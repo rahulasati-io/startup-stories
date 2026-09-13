@@ -6,12 +6,23 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import:logos": "node --env-file=.env.local scripts/import-company-logos.mjs",
+    "import:articles": "node --env-file=.env.local scripts/import-articles.mjs"
   },
   "dependencies": {
+    "@portabletext/react": "^8.0.1",
+    "@sanity/client": "^8.2.0",
+    "@sanity/icons": "^5.2.1",
+    "@sanity/image-url": "^2.1.1",
+    "@sanity/vision": "^5.31.2",
     "next": "16.3.2",
+    "next-sanity": "^13.3.3",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sanity": "^5.31.2",
+    "styled-components": "^6.5.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
