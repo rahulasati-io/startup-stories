@@ -405,3 +405,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Chose a GitHub branch and Vercel Preview Deployment workflow for beta testing before connecting `misterstory.in`.
 - **Privacy:** Environment files and credentials remain local. Excel workbooks, research inspection files, generated importer outputs, local spreadsheet tooling and logo-drop files are excluded from Git so they cannot be published with the website source.
 - **Reason:** Rahul wants to test the complete website online, including on mobile while the desktop is off, without treating the beta as the public launch.
+
+### 2026-09-13 — Private beta deployed on Vercel
+
+- **Status:** Implemented
+- **Change:** Connected the existing Vercel `startup-stories` project to the GitHub `beta` branch deployment and supplied only the runtime settings needed by the website.
+- **Access:** The stable beta URL is protected by Vercel Authentication and sends `X-Robots-Tag: noindex`; unauthenticated visitors are redirected to Vercel sign-in.
+- **Privacy:** Sanity project information, dataset selection and Kit form configuration are scoped to Preview deployments. The Kit API key is stored as a non-revealable Vercel secret. `SANITY_WRITE_TOKEN`, `.env.local`, Excel workbooks and research files remain outside GitHub and Vercel.
+- **Behaviour:** Pushing future commits to the `beta` branch automatically creates a protected Preview deployment. The existing `main` production deployment and `misterstory.in` remain unchanged.
