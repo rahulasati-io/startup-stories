@@ -413,3 +413,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Access:** The stable beta URL is protected by Vercel Authentication and sends `X-Robots-Tag: noindex`; unauthenticated visitors are redirected to Vercel sign-in.
 - **Privacy:** Sanity project information, dataset selection and Kit form configuration are scoped to Preview deployments. The Kit API key is stored as a non-revealable Vercel secret. `SANITY_WRITE_TOKEN`, `.env.local`, Excel workbooks and research files remain outside GitHub and Vercel.
 - **Behaviour:** Pushing future commits to the `beta` branch automatically creates a protected Preview deployment. The existing `main` production deployment and `misterstory.in` remain unchanged.
+
+### 2026-09-16 — Added the initial MisterStory author team
+
+- **Status:** Implemented in Sanity
+- **Change:** Added Aarav Mehta, Ananya Rao, Rohan Kapoor, Meera Iyer, Kabir Malhotra, Nisha Verma, and Arjun Nair as selectable article authors. Priya Shah was excluded as requested.
+- **Editorial safeguard:** Only the names and the generic description “Author at MisterStory” were added. Earlier placeholder education and experience were not published as verified facts.
+- **Workflow:** Added an idempotent setup script that creates missing author records and skips existing ones, preventing duplicates if it is run again.
