@@ -33,8 +33,8 @@ export default function HomepageCompanySearch({ companies }: { companies: Compan
   }, [companies, search]);
 
   function submit() {
-    if (activeIndex >= 0 && results[activeIndex]?.slug) router.push(`/company/${results[activeIndex].slug}`);
-    else if (results[0]?.slug) router.push(`/company/${results[0].slug}`);
+    if (activeIndex >= 0 && results[activeIndex]?.slug) router.push(`/companies/${results[activeIndex].slug}`);
+    else if (results[0]?.slug) router.push(`/companies/${results[0].slug}`);
     else setOpen(true);
   }
 
@@ -68,7 +68,7 @@ export default function HomepageCompanySearch({ companies }: { companies: Compan
       {open && search.trim() && (
         <div id="homepage-company-results" aria-label="Company search results" className="absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-lg border border-zinc-200 bg-white py-1 text-left shadow-xl md:w-[72%]">
           {results.length ? results.map((company, index) => (
-            <Link id={`homepage-company-result-${index}`} key={company._id} href={`/company/${company.slug}`} onMouseEnter={() => setActiveIndex(index)} className={`block truncate px-4 py-2.5 text-sm transition ${activeIndex === index ? "bg-zinc-950 font-semibold text-white" : "text-zinc-800 hover:bg-zinc-100"}`}>
+            <Link id={`homepage-company-result-${index}`} key={company._id} href={`/companies/${company.slug}`} onMouseEnter={() => setActiveIndex(index)} className={`block truncate px-4 py-2.5 text-sm transition ${activeIndex === index ? "bg-zinc-950 font-semibold text-white" : "text-zinc-800 hover:bg-zinc-100"}`}>
               {company.name}
             </Link>
           )) : <div className="px-4 py-6 text-center"><p className="text-sm font-semibold text-zinc-900">No companies found</p><p className="mt-1 text-xs text-zinc-500">Try another company or industry.</p></div>}
@@ -78,7 +78,7 @@ export default function HomepageCompanySearch({ companies }: { companies: Compan
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-zinc-500">
         <span>Popular:</span>
-        {popularCompanies.map((company) => <Link key={company.slug} href={`/company/${company.slug}`} className="font-semibold underline underline-offset-2 transition hover:text-zinc-950">{company.label}</Link>)}
+        {popularCompanies.map((company) => <Link key={company.slug} href={`/companies/${company.slug}`} className="font-semibold underline underline-offset-2 transition hover:text-zinc-950">{company.label}</Link>)}
       </div>
     </div>
   );

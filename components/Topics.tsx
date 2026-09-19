@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const topics = [
   { label: "Distribution", href: "/articles?q=Distribution" },
-  { label: "Business Models", href: "/articles?category=Business%20Model" },
+  { label: "Business Models", href: "/topics/business-model" },
   { label: "Food Delivery", href: "/articles?q=Food%20Delivery" },
   { label: "Consumer Internet", href: "/articles?q=Consumer%20Internet" },
   { label: "Moats", href: "/articles?q=Moats" },

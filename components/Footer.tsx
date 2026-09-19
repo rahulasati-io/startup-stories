@@ -45,8 +45,8 @@ export default async function Footer() {
             <Link href="/companies" className="block hover:text-white">Explore Companies</Link>
             <Link href="/people" className="block hover:text-white">Explore People</Link>
             <Link href="/articles" className="block hover:text-white">All Articles</Link>
-            <Link href="/articles?category=Business%20Model" className="block hover:text-white">Business Models</Link>
-            <Link href="/articles?category=Strategy" className="block hover:text-white">Strategies</Link>
+            <Link href="/topics/business-model" className="block hover:text-white">Business Models</Link>
+            <Link href="/topics/strategy" className="block hover:text-white">Strategies</Link>
           </nav>
         </div>
 
@@ -55,7 +55,7 @@ export default async function Footer() {
             <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Popular Companies</h2>
             <nav className="mt-4 space-y-3 text-sm text-zinc-300" aria-label="Popular companies">
               {uniqueCompanies.map((company) => (
-                <Link key={company._id} href={`/company/${company.slug}`} className="block hover:text-white">
+                <Link key={company._id} href={`/companies/${company.slug}`} className="block hover:text-white">
                   {company.name}
                 </Link>
               ))}

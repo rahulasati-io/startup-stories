@@ -38,7 +38,7 @@ export const ARTICLE_CARDS_QUERY = defineQuery(/* groq */ `
 `);
 
 export function articleHref(article: ArticleCardData) {
-  return `/articles/${article.categorySlug}/${article.slug}`;
+  return `/articles/${article.slug}`;
 }
 
 export function articleImageUrl(article: ArticleCardData) {

@@ -23,7 +23,7 @@ const options = [
     description:
       "Learn how businesses use pricing, distribution, branding and more to win.",
     action: "Explore strategy",
-    href: "/articles?category=Strategy",
+    href: "/topics/strategy",
   },
 ];
 

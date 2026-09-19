@@ -420,3 +420,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Added Aarav Mehta, Ananya Rao, Rohan Kapoor, Meera Iyer, Kabir Malhotra, Nisha Verma, and Arjun Nair as selectable article authors. Priya Shah was excluded as requested.
 - **Editorial safeguard:** Only the names and the generic description “Author at MisterStory” were added. Earlier placeholder education and experience were not published as verified facts.
 - **Workflow:** Added an idempotent setup script that creates missing author records and skips existing ones, preventing duplicates if it is run again.
+
+### 2026-09-19 — Simplified public URLs before launch
+
+- **Status:** Implemented
+- **Change:** Standardized company profiles at `/companies/[slug]`, person profiles at `/people/[slug]`, and articles at `/articles/[slug]`. Removed the old singular company route, founder route, and category segment inside article URLs.
+- **Topics:** Added `/topics/[slug]` collection pages so Business Model, Strategy, and future categories remain browsable without controlling an article’s permanent URL.
+- **Reason:** Rahul chose company- and people-friendly public paths and category-independent article URLs while the protected beta is not yet publicly indexed.
+- **Behaviour:** Updated search, cards, related content, group-company links, footer links, category links, canonical metadata, and the sitemap. No legacy redirects were retained because the site has not launched publicly.
+- **Publishing workflow:** Sanity document types and spreadsheet slugs remain unchanged; editors continue linking articles to companies, people, and categories as metadata.

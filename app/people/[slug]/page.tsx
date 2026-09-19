@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Newsletter from "@/components/Newsletter";
 import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
 import PeopleRow from "@/components/PeopleRow";
+import { absoluteUrl } from "@/lib/site-url";
 import { client } from "@/sanity/lib/client";
 import { DEFAULT_SEO_TEMPLATES, fillSeoTemplate, SEO_SETTINGS_QUERY, type SeoSettings } from "@/sanity/lib/seo";
 
@@ -131,10 +132,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: person.seoTitle || fillSeoTemplate(settings?.founderTitleTemplate || DEFAULT_SEO_TEMPLATES.founderTitleTemplate, values),
     description: person.seoDescription || fillSeoTemplate(settings?.founderDescriptionTemplate || DEFAULT_SEO_TEMPLATES.founderDescriptionTemplate, values),
+    alternates: { canonical: absoluteUrl(`/people/${slug}`) },
   };
 }
 
-export default async function FounderPage({ params }: Props) {
+export default async function PersonPage({ params }: Props) {
   const { slug } = await params;
   const person = await getPerson(slug);
   if (!person) notFound();
@@ -199,7 +201,7 @@ export default async function FounderPage({ params }: Props) {
               <h2 className="mt-3 text-2xl font-semibold">Associated companies</h2>
               <div className="mt-5 divide-y divide-zinc-100">
                 {associatedCompanies.map((item) => item.company?.slug ? (
-                  <Link key={item.company._id} href={`/company/${item.company.slug}`} className="group block py-5 first:pt-0 last:pb-0">
+                  <Link key={item.company._id} href={`/companies/${item.company.slug}`} className="group block py-5 first:pt-0 last:pb-0">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold group-hover:text-amber-800">{item.company.name}</p>
@@ -226,7 +228,7 @@ export default async function FounderPage({ params }: Props) {
               {relatedArticles.map((article) => {
                 const imageUrl = article.imageUrl || getBusinessModelThumbnailPath(article.category?.slug, article.slug, article._updatedAt);
                 return (
-                <Link key={article._id} href={`/articles/${article.category?.slug}/${article.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg">
+                <Link key={article._id} href={`/articles/${article.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg">
                   {imageUrl ? (
                     <Image src={imageUrl} alt={article.imageAlt || `${article.title} thumbnail`} width={720} height={378} className="aspect-[1200/630] w-full object-cover" />
                   ) : (

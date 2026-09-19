@@ -106,7 +106,7 @@ export default function CompanyDirectory({
         {visibleCompanies.length > 0 ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayedCompanies.map((company) => (
-              <Link key={company._id} href={`/company/${company.slug}`} className="group flex min-h-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
+              <Link key={company._id} href={`/companies/${company.slug}`} className="group flex min-h-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200 bg-white p-2">
                     {company.logoUrl ? (

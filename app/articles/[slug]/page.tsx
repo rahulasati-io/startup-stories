@@ -1,5 +1,6 @@
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
@@ -12,8 +13,7 @@ import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
 const ARTICLE_QUERY = `
   *[
     _type == "post" &&
-    slug.current == $slug &&
-    category->slug.current == $category
+    slug.current == $slug
   ][0]{
     _updatedAt,
     title,
@@ -82,16 +82,14 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{
-    category: string;
     slug: string;
   }>;
 }) {
-  const { category, slug } = await params;
+  const { slug } = await params;
 
   const article: Article | null = await client.fetch(
     ARTICLE_QUERY,
     {
-      category,
       slug,
     },
     { next: { revalidate: 60 } }
@@ -102,7 +100,7 @@ export async function generateMetadata({
   }
 
   const canonicalUrl = absoluteUrl(
-    `/articles/${article.categorySlug}/${article.slug}`,
+    `/articles/${article.slug}`,
   );
   const generatedThumbnail = getBusinessModelThumbnailPath(
     article.categorySlug,
@@ -205,16 +203,14 @@ export default async function ArticlePage({
   params,
 }: {
   params: Promise<{
-    category: string;
     slug: string;
   }>;
 }) {
-  const { category, slug } = await params;
+  const { slug } = await params;
 
   const article: Article | null = await client.fetch(
     ARTICLE_QUERY,
     {
-      category,
       slug,
     },
     { next: { revalidate: 60 } }
@@ -236,9 +232,13 @@ export default async function ArticlePage({
     <main className="bg-[#f7f6f2]">
       <article className="mx-auto max-w-5xl px-5 py-14 md:px-8 md:py-20">
         {article.category && (
-          <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
-            {article.category}
-          </p>
+          article.categorySlug ? (
+            <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
+              <Link href={`/topics/${article.categorySlug}`} className="hover:underline">{article.category}</Link>
+            </p>
+          ) : (
+            <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-700">{article.category}</p>
+          )
         )}
 
         <h1 className="mx-auto mt-4 max-w-4xl text-center text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
@@ -290,7 +290,7 @@ export default async function ArticlePage({
                 {article.companies.map((company) => (
                   <a
                     key={company.slug}
-                    href={`/company/${company.slug}`}
+                    href={`/companies/${company.slug}`}
                     className="block text-lg font-bold text-zinc-950 hover:underline"
                   >
                     {company.name}
