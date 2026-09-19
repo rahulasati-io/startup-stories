@@ -29,7 +29,7 @@ const validSlug = (slug) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 const same = (left, right) => JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
 const controlledFields = ["title", "slug", "body", "category", "company", "author", "publishedAt", "seoTitle", "seoDescription"];
 const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => !["_rev", "_createdAt", "_updatedAt"].includes(field)));
-const changed = (document, values) => controlledFields.some((field) => !same(document?.[field], values[field]));
+const changed = (document, values, fields = controlledFields) => fields.some((field) => !same(document?.[field], values[field]));
 const progress = (done, total) => { if (done % 20 === 0 || done === total) console.log(`Articles: ${done}/${total} checked`); };
 
 function isoDate(value, rowNumber, required) {
@@ -58,6 +58,10 @@ async function run() {
     const companySlugs = split(row.company_slug);
     const categorySlug = clean(row.category_slug) || "business-model";
     const authorSlug = clean(row.author_slug);
+    const hasPeopleSlugs = clean(row.people_slugs) !== "";
+    const peopleSlugs = split(row.people_slugs);
+    const hasConceptSlugs = clean(row.concept_slugs) !== "";
+    const conceptSlugs = split(row.concept_slugs);
     const bodyMarkdown = clean(row.article_body);
     const status = (clean(row.status) || "draft").toLowerCase();
     const missing = [["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
@@ -66,21 +70,27 @@ async function run() {
     if (slugs.has(slug)) throw new Error(`Articles row ${rowNumber}: duplicate article_slug "${slug}".`);
     if (!["draft", "published"].includes(status)) throw new Error(`Articles row ${rowNumber}: status must be draft or published.`);
     slugs.add(slug);
-    return { rowNumber, slug, title, companySlugs, categorySlug, authorSlug, status, publishedAt: isoDate(row.published_at, rowNumber, status === "published"), body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
+    return { rowNumber, slug, title, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, publishedAt: isoDate(row.published_at, rowNumber, status === "published"), body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
   });
 
   const companySlugs = [...new Set(inputs.flatMap((input) => input.companySlugs))];
   const categorySlugs = [...new Set(inputs.map((input) => input.categorySlug))];
   const authorSlugs = [...new Set(inputs.map((input) => input.authorSlug))];
-  const [companies, categories, authors, articles] = await Promise.all([
+  const peopleSlugs = [...new Set(inputs.flatMap((input) => input.peopleSlugs))];
+  const conceptSlugs = [...new Set(inputs.flatMap((input) => input.conceptSlugs))];
+  const [companies, categories, authors, people, concepts, articles] = await Promise.all([
     client.fetch(`*[_type == "company" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: companySlugs }),
     client.fetch(`*[_type == "category" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: categorySlugs }),
     client.fetch(`*[_type == "author" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: authorSlugs }),
+    peopleSlugs.length ? client.fetch(`*[_type == "founder" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: peopleSlugs }) : [],
+    conceptSlugs.length ? client.fetch(`*[_type == "concept" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: conceptSlugs }) : [],
     client.fetch(`*[_type == "post" && slug.current in $slugs]|order(_updatedAt asc){...,"slugValue":slug.current}`, { slugs: [...slugs] }),
   ]);
   const companiesBySlug = new Map(companies.map((item) => [item.slug, item._id]));
   const categoriesBySlug = new Map(categories.map((item) => [item.slug, item._id]));
   const authorsBySlug = new Map(authors.map((item) => [item.slug, item._id]));
+  const peopleBySlug = new Map(people.map((item) => [item.slug, item._id]));
+  const conceptsBySlug = new Map(concepts.map((item) => [item.slug, item._id]));
   const articlesBySlug = new Map();
   for (const article of articles) {
     const pair = articlesBySlug.get(article.slugValue) || {};
@@ -93,6 +103,8 @@ async function run() {
     for (const slug of input.companySlugs) if (!companiesBySlug.has(slug)) errors.push(`row ${input.rowNumber}: company_slug "${slug}" was not found in Sanity`);
     if (!categoriesBySlug.has(input.categorySlug)) errors.push(`row ${input.rowNumber}: category_slug "${input.categorySlug}" was not found in Sanity`);
     if (!authorsBySlug.has(input.authorSlug)) errors.push(`row ${input.rowNumber}: author_slug "${input.authorSlug}" was not found in Sanity`);
+    for (const slug of input.peopleSlugs) if (!peopleBySlug.has(slug)) errors.push(`row ${input.rowNumber}: people_slugs value "${slug}" was not found in Sanity`);
+    for (const slug of input.conceptSlugs) if (!conceptsBySlug.has(slug)) errors.push(`row ${input.rowNumber}: concept_slugs value "${slug}" was not found in Sanity`);
   }
   if (errors.length) throw new Error(`Reference validation failed:\n- ${errors.join("\n- ")}`);
 
@@ -113,10 +125,19 @@ async function run() {
       seoTitle: input.seoTitle,
       seoDescription: input.seoDescription,
     };
+    const comparedFields = [...controlledFields];
+    if (input.hasPeopleSlugs) {
+      values.people = input.peopleSlugs.map((slug) => ({ ...reference(peopleBySlug.get(slug)), _key: `person-${slug}` }));
+      comparedFields.push("people");
+    }
+    if (input.hasConceptSlugs) {
+      values.concepts = input.conceptSlugs.map((slug) => ({ ...reference(conceptsBySlug.get(slug)), _key: `concept-${slug}` }));
+      comparedFields.push("concepts");
+    }
     const shouldPublish = input.status === "published" && allowPublish;
     if (input.status === "published" && !allowPublish) heldAsDraft += 1;
     const comparison = shouldPublish ? existing.published : (existing.draft || existing.published);
-    if (comparison && !changed(comparison, values) && (shouldPublish ? Boolean(existing.published) : Boolean(existing.draft))) {
+    if (comparison && !changed(comparison, values, comparedFields) && (shouldPublish ? Boolean(existing.published) : Boolean(existing.draft))) {
       skipped += 1;
       progress(index + 1, inputs.length);
       continue;

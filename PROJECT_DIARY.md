@@ -439,3 +439,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Editorial rules:** Every article now requires one primary category, one author and at least one linked company. People and concepts remain optional and should only be linked when directly relevant.
 - **Authors:** Added optional verified role, education, experience and LinkedIn fields to author records and a public profile page that lists each author’s articles. No placeholder credentials were added.
 - **Importer:** The spreadsheet importer continues to manage the core article fields while preserving people, concepts, images and other manually managed Sanity fields on later updates.
+
+### 2026-09-19 — Added optional article relationship columns
+
+- **Status:** Implemented
+- **Change:** Added optional `people_slugs` and `concept_slugs` columns to both article workbooks and taught the article importer to validate and create those Sanity references.
+- **Safe update rule:** A populated cell replaces that article's corresponding links. A blank cell leaves existing people or concept links in Sanity untouched, so later spreadsheet imports cannot accidentally erase manual editorial work.
+- **Reason:** Article pages now use linked people and concepts for discovery, and Rahul needs a scalable way to supply those relationships while importing hundreds of articles.
