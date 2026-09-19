@@ -60,6 +60,7 @@ export const postType = defineType({
     defineField({
       name: "company",
       title: "Companies",
+      description: "Link every company that is substantially discussed in this article. Add at least one company.",
       type: "array",
       of: [
         defineArrayMember({
@@ -67,6 +68,7 @@ export const postType = defineType({
           to: [{ type: "company" }],
         }),
       ],
+      validation: (Rule) => Rule.required().min(1).unique(),
     }),
 
     defineField({
@@ -93,6 +95,7 @@ export const postType = defineType({
           to: [{ type: "concept" }],
         }),
       ],
+      validation: (Rule) => Rule.unique(),
     }),
 
     defineField({

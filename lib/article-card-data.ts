@@ -10,7 +10,11 @@ export type ArticleCardData = {
   categorySlug: string;
   description: string | null;
   publishedAt: string | null;
-  companyName: string | null;
+  companies: {
+    name: string;
+    slug: string;
+    industry: string | null;
+  }[];
   socialImageUrl: string | null;
   mainImageUrl: string | null;
 };
@@ -31,7 +35,11 @@ export const ARTICLE_CARDS_QUERY = defineQuery(/* groq */ `
     "categorySlug": category->slug.current,
     "description": coalesce(seoDescription, array::join(body[0...2].children[].text, " ")),
     publishedAt,
-    "companyName": company[0]->name,
+    "companies": coalesce(company[]->{
+      name,
+      "slug": slug.current,
+      "industry": coalesce(industryCategory->name, industry)
+    }, []),
     "socialImageUrl": socialImage.asset->url,
     "mainImageUrl": mainImage.asset->url
   }

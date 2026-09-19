@@ -7,7 +7,7 @@ export const revalidate = 3600;
 
 const SITEMAP_QUERY = defineQuery(/* groq */ `
   *[
-    _type in ["company", "founder", "post", "category"] &&
+    _type in ["company", "founder", "post", "category", "author"] &&
     defined(slug.current) &&
     !(_id in path("drafts.**"))
   ] {
@@ -18,7 +18,7 @@ const SITEMAP_QUERY = defineQuery(/* groq */ `
 `);
 
 type SitemapDocument = {
-  _type: "company" | "founder" | "post" | "category";
+  _type: "company" | "founder" | "post" | "category" | "author";
   slug: string;
   _updatedAt: string;
 };
@@ -28,6 +28,7 @@ function documentPath(document: SitemapDocument) {
   if (document._type === "founder") return `/people/${document.slug}`;
   if (document._type === "post") return `/articles/${document.slug}`;
   if (document._type === "category") return `/topics/${document.slug}`;
+  if (document._type === "author") return `/authors/${document.slug}`;
   return null;
 }
 

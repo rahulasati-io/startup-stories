@@ -8,6 +8,10 @@ export default function ArticleCard({ article, compact = false }: { article: Art
   const date = article.publishedAt
     ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(article.publishedAt))
     : null;
+  const companyNames = article.companies.map((company) => company.name);
+  const companyLabel = companyNames.length > 2
+    ? `${companyNames.slice(0, 2).join(" · ")} +${companyNames.length - 2}`
+    : companyNames.join(" · ");
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
@@ -20,8 +24,8 @@ export default function ArticleCard({ article, compact = false }: { article: Art
           <h3 className={`mt-2 font-bold leading-tight tracking-tight text-zinc-950 ${compact ? "text-lg" : "text-xl"}`}>{article.title}</h3>
           {article.description && <p className={`mt-3 line-clamp-2 text-zinc-600 ${compact ? "text-xs leading-5" : "text-sm leading-6"}`}>{article.description}</p>}
           <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-zinc-500">
-            {article.companyName && <span>{article.companyName}</span>}
-            {article.companyName && date && <span aria-hidden="true">•</span>}
+            {companyLabel && <span>{companyLabel}</span>}
+            {companyLabel && date && <span aria-hidden="true">•</span>}
             {date && <time dateTime={article.publishedAt || undefined}>{date}</time>}
           </div>
         </div>

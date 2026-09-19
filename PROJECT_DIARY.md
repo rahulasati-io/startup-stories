@@ -429,3 +429,13 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Reason:** Rahul chose company- and people-friendly public paths and category-independent article URLs while the protected beta is not yet publicly indexed.
 - **Behaviour:** Updated search, cards, related content, group-company links, footer links, category links, canonical metadata, and the sitemap. No legacy redirects were retained because the site has not launched publicly.
 - **Publishing workflow:** Sanity document types and spreadsheet slugs remain unchanged; editors continue linking articles to companies, people, and categories as metadata.
+
+### 2026-09-19 — Expanded article discovery and author profiles
+
+- **Status:** Implemented
+- **Change:** Article pages now expose linked companies, featured people and concepts; author names link to new `/authors/[slug]` profiles; and each article recommends more stories about the same companies and from the same category.
+- **Directory:** Added company and industry filters to `/articles`. Industry is inherited from linked companies, so editors do not enter it twice. Cards can display multiple linked companies.
+- **Taxonomy:** Confirmed Business Model and Strategy already existed, then added Company Story and People & Leadership as the two missing primary categories. Category pages continue to use `/topics/[slug]`.
+- **Editorial rules:** Every article now requires one primary category, one author and at least one linked company. People and concepts remain optional and should only be linked when directly relevant.
+- **Authors:** Added optional verified role, education, experience and LinkedIn fields to author records and a public profile page that lists each author’s articles. No placeholder credentials were added.
+- **Importer:** The spreadsheet importer continues to manage the core article fields while preserving people, concepts, images and other manually managed Sanity fields on later updates.
