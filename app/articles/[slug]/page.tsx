@@ -271,7 +271,7 @@ export default async function ArticlePage({
     <>
     <Header />
     <main className="bg-[#f7f6f2]">
-      <article className="mx-auto max-w-5xl px-5 py-14 md:px-8 md:py-20">
+      <article className="mx-auto max-w-[1220px] px-4 py-12 sm:px-6 md:px-8 md:py-16 lg:py-20">
         {article.category && (
           article.categorySlug ? (
             <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
@@ -282,7 +282,7 @@ export default async function ArticlePage({
           )
         )}
 
-        <h1 className="mx-auto mt-4 max-w-4xl text-center text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
+        <h1 className="mx-auto mt-4 max-w-5xl text-center text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
           {article.title}
         </h1>
 
@@ -319,7 +319,7 @@ export default async function ArticlePage({
           </div>
         )}
 
-        <div className="mx-auto mt-12 max-w-3xl">
+        <div className="mx-auto mt-10 w-full max-w-[825px] md:mt-12">
           <PortableText
             value={article.body || []}
             components={portableTextComponents}

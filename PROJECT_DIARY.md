@@ -454,3 +454,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Tag selection:** The workbook uses a required `article_tag` dropdown with Business Model, Strategy, Company Story, and People & Leadership. The importer converts the readable selection into the corresponding Sanity category reference.
 - **Taxonomy rule:** Each article gets one primary article tag for browsing. Optional `concept_slugs` remain available for multiple narrower topics.
 - **Reason:** A single master workbook is simpler to maintain and scales better for bulk article publishing.
+
+### 2026-09-20 — Widened the article reading layout
+
+- **Status:** Implemented
+- **Change:** Expanded the article canvas and headline area, and set the main reading column to approximately 825 pixels on desktop while retaining compact mobile gutters.
+- **Reason:** Rahul wanted article pages to use the more comfortable content spacing of the referenced INDmoney article instead of leaving excessive unused space around the story.
+- **Behaviour:** Article copy remains centred and readable, while headlines and hero images have more room on larger screens. Mobile spacing remains responsive.
