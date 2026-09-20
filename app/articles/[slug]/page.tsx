@@ -271,22 +271,22 @@ export default async function ArticlePage({
     <>
     <Header />
     <main className="bg-[#f7f6f2]">
-      <article className="mx-auto max-w-[1220px] px-4 py-12 sm:px-6 md:px-8 md:py-16 lg:py-20">
+      <article className="w-full px-4 py-12 sm:px-6 md:px-8 md:py-16 lg:py-20">
         {article.category && (
           article.categorySlug ? (
-            <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
               <Link href={`/topics/${article.categorySlug}`} className="hover:underline">{article.category}</Link>
             </p>
           ) : (
-            <p className="text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-700">{article.category}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">{article.category}</p>
           )
         )}
 
-        <h1 className="mx-auto mt-4 max-w-5xl text-center text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
+        <h1 className="mt-4 max-w-[1220px] text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
           {article.title}
         </h1>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm text-zinc-500">
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
           {article.author && (
             article.author.slug
               ? <span>By <Link href={`/authors/${article.author.slug}`} className="font-semibold text-zinc-700 hover:underline">{article.author.name}</Link></span>
@@ -310,7 +310,7 @@ export default async function ArticlePage({
         </div>
 
         {heroImage && (
-          <div className="mt-10 aspect-[16/9] overflow-hidden rounded-3xl md:aspect-[16/8]">
+          <div className="mt-10 aspect-[16/9] max-w-[825px] overflow-hidden rounded-3xl md:aspect-[16/8]">
             <img
               src={heroImage}
               alt={article.mainImage?.alt || article.title}
@@ -319,7 +319,7 @@ export default async function ArticlePage({
           </div>
         )}
 
-        <div className="mx-auto mt-10 w-full max-w-[825px] md:mt-12">
+        <div className="mt-10 w-full max-w-[825px] md:mt-12">
           <PortableText
             value={article.body || []}
             components={portableTextComponents}

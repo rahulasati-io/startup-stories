@@ -461,3 +461,9 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Expanded the article canvas and headline area, and set the main reading column to approximately 825 pixels on desktop while retaining compact mobile gutters.
 - **Reason:** Rahul wanted article pages to use the more comfortable content spacing of the referenced INDmoney article instead of leaving excessive unused space around the story.
 - **Behaviour:** Article copy remains centred and readable, while headlines and hero images have more room on larger screens. Mobile spacing remains responsive.
+
+### 2026-09-20 — Left-aligned the article reading canvas
+
+- **Status:** Implemented; refines the article-spacing change above
+- **Change:** Reduced the desktop left gutter to 32 pixels and aligned the category, headline, byline, hero and article body to the same edge. Mobile retains a 16-pixel gutter.
+- **Reason:** The centred reading column still left too much unused space on the left. Rahul wanted the article to follow the reference page's compact left spacing more closely.
