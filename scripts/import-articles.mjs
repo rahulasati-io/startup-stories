@@ -26,6 +26,16 @@ const clean = (value) => value === undefined || value === null ? "" : String(val
 const split = (value) => clean(value).split(";").map(clean).filter(Boolean);
 const reference = (id) => ({ _type: "reference", _ref: id });
 const validSlug = (slug) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+const categoryAliases = new Map([
+  ["business model", "business-model"],
+  ["business-model", "business-model"],
+  ["strategy", "strategy"],
+  ["company story", "company-story"],
+  ["company-story", "company-story"],
+  ["people & leadership", "people-leadership"],
+  ["people and leadership", "people-leadership"],
+  ["people-leadership", "people-leadership"],
+]);
 const same = (left, right) => JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
 const controlledFields = ["title", "slug", "body", "category", "company", "author", "publishedAt", "seoTitle", "seoDescription"];
 const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => !["_rev", "_createdAt", "_updatedAt"].includes(field)));
@@ -56,7 +66,8 @@ async function run() {
     const slug = clean(row.article_slug);
     const title = clean(row.title);
     const companySlugs = split(row.company_slug);
-    const categorySlug = clean(row.category_slug) || "business-model";
+    const categoryInput = clean(row.article_tag) || clean(row.category_slug);
+    const categorySlug = categoryAliases.get(categoryInput.toLowerCase()) || categoryInput;
     const authorSlug = clean(row.author_slug);
     const hasPeopleSlugs = clean(row.people_slugs) !== "";
     const peopleSlugs = split(row.people_slugs);
@@ -64,7 +75,7 @@ async function run() {
     const conceptSlugs = split(row.concept_slugs);
     const bodyMarkdown = clean(row.article_body);
     const status = (clean(row.status) || "draft").toLowerCase();
-    const missing = [["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
+    const missing = [["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["article_tag", categoryInput], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) throw new Error(`Articles row ${rowNumber}: ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required.`);
     if (!validSlug(slug)) throw new Error(`Articles row ${rowNumber}: article_slug must use lowercase letters, numbers and hyphens only.`);
     if (slugs.has(slug)) throw new Error(`Articles row ${rowNumber}: duplicate article_slug "${slug}".`);
@@ -101,7 +112,7 @@ async function run() {
   const errors = [];
   for (const input of inputs) {
     for (const slug of input.companySlugs) if (!companiesBySlug.has(slug)) errors.push(`row ${input.rowNumber}: company_slug "${slug}" was not found in Sanity`);
-    if (!categoriesBySlug.has(input.categorySlug)) errors.push(`row ${input.rowNumber}: category_slug "${input.categorySlug}" was not found in Sanity`);
+    if (!categoriesBySlug.has(input.categorySlug)) errors.push(`row ${input.rowNumber}: article_tag "${input.categorySlug}" was not found in Sanity`);
     if (!authorsBySlug.has(input.authorSlug)) errors.push(`row ${input.rowNumber}: author_slug "${input.authorSlug}" was not found in Sanity`);
     for (const slug of input.peopleSlugs) if (!peopleBySlug.has(slug)) errors.push(`row ${input.rowNumber}: people_slugs value "${slug}" was not found in Sanity`);
     for (const slug of input.conceptSlugs) if (!conceptsBySlug.has(slug)) errors.push(`row ${input.rowNumber}: concept_slugs value "${slug}" was not found in Sanity`);

@@ -446,3 +446,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Added optional `people_slugs` and `concept_slugs` columns to both article workbooks and taught the article importer to validate and create those Sanity references.
 - **Safe update rule:** A populated cell replaces that article's corresponding links. A blank cell leaves existing people or concept links in Sanity untouched, so later spreadsheet imports cannot accidentally erase manual editorial work.
 - **Reason:** Article pages now use linked people and concepts for discovery, and Rahul needs a scalable way to supply those relationships while importing hundreds of articles.
+
+### 2026-09-20 — Consolidated article importing into one workbook
+
+- **Status:** Implemented
+- **Change:** Replaced the separate Business Model and Strategy workbooks with one `articles-template.xlsx` for every article type.
+- **Tag selection:** The workbook uses a required `article_tag` dropdown with Business Model, Strategy, Company Story, and People & Leadership. The importer converts the readable selection into the corresponding Sanity category reference.
+- **Taxonomy rule:** Each article gets one primary article tag for browsing. Optional `concept_slugs` remain available for multiple narrower topics.
+- **Reason:** A single master workbook is simpler to maintain and scales better for bulk article publishing.
