@@ -114,6 +114,22 @@ export const postType = defineType({
     }),
 
     defineField({
+      name: "promotion",
+      title: "Article promotion",
+      description:
+        "Mark an article as Popular only when you want it promoted in article sidebars. Leave Standard selected for normal articles.",
+      type: "string",
+      initialValue: "standard",
+      options: {
+        list: [
+          { title: "Standard", value: "standard" },
+          { title: "Popular", value: "popular" },
+        ],
+        layout: "radio",
+      },
+    }),
+
+    defineField({
       name: "seoTitle",
       title: "SEO Title",
       type: "string",

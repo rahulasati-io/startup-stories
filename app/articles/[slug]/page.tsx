@@ -2,17 +2,18 @@ import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { defineQuery } from "next-sanity";
 import ArticleCard from "@/components/ArticleCard";
+import ArticleSidebar, { type SidebarCompany } from "@/components/ArticleSidebar";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import Newsletter from "@/components/Newsletter";
 import { absoluteUrl } from "@/lib/site-url";
 import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
 import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
 
-const ARTICLE_QUERY = `
+const ARTICLE_QUERY = defineQuery(/* groq */ `
   *[
     _type == "post" &&
     slug.current == $slug
@@ -37,7 +38,9 @@ const ARTICLE_QUERY = `
       _id,
       name,
       "slug": slug.current,
-      "industry": coalesce(industryCategory->name, industry)
+      "industry": coalesce(industryCategory->name, industry),
+      "industryId": industryCategory._ref,
+      description
     },
     "people": people[]->{
       _id,
@@ -56,7 +59,27 @@ const ARTICLE_QUERY = `
       asset
     }
   }
-`;
+`);
+
+const RELATED_COMPANIES_QUERY = defineQuery(/* groq */ `
+  *[
+    _type == "company" &&
+    !(_id in path("drafts.**")) &&
+    defined(name) &&
+    defined(slug.current) &&
+    !(_id in $excludedIds) &&
+    (
+      ($industryId != null && industryCategory._ref == $industryId) ||
+      ($industryId == null && industry == $industry)
+    )
+  ] | order(name asc)[0...3] {
+    _id,
+    name,
+    "slug": slug.current,
+    "industry": coalesce(industryCategory->name, industry),
+    description
+  }
+`);
 
 type Article = {
   _id: string;
@@ -80,6 +103,8 @@ type Article = {
     name: string;
     slug: string;
     industry?: string;
+    industryId?: string;
+    description?: string;
   }[];
   people?: {
     _id: string;
@@ -112,6 +137,43 @@ function calculateReadingTime(body: PortableTextBlock[] = []) {
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
 
   return `${Math.max(1, Math.ceil(words / 200))} min read`;
+}
+
+function getBlockText(block: PortableTextBlock) {
+  if (!("children" in block) || !Array.isArray(block.children)) return "";
+
+  return block.children
+    .map((child) =>
+      child && typeof child === "object" && "text" in child && typeof child.text === "string"
+        ? child.text
+        : "",
+    )
+    .join("")
+    .trim();
+}
+
+function headingId(text: string, key = "heading") {
+  const textSlug = text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  const keySuffix = key.replace(/[^a-z0-9]/gi, "").slice(-6).toLowerCase();
+
+  return `${textSlug || "section"}-${keySuffix || "heading"}`;
+}
+
+function getArticleHeadings(body: PortableTextBlock[] = []) {
+  return body.flatMap((block) => {
+    const style = "style" in block ? block.style : undefined;
+    if (block._type !== "block" || style !== "h2") return [];
+
+    const text = getBlockText(block);
+    if (!text) return [];
+
+    const id = headingId(text, block._key);
+    return [{ key: block._key || id, text, id }];
+  });
 }
 
 export async function generateMetadata({
@@ -184,11 +246,16 @@ const portableTextComponents: PortableTextComponents = {
       </p>
     ),
 
-    h2: ({ children }) => (
-      <h2 className="mt-12 mb-5 text-3xl font-semibold tracking-[-0.02em] text-zinc-950">
-        {children}
-      </h2>
-    ),
+    h2: ({ children, value }) => {
+      const block = value as PortableTextBlock;
+      const id = headingId(getBlockText(block), block._key);
+
+      return (
+        <h2 id={id} className="mt-12 mb-5 scroll-mt-24 text-3xl font-semibold tracking-[-0.02em] text-zinc-950">
+          {children}
+        </h2>
+      );
+    },
 
     h3: ({ children }) => (
       <h3 className="mt-10 mb-4 text-2xl font-semibold tracking-[-0.02em] text-zinc-950">
@@ -254,6 +321,13 @@ export default async function ArticlePage({
   }
 
   const readingTime = calculateReadingTime(article.body);
+  const articleHeadings = getArticleHeadings(article.body);
+  const recentArticles = allArticles
+    .filter((item) => item._id !== article._id)
+    .slice(0, 5);
+  const popularArticles = allArticles
+    .filter((item) => item._id !== article._id && item.promotion === "popular")
+    .slice(0, 3);
   const companySlugs = new Set((article.companies || []).map((company) => company.slug));
   const moreAboutCompanies = allArticles
     .filter((item) => item._id !== article._id && item.companies.some((company) => companySlugs.has(company.slug)))
@@ -262,6 +336,19 @@ export default async function ArticlePage({
   const moreFromCategory = allArticles
     .filter((item) => item._id !== article._id && !companyArticleIds.has(item._id) && item.categorySlug === article.categorySlug)
     .slice(0, 3);
+  const primaryCompany = article.companies?.[0];
+  const relatedCompanies = primaryCompany?.industry
+    ? await client.fetch<SidebarCompany[]>(
+        RELATED_COMPANIES_QUERY,
+        {
+          excludedIds: (article.companies || []).map((company) => company._id),
+          industryId: primaryCompany.industryId || null,
+          industry: primaryCompany.industry,
+        },
+        { perspective: "published", next: { revalidate: 60 } },
+      )
+    : [];
+  const nextArticle = moreAboutCompanies[0] || moreFromCategory[0] || recentArticles[0];
 
   const heroImage = article.mainImage?.asset
     ? urlFor(article.mainImage).width(1600).url()
@@ -271,7 +358,7 @@ export default async function ArticlePage({
     <>
     <Header />
     <main className="bg-[#f7f6f2]">
-      <article className="w-full px-4 py-12 sm:px-6 md:px-8 md:py-16 lg:py-20">
+      <article className="w-full px-4 py-12 sm:px-6 md:px-10 md:py-16 lg:px-14 lg:py-20">
         {article.category && (
           article.categorySlug ? (
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
@@ -309,70 +396,72 @@ export default async function ArticlePage({
           )}
         </div>
 
-        {heroImage && (
-          <div className="mt-10 aspect-[16/9] max-w-[825px] overflow-hidden rounded-3xl md:aspect-[16/8]">
-            <img
-              src={heroImage}
-              alt={article.mainImage?.alt || article.title}
-              className="h-full w-full object-cover object-center"
-            />
-          </div>
-        )}
+        <div className="mt-10 grid items-start gap-10 xl:grid-cols-[minmax(0,880px)_minmax(280px,320px)]">
+          <div className="min-w-0">
+            {heroImage && (
+              <div className="aspect-[16/9] overflow-hidden rounded-3xl md:aspect-[16/8]">
+                <img
+                  src={heroImage}
+                  alt={article.mainImage?.alt || article.title}
+                  className="h-full w-full object-cover object-center"
+                />
+              </div>
+            )}
 
-        <div className="mt-10 w-full max-w-[825px] md:mt-12">
-          <PortableText
-            value={article.body || []}
-            components={portableTextComponents}
-          />
+            {articleHeadings.length > 0 && (
+              <details className="mt-6 rounded-2xl border border-zinc-200 bg-white px-5 py-4">
+                <summary className="cursor-pointer font-bold text-zinc-950">What&apos;s covered</summary>
+                <ol className="mt-4 space-y-2 border-t border-zinc-200 pt-4">
+                  {articleHeadings.map((heading) => (
+                    <li key={heading.key}>
+                      <a href={`#${heading.id}`} className="text-sm leading-6 text-zinc-700 hover:text-amber-800 hover:underline">
+                        {heading.text}
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
 
-          {article.companies && article.companies.length > 0 && (
-            <section className="mt-14 rounded-2xl border border-zinc-200 bg-white p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">
-                {article.companies.length === 1 ? "About the company" : "Companies discussed"}
+            <div className="mt-10 w-full md:mt-12">
+              <PortableText
+                value={article.body || []}
+                components={portableTextComponents}
+              />
+
+              {article.concepts && article.concepts.length > 0 && (
+                <section className="mt-8">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Concepts covered</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {article.concepts.map((concept) => <span key={concept._id} className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700">{concept.name}</span>)}
+                  </div>
+                </section>
+              )}
+
+              <p className="mt-12 border-t border-zinc-200 pt-5 text-sm text-zinc-500">
+                Last updated {new Date(article._updatedAt).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
 
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {article.companies.map((company) => (
-                  <Link
-                    key={company._id}
-                    href={`/companies/${company.slug}`}
-                    className="rounded-xl border border-zinc-200 px-4 py-3 transition hover:border-amber-300 hover:bg-amber-50/40"
-                  >
-                    <span className="block text-lg font-bold text-zinc-950">{company.name}</span>
-                    {company.industry && <span className="mt-1 block text-xs text-zinc-500">{company.industry}</span>}
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+              {nextArticle && (
+                <Link href={`/articles/${nextArticle.slug}`} className="group mt-6 block rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">Read next</span>
+                  <span className="mt-2 block text-xl font-bold tracking-tight text-zinc-950 group-hover:text-amber-800">{nextArticle.title}</span>
+                </Link>
+              )}
+            </div>
+          </div>
 
-          {article.people && article.people.length > 0 && (
-            <section className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">People featured</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {article.people.map((person) => person.slug ? (
-                  <Link key={person._id} href={`/people/${person.slug}`} className="rounded-xl border border-zinc-200 px-4 py-3 transition hover:border-amber-300 hover:bg-amber-50/40">
-                    <span className="block font-bold text-zinc-950">{person.name}</span>
-                    {person.role && <span className="mt-1 block text-xs text-zinc-500">{person.role}</span>}
-                  </Link>
-                ) : (
-                  <div key={person._id} className="rounded-xl border border-zinc-200 px-4 py-3">
-                    <span className="block font-bold text-zinc-950">{person.name}</span>
-                    {person.role && <span className="mt-1 block text-xs text-zinc-500">{person.role}</span>}
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {article.concepts && article.concepts.length > 0 && (
-            <section className="mt-8">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Concepts covered</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {article.concepts.map((concept) => <span key={concept._id} className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-700">{concept.name}</span>)}
-              </div>
-            </section>
-          )}
+          <ArticleSidebar
+            companies={article.companies || []}
+            recentArticles={recentArticles}
+            relatedCompanies={relatedCompanies}
+            people={article.people || []}
+            popularArticles={popularArticles}
+          />
         </div>
       </article>
       {moreAboutCompanies.length > 0 && (
@@ -389,7 +478,6 @@ export default async function ArticlePage({
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{moreFromCategory.map((item) => <ArticleCard key={item._id} article={item} />)}</div>
         </section>
       )}
-      <Newsletter />
     </main>
     <Footer />
     </>

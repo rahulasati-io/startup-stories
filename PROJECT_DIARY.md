@@ -467,3 +467,13 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Status:** Implemented; refines the article-spacing change above
 - **Change:** Reduced the desktop left gutter to 32 pixels and aligned the category, headline, byline, hero and article body to the same edge. Mobile retains a 16-pixel gutter.
 - **Reason:** The centred reading column still left too much unused space on the left. Rahul wanted the article to follow the reference page's compact left spacing more closely.
+
+### 2026-09-23 — Added the article discovery sidebar and collapsible overview
+
+- **Status:** Implemented
+- **Layout:** Article pages now use a 56-pixel desktop gutter, a reading column of up to 880 pixels, and a separate discovery sidebar on wide screens. The sidebar moves below the article on smaller screens.
+- **What’s covered:** A collapsed section immediately below the hero image is generated from the article’s H2 headings. Its links and headings are present in the server-rendered HTML and jump to the corresponding article sections.
+- **Sidebar:** Added the linked company, the existing Kit newsletter form, five recent articles, up to three companies from the same industry, directly linked people, and editor-selected popular articles. Empty or unsupported sections remain hidden.
+- **Editorial control:** Added an optional Article promotion field in Sanity. Selecting Popular makes a published article eligible for the Popular articles sidebar; Standard remains the default. This avoids presenting recent stories as popularity data before real analytics exist.
+- **Article ending:** Removed duplicate company and person cards from the body and added the Sanity last-updated date plus one contextual Read next article. No public source list is displayed; research URLs remain internal.
+- **Reason:** Rahul wanted wider article text, moderate left spacing, useful content on the right, a newsletter conversion point, and stronger discovery without a sidebar table of contents or a public sources section.

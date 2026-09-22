@@ -1,14 +1,16 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 
 type SubmissionState = "idle" | "submitting" | "success" | "error";
 
-export default function Newsletter() {
+export default function Newsletter({ compact = false }: { compact?: boolean }) {
   const [email, setEmail] = useState("");
   const [submissionState, setSubmissionState] =
     useState<SubmissionState>("idle");
   const [message, setMessage] = useState("");
+  const emailInputId = useId();
+  const websiteInputId = useId();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,29 +52,34 @@ export default function Newsletter() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12">
-      <div className="rounded-2xl border border-zinc-200 bg-zinc-100 p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-8">
+    <section className={compact ? "" : "mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12"}>
+      <div className={compact
+        ? "rounded-2xl border border-zinc-200 bg-zinc-100 p-5"
+        : "rounded-2xl border border-zinc-200 bg-zinc-100 p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-8"
+      }>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-            One business story every week.
+          <h2 className={compact ? "text-xl font-bold tracking-tight text-zinc-950" : "text-2xl font-bold tracking-tight text-zinc-950"}>
+            {compact ? "Understand companies better." : "One business story every week."}
           </h2>
 
-          <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-600">
-            Interesting companies, smart strategies and the numbers behind
-            them.
+          <p className={compact ? "mt-2 text-sm leading-6 text-zinc-600" : "mt-2 max-w-xl text-sm leading-6 text-zinc-600"}>
+            {compact
+              ? "One clear company story in your inbox every week."
+              : "Interesting companies, smart strategies and the numbers behind them."
+            }
           </p>
         </div>
 
         <form
-          className="mt-5 w-full max-w-md md:mt-0"
+          className={compact ? "mt-5 w-full" : "mt-5 w-full max-w-md md:mt-0"}
           onSubmit={handleSubmit}
         >
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <label className="sr-only" htmlFor="newsletter-email">
+          <div className={compact ? "flex flex-col gap-2" : "flex flex-col gap-2 sm:flex-row"}>
+            <label className="sr-only" htmlFor={emailInputId}>
               Email address
             </label>
             <input
-              id="newsletter-email"
+              id={emailInputId}
               name="email"
               type="email"
               autoComplete="email"
@@ -85,9 +92,9 @@ export default function Newsletter() {
             />
 
             <div className="absolute -left-[10000px]" aria-hidden="true">
-              <label htmlFor="newsletter-website">Website</label>
+              <label htmlFor={websiteInputId}>Website</label>
               <input
-                id="newsletter-website"
+                id={websiteInputId}
                 name="website"
                 type="text"
                 tabIndex={-1}
