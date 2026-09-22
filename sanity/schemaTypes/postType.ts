@@ -25,6 +25,15 @@ export const postType = defineType({
     }),
 
     defineField({
+      name: "importId",
+      title: "Spreadsheet Import ID",
+      description: "Internal stable identity used by the Excel importer. It stays unchanged when the public article slug changes.",
+      type: "string",
+      readOnly: true,
+      hidden: true,
+    }),
+
+    defineField({
       name: "mainImage",
       title: "Hero Image",
       type: "image",

@@ -1,5 +1,6 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
@@ -36,8 +37,8 @@ const categoryAliases = new Map([
   ["people and leadership", "people-leadership"],
   ["people-leadership", "people-leadership"],
 ]);
-const same = (left, right) => JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
-const controlledFields = ["title", "slug", "body", "category", "company", "author", "publishedAt", "seoTitle", "seoDescription"];
+const same = (left, right) => isDeepStrictEqual(left ?? null, right ?? null);
+const controlledFields = ["importId", "title", "slug", "body", "category", "company", "author", "publishedAt", "seoTitle", "seoDescription"];
 const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => !["_rev", "_createdAt", "_updatedAt"].includes(field)));
 const changed = (document, values, fields = controlledFields) => fields.some((field) => !same(document?.[field], values[field]));
 const progress = (done, total) => { if (done % 20 === 0 || done === total) console.log(`Articles: ${done}/${total} checked`); };
@@ -61,8 +62,10 @@ async function run() {
   if (!filtered.length) throw new Error("No matching rows were found on the Articles sheet.");
 
   const slugs = new Set();
+  const importIds = new Set();
   const inputs = filtered.map((row, index) => {
     const rowNumber = index + 2;
+    const importId = clean(row.import_id);
     const slug = clean(row.article_slug);
     const title = clean(row.title);
     const companySlugs = split(row.company_slug);
@@ -75,13 +78,16 @@ async function run() {
     const conceptSlugs = split(row.concept_slugs);
     const bodyMarkdown = clean(row.article_body);
     const status = (clean(row.status) || "draft").toLowerCase();
-    const missing = [["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["article_tag", categoryInput], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
+    const missing = [["import_id", importId], ["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["article_tag", categoryInput], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) throw new Error(`Articles row ${rowNumber}: ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required.`);
+    if (!validSlug(importId)) throw new Error(`Articles row ${rowNumber}: import_id must use lowercase letters, numbers and hyphens only.`);
     if (!validSlug(slug)) throw new Error(`Articles row ${rowNumber}: article_slug must use lowercase letters, numbers and hyphens only.`);
+    if (importIds.has(importId)) throw new Error(`Articles row ${rowNumber}: duplicate import_id "${importId}".`);
     if (slugs.has(slug)) throw new Error(`Articles row ${rowNumber}: duplicate article_slug "${slug}".`);
     if (!["draft", "published"].includes(status)) throw new Error(`Articles row ${rowNumber}: status must be draft or published.`);
+    importIds.add(importId);
     slugs.add(slug);
-    return { rowNumber, slug, title, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, publishedAt: isoDate(row.published_at, rowNumber, status === "published"), body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
+    return { rowNumber, importId, slug, title, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, publishedAt: isoDate(row.published_at, rowNumber, status === "published"), body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
   });
 
   const companySlugs = [...new Set(inputs.flatMap((input) => input.companySlugs))];
@@ -95,7 +101,7 @@ async function run() {
     client.fetch(`*[_type == "author" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: authorSlugs }),
     peopleSlugs.length ? client.fetch(`*[_type == "founder" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: peopleSlugs }) : [],
     conceptSlugs.length ? client.fetch(`*[_type == "concept" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: conceptSlugs }) : [],
-    client.fetch(`*[_type == "post" && slug.current in $slugs]|order(_updatedAt asc){...,"slugValue":slug.current}`, { slugs: [...slugs] }),
+    client.fetch(`*[_type == "post" && (importId in $importIds || slug.current in $slugs)]|order(_updatedAt asc){...,"slugValue":slug.current}`, { importIds: [...importIds], slugs: [...slugs] }),
   ]);
   const companiesBySlug = new Map(companies.map((item) => [item.slug, item._id]));
   const categoriesBySlug = new Map(categories.map((item) => [item.slug, item._id]));
@@ -103,10 +109,22 @@ async function run() {
   const peopleBySlug = new Map(people.map((item) => [item.slug, item._id]));
   const conceptsBySlug = new Map(concepts.map((item) => [item.slug, item._id]));
   const articlesBySlug = new Map();
-  for (const article of articles) {
-    const pair = articlesBySlug.get(article.slugValue) || {};
+  const articlesByImportId = new Map();
+
+  function addArticlePair(map, key, article, identityLabel) {
+    if (!key) return;
+    const baseId = article._id.replace(/^drafts\./, "");
+    const pair = map.get(key) || { baseId };
+    if (pair.baseId !== baseId) {
+      throw new Error(`Sanity contains multiple article records with ${identityLabel} "${key}". Resolve the duplicate before importing.`);
+    }
     pair[article._id.startsWith("drafts.") ? "draft" : "published"] = article;
-    articlesBySlug.set(article.slugValue, pair);
+    map.set(key, pair);
+  }
+
+  for (const article of articles) {
+    addArticlePair(articlesBySlug, article.slugValue, article, "slug");
+    addArticlePair(articlesByImportId, article.importId, article, "import_id");
   }
 
   const errors = [];
@@ -123,9 +141,15 @@ async function run() {
   let skipped = 0;
   let heldAsDraft = 0;
   for (const [index, input] of inputs.entries()) {
-    const existing = articlesBySlug.get(input.slug) || {};
+    const existingById = articlesByImportId.get(input.importId);
+    const existingBySlug = articlesBySlug.get(input.slug);
+    if (existingById && existingBySlug && existingById.baseId !== existingBySlug.baseId) {
+      throw new Error(`Articles row ${input.rowNumber}: import_id "${input.importId}" and article_slug "${input.slug}" point to different Sanity articles. Resolve the duplicate before importing.`);
+    }
+    const existing = existingById || existingBySlug || {};
     const values = {
       _type: "post",
+      importId: input.importId,
       title: input.title,
       slug: { _type: "slug", current: input.slug },
       body: input.body,

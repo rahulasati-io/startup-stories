@@ -477,3 +477,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Editorial control:** Added an optional Article promotion field in Sanity. Selecting Popular makes a published article eligible for the Popular articles sidebar; Standard remains the default. This avoids presenting recent stories as popularity data before real analytics exist.
 - **Article ending:** Removed duplicate company and person cards from the body and added the Sanity last-updated date plus one contextual Read next article. No public source list is displayed; research URLs remain internal.
 - **Reason:** Rahul wanted wider article text, moderate left spacing, useful content on the right, a newsletter conversion point, and stronger discovery without a sidebar table of contents or a public sources section.
+
+### 2026-09-23 — Made spreadsheet article updates identity-safe
+
+- **Status:** Implemented
+- **Problem:** Changing an `article_slug` in the workbook created a second Sanity article because the importer previously treated the public slug as the record's identity.
+- **Change:** Added a required, permanent `import_id` column to the master article workbook and a hidden `importId` field in Sanity. The importer now finds an existing article by `import_id` first, while still using the slug as a fallback for older records.
+- **Editorial rule:** Never edit or reuse an article's `import_id`. Titles, public slugs, article copy and SEO fields may be changed without creating a new record.
+- **Performance:** Replaced order-sensitive JSON comparisons with structural equality, so records whose data has not changed are skipped instead of rewritten.
+- **Cleanup audit:** Identified five legacy duplicates caused by earlier slug changes: Zomato, Safari Industries, Eternal, Jio Platforms and Policybazaar. These old copies require a one-time deletion; unrelated articles are not included in that cleanup.
