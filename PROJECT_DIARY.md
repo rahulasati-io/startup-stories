@@ -486,3 +486,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Editorial rule:** Never edit or reuse an article's `import_id`. Titles, public slugs, article copy and SEO fields may be changed without creating a new record.
 - **Performance:** Replaced order-sensitive JSON comparisons with structural equality, so records whose data has not changed are skipped instead of rewritten.
 - **Cleanup audit:** Identified five legacy duplicates caused by earlier slug changes: Zomato, Safari Industries, Eternal, Jio Platforms and Policybazaar. These old copies require a one-time deletion; unrelated articles are not included in that cleanup.
+
+### 2026-09-24 — Added launch trust and policy pages
+
+- **Status:** Implemented
+- **Change:** Added About, Editorial and Research Policy, Contact, Privacy Policy and Terms of Use pages with page-specific metadata and canonical URLs.
+- **Editorial standards:** Published the source hierarchy, verification approach, AI-assistance safeguards, independence rules and correction process that apply to MisterStory content.
+- **Newsletter disclosure:** Added a plain-language consent notice and Privacy Policy link immediately below every Kit newsletter form. The Privacy Policy documents the email, referrer and short-lived rate-limiting information currently processed by the site.
+- **Discovery:** Added all five pages to the footer and generated sitemap. The existing robots file continues to allow the public site while excluding Studio and API routes.
+- **Launch dependency:** `hello@misterstory.in` is now the public contact and privacy address and must be created or forwarded before launch. The legal operator name and a more specific court jurisdiction can be added after the operating entity is finalised.

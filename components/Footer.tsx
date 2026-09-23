@@ -30,8 +30,8 @@ export default async function Footer() {
 
   return (
     <footer className="bg-zinc-950 text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-4 md:px-8 md:py-16">
-        <div className="md:col-span-2">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-4 md:px-8 md:py-16">
+        <div>
           <Link href="/" className="text-2xl font-extrabold tracking-tight">MisterStory</Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-400">
             Stories, strategies and numbers that explain how interesting businesses work.
@@ -50,6 +50,17 @@ export default async function Footer() {
           </nav>
         </div>
 
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">MisterStory</h2>
+          <nav className="mt-4 space-y-3 text-sm text-zinc-300" aria-label="About and legal navigation">
+            <Link href="/about" className="block hover:text-white">About</Link>
+            <Link href="/editorial-policy" className="block hover:text-white">Editorial Policy</Link>
+            <Link href="/contact" className="block hover:text-white">Contact</Link>
+            <Link href="/privacy" className="block hover:text-white">Privacy Policy</Link>
+            <Link href="/terms" className="block hover:text-white">Terms of Use</Link>
+          </nav>
+        </div>
+
         {uniqueCompanies.length > 0 && (
           <div>
             <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Popular Companies</h2>
@@ -65,7 +76,7 @@ export default async function Footer() {
       </div>
 
       <div className="border-t border-zinc-800 px-5 py-5 text-center text-xs text-zinc-500">
-        © 2026 MisterStory. All rights reserved.
+        © 2026 MisterStory. General information only; not investment advice.
       </div>
     </footer>
   );

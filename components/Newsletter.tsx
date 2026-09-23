@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useId, useState } from "react";
+import Link from "next/link";
 
 type SubmissionState = "idle" | "submitting" | "success" | "error";
 
@@ -110,6 +111,13 @@ export default function Newsletter({ compact = false }: { compact?: boolean }) {
               {submissionState === "submitting" ? "Subscribing…" : "Subscribe"}
             </button>
           </div>
+
+          <p className="mt-3 text-xs leading-5 text-zinc-500">
+            By subscribing, you agree to receive the MisterStory newsletter. You can unsubscribe at any time.{" "}
+            <Link href="/privacy" className="font-semibold underline underline-offset-2 hover:text-zinc-800">
+              Privacy Policy
+            </Link>
+          </p>
 
           <p
             className={`mt-2 min-h-5 text-sm ${
