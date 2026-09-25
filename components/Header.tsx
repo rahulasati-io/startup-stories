@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import GlobalSearch from "@/components/GlobalSearch";
 
 const navigation = [
   { href: "/companies", label: "Companies" },
@@ -15,8 +16,10 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:h-20 md:px-8">
-          <Link href="/" className="text-2xl font-extrabold tracking-tight text-zinc-950">MisterStory</Link>
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-5 md:h-20 md:gap-6 md:px-8">
+          <Link href="/" className="shrink-0 text-2xl font-extrabold tracking-tight text-zinc-950">MisterStory</Link>
+
+          <GlobalSearch />
 
           <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
             {navigation.map((item) => (
@@ -31,7 +34,7 @@ export default function Header() {
             aria-label="Open menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg md:hidden"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg md:hidden"
           >
             ☰
           </button>

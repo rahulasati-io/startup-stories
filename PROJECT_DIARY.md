@@ -495,3 +495,20 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Newsletter disclosure:** Added a plain-language consent notice and Privacy Policy link immediately below every Kit newsletter form. The Privacy Policy documents the email, referrer and short-lived rate-limiting information currently processed by the site.
 - **Discovery:** Added all five pages to the footer and generated sitemap. The existing robots file continues to allow the public site while excluding Studio and API routes.
 - **Launch dependency:** `hello@misterstory.in` is now the public contact and privacy address and must be created or forwarded before launch. The legal operator name and a more specific court jurisdiction can be added after the operating entity is finalised.
+
+### 2026-09-24 — Added a reusable article launch audit
+
+- **Status:** Implemented
+- **Change:** Added an `audit:articles` command that compares published Sanity articles with the master article workbook. It checks stable identities, duplicate slugs, company and author links, publication dates, article structure and SEO fields.
+- **Scope:** The default audit checks published Business Model articles because Strategy publishing is deferred. Optional command flags can inspect one article, include all categories or show articles that passed.
+- **Output:** Articles are classified as `PASS`, `REVIEW` or `BLOCKED` in both the terminal and `outputs/audits/article-audit-report.xlsx`. The workbook contains Summary, Blocked, Review, Passed and All articles tabs. Missing live content, missing SEO descriptions and unresolved relationships are launch blockers. Length guidance and lighter structural concerns are review warnings.
+- **Source URL policy:** Source URLs remain optional internal research notes. The audit does not require or validate them, and they cannot block an article from launch.
+- **Reason:** Rahul wanted a repeatable content-readiness check before making MisterStory public, rather than manually opening every article and spreadsheet row.
+
+### 2026-09-25 — Added global site search
+
+- **Status:** Implemented
+- **Change:** Added one search control to the shared public header, so it appears on every page. Suggestions are grouped into Companies, People and Articles, and every result links directly to its destination page.
+- **Mobile behaviour:** The compact mobile search button opens a dedicated full-screen search view without crowding the header.
+- **Discovery:** Added a `/search` results page for broader searches while keeping the homepage company search as the larger, discovery-focused entry point.
+- **Reason:** Rahul wanted visitors to move between research pages without returning to the homepage or opening a directory first.
