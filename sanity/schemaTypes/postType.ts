@@ -14,6 +14,16 @@ export const postType = defineType({
     }),
 
     defineField({
+      name: "thumbnailTitle",
+      title: "Thumbnail Title",
+      type: "string",
+      description:
+        "Optional shorter title used only inside the automatic thumbnail. The article heading and SEO title stay unchanged.",
+      validation: (Rule) =>
+        Rule.max(80).warning("Keep the thumbnail title under 80 characters for the clearest artwork."),
+    }),
+
+    defineField({
       name: "slug",
       title: "Slug",
       type: "slug",
@@ -117,9 +127,18 @@ export const postType = defineType({
 
     defineField({
       name: "publishedAt",
-      title: "Publish Date",
+      title: "First Published",
       type: "datetime",
-      validation: (Rule) => Rule.required(),
+      description: "Set automatically the first time this article goes live.",
+      readOnly: true,
+    }),
+
+    defineField({
+      name: "contentUpdatedAt",
+      title: "Last Content Update",
+      type: "datetime",
+      description: "Set automatically when a previously published article is changed and published again.",
+      readOnly: true,
     }),
 
     defineField({

@@ -9,7 +9,9 @@
     "lint": "eslint",
     "audit:articles": "node --env-file=.env.local scripts/audit-articles.mjs",
     "import:logos": "node --env-file=.env.local scripts/import-company-logos.mjs",
-    "import:articles": "node --env-file=.env.local scripts/import-articles.mjs"
+    "import:articles": "node --env-file=.env.local scripts/import-articles.mjs",
+    "import:articles:check": "node --env-file=.env.local scripts/import-articles.mjs --dry-run",
+    "import:articles:publish": "node --env-file=.env.local scripts/import-articles.mjs --publish"
   },
   "dependencies": {
     "@portabletext/react": "^8.0.1",

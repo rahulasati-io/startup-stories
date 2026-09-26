@@ -38,20 +38,11 @@ const categoryAliases = new Map([
   ["people-leadership", "people-leadership"],
 ]);
 const same = (left, right) => isDeepStrictEqual(left ?? null, right ?? null);
-const controlledFields = ["importId", "title", "slug", "body", "category", "company", "author", "publishedAt", "seoTitle", "seoDescription"];
+const controlledFields = ["importId", "title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription"];
+const publicContentFields = ["title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription"];
 const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => !["_rev", "_createdAt", "_updatedAt"].includes(field)));
 const changed = (document, values, fields = controlledFields) => fields.some((field) => !same(document?.[field], values[field]));
 const progress = (done, total) => { if (done % 20 === 0 || done === total) console.log(`Articles: ${done}/${total} checked`); };
-
-function isoDate(value, rowNumber, required) {
-  if (!value) {
-    if (required) throw new Error(`Articles row ${rowNumber}: published_at is required when status is published.`);
-    return undefined;
-  }
-  const date = value instanceof Date ? value : new Date(clean(value));
-  if (Number.isNaN(date.getTime())) throw new Error(`Articles row ${rowNumber}: published_at must be a valid date.`);
-  return date.toISOString();
-}
 
 async function run() {
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: true });
@@ -68,6 +59,7 @@ async function run() {
     const importId = clean(row.import_id);
     const slug = clean(row.article_slug);
     const title = clean(row.title);
+    const thumbnailTitle = clean(row.thumbnail_title) || undefined;
     const companySlugs = split(row.company_slug);
     const categoryInput = clean(row.article_tag) || clean(row.category_slug);
     const categorySlug = categoryAliases.get(categoryInput.toLowerCase()) || categoryInput;
@@ -87,7 +79,7 @@ async function run() {
     if (!["draft", "published"].includes(status)) throw new Error(`Articles row ${rowNumber}: status must be draft or published.`);
     importIds.add(importId);
     slugs.add(slug);
-    return { rowNumber, importId, slug, title, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, publishedAt: isoDate(row.published_at, rowNumber, status === "published"), body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
+    return { rowNumber, importId, slug, title, thumbnailTitle, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
   });
 
   const companySlugs = [...new Set(inputs.flatMap((input) => input.companySlugs))];
@@ -151,23 +143,26 @@ async function run() {
       _type: "post",
       importId: input.importId,
       title: input.title,
+      thumbnailTitle: input.thumbnailTitle,
       slug: { _type: "slug", current: input.slug },
       body: input.body,
       category: reference(categoriesBySlug.get(input.categorySlug)),
       company: input.companySlugs.map((slug) => ({ ...reference(companiesBySlug.get(slug)), _key: `company-${slug}` })),
       author: reference(authorsBySlug.get(input.authorSlug)),
-      publishedAt: input.publishedAt,
       seoTitle: input.seoTitle,
       seoDescription: input.seoDescription,
     };
     const comparedFields = [...controlledFields];
+    const comparedPublicFields = [...publicContentFields];
     if (input.hasPeopleSlugs) {
       values.people = input.peopleSlugs.map((slug) => ({ ...reference(peopleBySlug.get(slug)), _key: `person-${slug}` }));
       comparedFields.push("people");
+      comparedPublicFields.push("people");
     }
     if (input.hasConceptSlugs) {
       values.concepts = input.conceptSlugs.map((slug) => ({ ...reference(conceptsBySlug.get(slug)), _key: `concept-${slug}` }));
       comparedFields.push("concepts");
+      comparedPublicFields.push("concepts");
     }
     const shouldPublish = input.status === "published" && allowPublish;
     if (input.status === "published" && !allowPublish) heldAsDraft += 1;
@@ -180,7 +175,15 @@ async function run() {
     if (!dryRun) {
       const baseId = existing.published?._id || existing.draft?._id.replace(/^drafts\./, "") || randomUUID();
       const source = stripSystem(existing.draft || existing.published || {});
-      const document = { ...source, ...values, _id: shouldPublish ? baseId : `drafts.${baseId}` };
+      const now = new Date().toISOString();
+      const dateValues = shouldPublish
+        ? existing.published
+          ? changed(existing.published, values, comparedPublicFields)
+            ? { contentUpdatedAt: now }
+            : {}
+          : { publishedAt: source.publishedAt || now }
+        : {};
+      const document = { ...source, ...values, ...dateValues, _id: shouldPublish ? baseId : `drafts.${baseId}` };
       if (shouldPublish) {
         let transaction = client.transaction().createOrReplace(document);
         if (existing.draft) transaction = transaction.delete(existing.draft._id);

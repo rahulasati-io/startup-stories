@@ -12,6 +12,7 @@ import {structureTool} from 'sanity/structure'
 import {apiVersion, dataset, projectId} from './sanity/env'
 import {schema} from './sanity/schemaTypes'
 import {structure} from './sanity/structure'
+import {ArticlePublishAction} from './sanity/actions/ArticlePublishAction'
 
 const companyRecordTemplates = [
   ['companyPersonRole', 'Person role'],
@@ -41,6 +42,15 @@ export default defineConfig({
         }),
       })),
     ],
+  },
+  document: {
+    actions: (previousActions, context) => {
+      if (context.schemaType !== 'post') return previousActions
+
+      return previousActions.map((action) =>
+        action.action === 'publish' ? ArticlePublishAction : action,
+      )
+    },
   },
   plugins: [
     structureTool({structure}),

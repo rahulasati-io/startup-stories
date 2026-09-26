@@ -44,6 +44,7 @@ const PERSON_QUERY = defineQuery(/* groq */ `
       title,
       "slug": slug.current,
       publishedAt,
+      contentUpdatedAt,
       seoDescription,
       "imageUrl": mainImage.asset->url,
       "imageAlt": coalesce(mainImage.alt, title),
@@ -65,6 +66,7 @@ type RelatedArticle = {
   title: string;
   slug: string;
   publishedAt?: string;
+  contentUpdatedAt?: string;
   seoDescription?: string;
   imageUrl?: string;
   imageAlt?: string;
@@ -238,7 +240,7 @@ export default async function PersonPage({ params }: Props) {
                     <p className="text-xs font-bold uppercase tracking-[.12em] text-amber-700">{article.category?.title || "Article"}</p>
                     <h3 className="mt-2 text-xl font-semibold leading-tight group-hover:text-amber-800">{article.title}</h3>
                     {article.seoDescription && <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-600">{article.seoDescription}</p>}
-                    {article.publishedAt && <p className="mt-4 text-xs text-zinc-500">{new Date(article.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>}
+                    {(article.contentUpdatedAt || article.publishedAt) && <p className="mt-4 text-xs text-zinc-500">{article.contentUpdatedAt ? "Updated" : "Published"} {new Date(article.contentUpdatedAt || article.publishedAt!).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>}
                   </div>
                 </Link>
                 );

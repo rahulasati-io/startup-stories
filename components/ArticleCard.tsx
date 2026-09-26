@@ -5,9 +5,11 @@ import { articleHref, articleImageUrl, type ArticleCardData } from "@/lib/articl
 export default function ArticleCard({ article, compact = false }: { article: ArticleCardData; compact?: boolean }) {
   const imageUrl = articleImageUrl(article);
   const isGeneratedThumbnail = imageUrl?.startsWith("/api/article-thumbnail/") ?? false;
-  const date = article.publishedAt
-    ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(article.publishedAt))
+  const displayDate = article.contentUpdatedAt || article.publishedAt;
+  const date = displayDate
+    ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(displayDate))
     : null;
+  const dateLabel = article.contentUpdatedAt ? "Updated" : "Published";
   const companyNames = article.companies.map((company) => company.name);
   const companyLabel = companyNames.length > 2
     ? `${companyNames.slice(0, 2).join(" · ")} +${companyNames.length - 2}`
@@ -26,7 +28,7 @@ export default function ArticleCard({ article, compact = false }: { article: Art
           <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] font-semibold text-zinc-500">
             {companyLabel && <span>{companyLabel}</span>}
             {companyLabel && date && <span aria-hidden="true">•</span>}
-            {date && <time dateTime={article.publishedAt || undefined}>{date}</time>}
+            {date && <time dateTime={displayDate || undefined}>{dateLabel} {date}</time>}
           </div>
         </div>
       </Link>

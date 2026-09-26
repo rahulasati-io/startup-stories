@@ -91,7 +91,7 @@ function stableHash(value: string) {
 
 export const BUSINESS_MODEL_PATTERN_COUNT = 21;
 export const BUSINESS_MODEL_LIGHT_PALETTE_COUNT = 30;
-export const BUSINESS_MODEL_THUMBNAIL_VERSION = "7";
+export const BUSINESS_MODEL_THUMBNAIL_VERSION = "8";
 
 export function getBusinessModelPattern(companyName: string, industry?: string | null) {
   const value = industry?.trim().toLowerCase() || "";

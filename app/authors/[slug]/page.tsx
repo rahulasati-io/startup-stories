@@ -37,6 +37,7 @@ const AUTHOR_QUERY = defineQuery(/* groq */ `
       "categorySlug": category->slug.current,
       "description": coalesce(seoDescription, array::join(body[0...2].children[].text, " ")),
       publishedAt,
+      contentUpdatedAt,
       "companies": coalesce(company[]->{
         name,
         "slug": slug.current,

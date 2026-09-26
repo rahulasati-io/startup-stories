@@ -512,3 +512,27 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Mobile behaviour:** The compact mobile search button opens a dedicated full-screen search view without crowding the header.
 - **Discovery:** Added a `/search` results page for broader searches while keeping the homepage company search as the larger, discovery-focused entry point.
 - **Reason:** Rahul wanted visitors to move between research pages without returning to the homepage or opening a directory first.
+
+### 2026-09-26 — Automated article dates and shortened thumbnail titles
+
+- **Status:** Implemented
+- **Dates:** Article drafts no longer require a spreadsheet publication date. The first time an article goes live, the importer or Sanity Publish action records `publishedAt`; a later publication containing changed article content records `contentUpdatedAt`. Unchanged spreadsheet imports remain skipped and do not move either timestamp.
+- **Display:** Public article pages and article cards show one contextual date: `Published` until the first revision, then `Updated`. The automatic Sanity system timestamp is no longer presented as an editorial update date.
+- **Thumbnails:** Added an optional `thumbnailTitle` field and `thumbnail_title` spreadsheet column. It changes only the generated thumbnail; the public article heading and SEO title remain unchanged. Automatic font scaling remains as a fallback when the shorter title is blank.
+- **Reason:** Rahul wanted long automatic thumbnails to remain readable and article dates to reflect actual publication and content changes without manual spreadsheet maintenance.
+- **Import safety:** Added dedicated `import:articles:check` and `import:articles:publish` commands so Windows cannot silently drop the dry-run or publish mode when forwarding trailing command flags.
+
+### 2026-09-26 — Made thumbnail motifs text-neutral
+
+- **Status:** Implemented
+- **Change:** Removed descriptive wording embedded inside generated business-model motifs, including labels such as marketplace, recurring revenue, product portfolio and revenue streams.
+- **Preserved:** Article title, company name, Business Model category label, MisterStory branding, colour palette and decorative shapes remain visible.
+- **Cache:** Increased the generated-thumbnail version so existing article cards request the updated design instead of retaining cached images.
+- **Reason:** A decorative motif can suit the visual composition without accurately describing every company's business model, so the graphics should not make unsupported claims.
+
+### 2026-09-26 — Added article publication time
+
+- **Status:** Implemented
+- **Change:** Article bylines now show the precise Published or Updated time in Indian Standard Time alongside the date.
+- **Scope:** Directory cards remain date-only to keep the browsing interface compact.
+- **Reason:** Rahul wanted readers to see when an article actually went live, not only the calendar date.

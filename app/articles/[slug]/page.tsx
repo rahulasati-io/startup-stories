@@ -29,6 +29,7 @@ const ARTICLE_QUERY = defineQuery(/* groq */ `
       "slug": slug.current
     },
     publishedAt,
+    contentUpdatedAt,
     body,
     mainImage{
       asset,
@@ -93,6 +94,7 @@ type Article = {
     slug?: string;
   };
   publishedAt?: string;
+  contentUpdatedAt?: string;
   body?: PortableTextBlock[];
   mainImage?: {
     asset?: Parameters<typeof urlFor>[0];
@@ -226,6 +228,7 @@ export async function generateMetadata({
       url: canonicalUrl,
       type: "article",
       publishedTime: article.publishedAt,
+      modifiedTime: article.contentUpdatedAt,
       authors: article.author?.name ? [article.author.name] : undefined,
       images: socialImage ? [socialImage] : undefined,
     },
@@ -382,16 +385,20 @@ export default async function ArticlePage({
           <span>·</span>
           <span>{readingTime}</span>
 
-          {article.publishedAt && (
+          {(article.contentUpdatedAt || article.publishedAt) && (
             <>
               <span>·</span>
-              <span>
-                {new Date(article.publishedAt).toLocaleDateString("en-IN", {
+              <time dateTime={article.contentUpdatedAt || article.publishedAt}>
+                {article.contentUpdatedAt ? "Updated" : "Published"} {new Date(article.contentUpdatedAt || article.publishedAt!).toLocaleString("en-IN", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
-                })}
-              </span>
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                  timeZone: "Asia/Kolkata",
+                })} IST
+              </time>
             </>
           )}
         </div>
@@ -437,14 +444,6 @@ export default async function ArticlePage({
                   </div>
                 </section>
               )}
-
-              <p className="mt-12 border-t border-zinc-200 pt-5 text-sm text-zinc-500">
-                Last updated {new Date(article._updatedAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
 
               {nextArticle && (
                 <Link href={`/articles/${nextArticle.slug}`} className="group mt-6 block rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm">

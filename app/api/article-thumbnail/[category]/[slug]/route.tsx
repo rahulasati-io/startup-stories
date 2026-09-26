@@ -17,6 +17,7 @@ const THUMBNAIL_QUERY = defineQuery(/* groq */ `
     category->slug.current == $category
   ][0] {
     title,
+    thumbnailTitle,
     "companyName": coalesce(company[0]->name, "MisterStory"),
     "industry": coalesce(company[0]->industryCategory->name, company[0]->industry)
   }
@@ -24,27 +25,32 @@ const THUMBNAIL_QUERY = defineQuery(/* groq */ `
 
 type ThumbnailArticle = {
   title: string;
+  thumbnailTitle?: string;
   companyName: string;
   industry?: string;
 };
 
 function titleSize(title: string) {
-  if (title.length > 72) return 54;
-  if (title.length > 52) return 62;
-  if (title.length > 34) return 72;
-  return 82;
+  if (title.length > 96) return 40;
+  if (title.length > 78) return 46;
+  if (title.length > 60) return 52;
+  if (title.length > 42) return 60;
+  if (title.length > 30) return 68;
+  return 76;
 }
 
 function DecorativePattern({ pattern, palette }: { pattern: number; palette: ThumbnailPalette }) {
   const shell = { display: "flex", position: "absolute" as const, right: 42, top: 142, width: 330, height: 380, borderRadius: 42, background: palette.panel, padding: 32 };
-  const label = { display: "flex", fontSize: 17, fontWeight: 800, letterSpacing: 2, color: palette.foreground };
+  // Keep the motifs purely visual. Business-model labels can be misleading
+  // when a company spans several revenue models.
+  const label = { display: "none" as const };
 
   if (pattern === 1) return (
     <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}>
       <div style={label}>MARKETPLACE</div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>{[0, 1, 2].map((item) => <div key={item} style={{ width: 42, height: 42, borderRadius: 21, background: palette.background, border: `7px solid ${palette.accent}` }} />)}</div>
-        <div style={{ display: "flex", width: 132, height: 132, borderRadius: 34, alignItems: "center", justifyContent: "center", background: palette.accent, color: palette.background, fontSize: 22, fontWeight: 900 }}>PLATFORM</div>
+        <div style={{ display: "flex", width: 132, height: 132, borderRadius: 34, alignItems: "center", justifyContent: "center", background: palette.accent }} />
       </div>
       <div style={{ ...label, alignSelf: "flex-end" }}>BUYERS ↔ SELLERS</div>
     </div>
@@ -59,7 +65,7 @@ function DecorativePattern({ pattern, palette }: { pattern: number; palette: Thu
   if (pattern === 3) return (
     <div style={{ ...shell, flexDirection: "column", gap: 24 }}>
       <div style={label}>PRODUCT PORTFOLIO</div>
-      {["CORE", "ADJACENT", "NEW"].map((item, index) => <div key={item} style={{ display: "flex", width: 250 - index * 24, height: 70, marginLeft: index * 24, borderRadius: 20, alignItems: "center", paddingLeft: 25, background: index === 0 ? palette.accent : palette.background, color: index === 0 ? palette.background : palette.foreground, fontSize: 19, fontWeight: 900, letterSpacing: 2 }}>{item}</div>)}
+      {["core", "adjacent", "new"].map((item, index) => <div key={item} style={{ display: "flex", width: 250 - index * 24, height: 70, marginLeft: index * 24, borderRadius: 20, background: index === 0 ? palette.accent : palette.background }} />)}
     </div>
   );
   if (pattern === 4) return (
@@ -89,19 +95,19 @@ function DecorativePattern({ pattern, palette }: { pattern: number; palette: Thu
     <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>RENEWAL CYCLE</div><div style={{ display: "flex", width: 250, height: 205, alignSelf: "center", borderRadius: 28, background: palette.background, borderTop: `42px solid ${palette.accent}`, alignItems: "center", justifyContent: "center" }}><div style={{ display: "flex", fontSize: 74, fontWeight: 900 }}>↻</div></div><div style={label}>MONTH AFTER MONTH</div></div>
   );
   if (pattern === 10) return (
-    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>MEMBERSHIP TIERS</div><div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>{["FREE", "PLUS", "PREMIUM"].map((item, index) => <div key={item} style={{ display: "flex", width: 170 + index * 42, height: 58, borderRadius: 18, alignItems: "center", justifyContent: "center", background: index === 2 ? palette.accent : palette.background, color: index === 2 ? palette.background : palette.foreground, fontSize: 17, fontWeight: 900, letterSpacing: 2 }}>{item}</div>)}</div><div style={label}>UPGRADE VALUE</div></div>
+    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>MEMBERSHIP TIERS</div><div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>{["small", "medium", "large"].map((item, index) => <div key={item} style={{ display: "flex", width: 170 + index * 42, height: 58, borderRadius: 18, background: index === 2 ? palette.accent : palette.background }} />)}</div><div style={label}>UPGRADE VALUE</div></div>
   );
   if (pattern === 11) return (
     <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>BUSINESS SEGMENTS</div><div style={{ display: "flex", gap: 14, alignItems: "flex-end" }}>{[115, 170, 225].map((height, index) => <div key={height} style={{ display: "flex", width: 76, height, borderRadius: "38px 38px 18px 18px", background: index === 1 ? palette.accent : palette.background }} />)}</div><div style={label}>MIX OF REVENUE</div></div>
   );
   if (pattern === 12) return (
-    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>VALUE CHAIN</div><div style={{ display: "flex", flexDirection: "column", gap: 20 }}>{["MAKE", "MOVE", "SELL"].map((item, index) => <div key={item} style={{ display: "flex", width: 255, height: 62, borderRadius: 18, paddingLeft: 24, alignItems: "center", background: index === 2 ? palette.accent : palette.background, color: index === 2 ? palette.background : palette.foreground, fontSize: 20, fontWeight: 900, letterSpacing: 2 }}>{item}<div style={{ display: "flex", marginLeft: "auto", marginRight: 18 }}>→</div></div>)}</div><div style={label}>END-TO-END MARGIN</div></div>
+    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>VALUE CHAIN</div><div style={{ display: "flex", flexDirection: "column", gap: 20 }}>{["one", "two", "three"].map((item, index) => <div key={item} style={{ display: "flex", width: 255, height: 62, borderRadius: 18, alignItems: "center", background: index === 2 ? palette.accent : palette.background }}><div style={{ display: "flex", marginLeft: "auto", marginRight: 18 }}>→</div></div>)}</div><div style={label}>END-TO-END MARGIN</div></div>
   );
   if (pattern === 13) return (
-    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>BUSINESS ECOSYSTEM</div><div style={{ display: "flex", width: 245, height: 245, alignSelf: "center", borderRadius: 123, border: `22px solid ${palette.background}`, alignItems: "center", justifyContent: "center" }}><div style={{ display: "flex", width: 125, height: 125, borderRadius: 63, background: palette.accent, alignItems: "center", justifyContent: "center", color: palette.background, fontSize: 19, fontWeight: 900 }}>CORE</div></div><div style={label}>ONE CORE, MANY LAYERS</div></div>
+    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>BUSINESS ECOSYSTEM</div><div style={{ display: "flex", width: 245, height: 245, alignSelf: "center", borderRadius: 123, border: `22px solid ${palette.background}`, alignItems: "center", justifyContent: "center" }}><div style={{ display: "flex", width: 125, height: 125, borderRadius: 63, background: palette.accent }} /></div><div style={label}>ONE CORE, MANY LAYERS</div></div>
   );
   if (pattern === 14) return (
-    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>COMMISSION SPLIT</div><div style={{ display: "flex", flexDirection: "column", gap: 22 }}><div style={{ display: "flex", height: 70, borderRadius: 22, overflow: "hidden" }}><div style={{ display: "flex", width: 190, background: palette.background }} /><div style={{ display: "flex", width: 76, background: palette.accent }} /></div><div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 900 }}><div style={{ display: "flex" }}>PARTNER</div><div style={{ display: "flex" }}>FEE</div></div></div><div style={{ display: "flex", alignSelf: "flex-end", fontSize: 74, fontWeight: 900, color: palette.accent }}>%</div></div>
+    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>COMMISSION SPLIT</div><div style={{ display: "flex", flexDirection: "column", gap: 22 }}><div style={{ display: "flex", height: 70, borderRadius: 22, overflow: "hidden" }}><div style={{ display: "flex", width: 190, background: palette.background }} /><div style={{ display: "flex", width: 76, background: palette.accent }} /></div></div><div style={{ display: "flex", alignSelf: "flex-end", fontSize: 74, fontWeight: 900, color: palette.accent }}>%</div></div>
   );
   if (pattern === 15) return (
     <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>PAYMENT RAILS</div><div style={{ display: "flex", flexDirection: "column", gap: 22 }}>{[0, 1, 2].map((item) => <div key={item} style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ display: "flex", width: 46, height: 46, borderRadius: 23, background: palette.background }} /><div style={{ display: "flex", width: 145, height: 10, borderRadius: 5, background: palette.accent }} /><div style={{ display: "flex", fontSize: 32, fontWeight: 900 }}>₹</div></div>)}</div><div style={label}>VOLUME × TAKE RATE</div></div>
@@ -119,12 +125,12 @@ function DecorativePattern({ pattern, palette }: { pattern: number; palette: Thu
     <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between", alignItems: "center" }}><div style={{ ...label, alignSelf: "flex-start" }}>REVENUE FUNNEL</div><div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>{[260, 205, 150, 95].map((width, index) => <div key={width} style={{ display: "flex", width, height: 48, borderRadius: 14, background: index === 3 ? palette.accent : palette.background }} />)}</div><div style={{ display: "flex", width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", background: palette.accent, color: palette.background, fontSize: 34, fontWeight: 900 }}>₹</div></div>
   );
   if (pattern === 20) return (
-    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>MULTIPLE STREAMS</div><div style={{ display: "flex", flexDirection: "column", gap: 26 }}>{[210, 175, 135].map((width, index) => <div key={width} style={{ display: "flex", alignSelf: "flex-end", alignItems: "center", gap: 14 }}><div style={{ display: "flex", width, height: 16, borderRadius: 8, background: index === 0 ? palette.accent : palette.background }} /><div style={{ display: "flex", fontSize: 28, fontWeight: 900 }}>→</div></div>)}</div><div style={{ display: "flex", alignSelf: "flex-end", width: 150, height: 78, borderRadius: 22, alignItems: "center", justifyContent: "center", background: palette.accent, color: palette.background, fontSize: 23, fontWeight: 900 }}>REVENUE</div></div>
+    <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}><div style={label}>MULTIPLE STREAMS</div><div style={{ display: "flex", flexDirection: "column", gap: 26 }}>{[210, 175, 135].map((width, index) => <div key={width} style={{ display: "flex", alignSelf: "flex-end", alignItems: "center", gap: 14 }}><div style={{ display: "flex", width, height: 16, borderRadius: 8, background: index === 0 ? palette.accent : palette.background }} /><div style={{ display: "flex", fontSize: 28, fontWeight: 900 }}>→</div></div>)}</div><div style={{ display: "flex", alignSelf: "flex-end", width: 150, height: 78, borderRadius: 22, background: palette.accent }} /></div>
   );
   return (
     <div style={{ ...shell, flexDirection: "column", justifyContent: "space-between" }}>
       <div style={label}>REVENUE STREAMS</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>{["PRODUCT", "SERVICE", "OTHER"].map((item, index) => <div key={item} style={{ display: "flex", alignItems: "center", gap: 14 }}><div style={{ display: "flex", width: 105, fontSize: 16, fontWeight: 800 }}>{item}</div><div style={{ display: "flex", width: 95 + index * 36, height: 18, borderRadius: 9, background: index === 1 ? palette.accent : palette.background }} /></div>)}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>{[95, 131, 167].map((width, index) => <div key={width} style={{ display: "flex", alignItems: "center" }}><div style={{ display: "flex", width, height: 18, borderRadius: 9, background: index === 1 ? palette.accent : palette.background }} /></div>)}</div>
       <div style={{ display: "flex", alignSelf: "flex-end", width: 130, height: 76, borderRadius: 22, alignItems: "center", justifyContent: "center", background: palette.accent, color: palette.background, fontSize: 42, fontWeight: 900 }}>₹</div>
     </div>
   );
@@ -152,6 +158,7 @@ export async function GET(
 
   const palette = getBusinessModelPalette(article.companyName);
   const pattern = getBusinessModelPattern(article.companyName, article.industry);
+  const displayTitle = article.thumbnailTitle || article.title;
 
   return new ImageResponse(
     (
@@ -200,14 +207,16 @@ export async function GET(
           style={{
             display: "flex",
             maxWidth: 700,
-            fontSize: titleSize(article.title),
+            maxHeight: 250,
+            overflow: "hidden",
+            fontSize: titleSize(displayTitle),
             lineHeight: 1.02,
             letterSpacing: -2.5,
             fontWeight: 800,
             zIndex: 2,
           }}
         >
-          {article.title}
+          {displayTitle}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 2 }}>
