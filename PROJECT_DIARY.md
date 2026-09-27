@@ -560,3 +560,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Behaviour:** Every published Sanity article linked to the company appears in the same section, while each card retains its own category label such as Business Model, Company Story or People & Leadership. Companies without a published article show a clear empty-state message instead of hiding the section.
 - **Preserved:** Article URLs, category records, importer fields and company references are unchanged.
 - **Reason:** Company pages now support several kinds of editorial coverage, so the page heading should not imply that every linked article is about the business model.
+
+### 2026-09-27 — Removed public person-profile photos
+
+- **Status:** Implemented
+- **Change:** Removed the portrait and initial-placeholder block from the public person-page header and expanded the name, role and profile links into the available width.
+- **Performance:** Person-page queries no longer request the profile photo because the public page does not render it.
+- **Preserved:** The Sanity photo field and uploaded assets remain untouched so portrait support can be restored later without re-uploading images.
+- **Reason:** Profile photos are not part of the current launch workflow and would create the same incomplete-coverage problem as company logos.

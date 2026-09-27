@@ -24,8 +24,6 @@ const PERSON_QUERY = defineQuery(/* groq */ `
     linkedinUrl,
     seoTitle,
     seoDescription,
-    "photoUrl": photo.asset->url,
-    "photoAlt": coalesce(photo.alt, name),
     "companyRoles": *[_type == "companyPersonRole" && person._ref == ^._id]
       | order(status asc, startDate asc) {
         _id,
@@ -82,8 +80,6 @@ type Person = {
   linkedinUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
-  photoUrl?: string;
-  photoAlt?: string;
   companyRoles?: CompanyRole[];
   relatedArticles?: RelatedArticle[];
 };
@@ -156,15 +152,8 @@ export default async function PersonPage({ params }: Props) {
       <Header />
       <main className="min-h-screen bg-[#f7f6f2] text-zinc-950">
         <section className="border-b border-zinc-200">
-          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 md:grid-cols-[180px_1fr] md:items-center md:px-8 md:py-20">
-            <div className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-3xl border border-zinc-200 bg-white">
-              {person.photoUrl ? (
-                <Image src={person.photoUrl} alt={person.photoAlt || person.name} width={320} height={320} className="h-full w-full object-cover" priority />
-              ) : (
-                <span className="text-5xl font-semibold text-zinc-300">{person.name.charAt(0)}</span>
-              )}
-            </div>
-            <div>
+          <div className="mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
+            <div className="max-w-4xl">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-amber-700">Person profile</p>
               <h1 className="mt-3 text-5xl font-semibold tracking-[-.04em] md:text-6xl">{person.name}</h1>
               {person.role && <p className="mt-4 text-lg text-zinc-600">{person.role}</p>}
