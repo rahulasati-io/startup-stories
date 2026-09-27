@@ -584,3 +584,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Directory:** Removed the repeated `MisterStory author` label and redundant `View author profile` instruction because the complete card is already an obvious link.
 - **Ordering:** Authors are now ranked by the number of published articles, with alphabetical ordering when article counts are equal.
 - **Reason:** The author directory should surface active contributors first and keep every card concise without relying on incomplete image coverage.
+
+### Post-launch — Improve newsletter sender trust
+
+- **Status:** Deferred until after the public website launch
+- **Planned flow:** After Kit confirmation, show a branded success page with an `Add MisterStory to contacts` vCard download and a prepared `Send a quick hello` email link.
+- **Optional guidance:** Explain how Gmail users can move the first newsletter to Primary. Do not claim that the website can automatically favourite, trust or whitelist the sender.
+- **Dependency:** Configure and verify the final MisterStory sending address and domain authentication before building this flow.
+- **Reason:** This can improve subscriber onboarding and email deliverability, but it is not required for the initial launch.
