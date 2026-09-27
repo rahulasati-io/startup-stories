@@ -576,3 +576,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Discovery:** Added Authors to the desktop/mobile header, footer, global search suggestions, full search results and sitemap.
 - **Profiles:** Existing `/authors/[slug]` pages remain the canonical author pages and continue to show verified biography, education, experience, LinkedIn and published work.
 - **Reason:** Individual author pages already existed but lacked a public directory and navigation entry, making them difficult to find except through an article byline.
+
+### 2026-09-27 — Simplified author presentation
+
+- **Status:** Implemented
+- **Profiles:** Removed the public author portrait and initial-placeholder block, expanded the profile header text, and stopped requesting the image in the public author query. Sanity image fields and assets remain preserved.
+- **Directory:** Removed the repeated `MisterStory author` label and redundant `View author profile` instruction because the complete card is already an obvious link.
+- **Ordering:** Authors are now ranked by the number of published articles, with alphabetical ordering when article counts are equal.
+- **Reason:** The author directory should surface active contributors first and keep every card concise without relying on incomplete image coverage.

@@ -1,6 +1,5 @@
 import { PortableText, type PortableTextBlock } from "@portabletext/react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
 import ArticleCard from "@/components/ArticleCard";
@@ -21,7 +20,6 @@ const AUTHOR_QUERY = defineQuery(/* groq */ `
     experience,
     linkedinUrl,
     "slug": slug.current,
-    "imageUrl": image.asset->url,
     "articles": *[
       _type == "post" &&
       author._ref == ^._id &&
@@ -58,7 +56,6 @@ type Author = {
   education?: string[];
   experience?: string[];
   linkedinUrl?: string;
-  imageUrl?: string;
   articles?: ArticleCardData[];
 };
 
@@ -90,11 +87,8 @@ export default async function AuthorPage({ params }: Props) {
       <Header />
       <main className="min-h-screen bg-[#f7f6f2] text-zinc-950">
         <section className="border-b border-zinc-200">
-          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 md:grid-cols-[180px_1fr] md:items-center md:px-8 md:py-20">
-            <div className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-3xl border border-zinc-200 bg-white">
-              {author.imageUrl ? <Image src={author.imageUrl} alt={author.name} width={320} height={320} className="h-full w-full object-cover" priority /> : <span className="text-5xl font-semibold text-zinc-300">{author.name.charAt(0)}</span>}
-            </div>
-            <div>
+          <div className="mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
+            <div className="max-w-4xl">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-amber-700">MisterStory author</p>
               <h1 className="mt-3 text-5xl font-semibold tracking-[-.04em] md:text-6xl">{author.name}</h1>
               {author.role && <p className="mt-4 text-lg text-zinc-600">{author.role}</p>}

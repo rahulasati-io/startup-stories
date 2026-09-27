@@ -46,11 +46,9 @@ export default function AuthorDirectory({ authors }: { authors: DirectoryAuthor[
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visibleAuthors.map((author) => (
               <Link key={author._id} href={`/authors/${author.slug}`} className="group rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md">
-                <p className="text-xs font-bold uppercase tracking-[.12em] text-amber-700">MisterStory author</p>
-                <h2 className="mt-3 text-xl font-semibold group-hover:text-amber-800">{author.name}</h2>
+                <h2 className="text-xl font-semibold group-hover:text-amber-800">{author.name}</h2>
                 {author.role && <p className="mt-2 text-sm leading-6 text-zinc-600">{author.role}</p>}
                 <p className="mt-5 text-xs text-zinc-500">{author.articleCount} {author.articleCount === 1 ? "published article" : "published articles"}</p>
-                <p className="mt-3 text-sm font-semibold text-amber-700">View author profile →</p>
               </Link>
             ))}
           </div>

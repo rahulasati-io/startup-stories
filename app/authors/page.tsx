@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 const AUTHORS_QUERY = defineQuery(/* groq */ `
-  *[_type == "author" && defined(name) && defined(slug.current)] | order(name asc) {
+  *[_type == "author" && defined(name) && defined(slug.current)] {
     _id,
     name,
     "slug": slug.current,
@@ -27,7 +27,7 @@ const AUTHORS_QUERY = defineQuery(/* groq */ `
       !(_id in path("drafts.**")) &&
       defined(slug.current)
     ])
-  }
+  } | order(articleCount desc, name asc)
 `);
 
 export default async function AuthorsPage() {
