@@ -552,3 +552,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Workflow:** The in-sheet result is an immediate writing aid. The existing `npm run audit:articles` command remains the final pre-publication check because it can compare the workbook with Sanity, validate live references, and confirm publication state.
 - **Workbook reliability:** Kept the generated workbook free of Excel table objects and retained normal filters and dropdowns, avoiding the table-repair warning seen in an earlier generated file.
 - **Reason:** Rahul wanted problems shown beside each article while editing so bulk updates can be corrected without repeatedly opening a separate audit report.
+
+### 2026-09-27 — Unified company-page articles
+
+- **Status:** Implemented
+- **Change:** Replaced the Business Model, Strategy and Related Articles groupings on company pages with one `Articles about [Company]` section and one `Articles` page-navigation link.
+- **Behaviour:** Every published Sanity article linked to the company appears in the same section, while each card retains its own category label such as Business Model, Company Story or People & Leadership. Companies without a published article show a clear empty-state message instead of hiding the section.
+- **Preserved:** Article URLs, category records, importer fields and company references are unchanged.
+- **Reason:** Company pages now support several kinds of editorial coverage, so the page heading should not imply that every linked article is about the business model.
