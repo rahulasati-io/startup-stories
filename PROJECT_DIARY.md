@@ -543,3 +543,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Removed logo requests and logo rendering from company-page headers, the company directory and group-company cards. Directory and group cards now use consistent company-initial badges, while the company header uses the reclaimed width for its name and description.
 - **Preserved:** Existing logo fields, uploaded Sanity assets and the optional logo importer remain untouched so logos can be restored later without repeating uploads.
 - **Reason:** Logos are not part of the current launch workflow, created inconsistent coverage and added avoidable image-loading work.
+
+### 2026-09-27 — Added live audit guidance to the article workbook
+
+- **Status:** Implemented
+- **Change:** Added `audit_status` and `audit_warnings` as the final two columns in the master article workbook. Each populated article row now updates automatically to `PASS`, `REVIEW`, or `BLOCKED` and explains missing required fields, duplicate slugs or permanent import IDs, article structure concerns, thumbnail-title length, and SEO-length guidance.
+- **Safety:** Audit formulas are prepared for up to 1,000 rows but are not sent to Sanity. The importer now ignores rows that contain formulas but no actual article input, preventing empty records and keeping large future workbooks safe.
+- **Workflow:** The in-sheet result is an immediate writing aid. The existing `npm run audit:articles` command remains the final pre-publication check because it can compare the workbook with Sanity, validate live references, and confirm publication state.
+- **Workbook reliability:** Kept the generated workbook free of Excel table objects and retained normal filters and dropdowns, avoiding the table-repair warning seen in an earlier generated file.
+- **Reason:** Rahul wanted problems shown beside each article while editing so bulk updates can be corrected without repeatedly opening a separate audit report.

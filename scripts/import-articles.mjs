@@ -46,10 +46,16 @@ const progress = (done, total) => { if (done % 20 === 0 || done === total) conso
 
 async function run() {
   const rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: true });
-  const filtered = rawRows.filter((row) =>
-    (!articleFilter || clean(row.article_slug) === articleFilter) &&
-    (!companyFilter || split(row.company_slug).includes(companyFilter))
-  );
+  const filtered = rawRows.filter((row) => {
+    // Audit formulas can be prefilled below the active article rows. Ignore
+    // those rows unless they contain actual article input.
+    const hasArticleInput = [row.article_slug, row.import_id, row.title, row.article_body]
+      .some((value) => Boolean(clean(value)));
+
+    return hasArticleInput &&
+      (!articleFilter || clean(row.article_slug) === articleFilter) &&
+      (!companyFilter || split(row.company_slug).includes(companyFilter));
+  });
   if (!filtered.length) throw new Error("No matching rows were found on the Articles sheet.");
 
   const slugs = new Set();

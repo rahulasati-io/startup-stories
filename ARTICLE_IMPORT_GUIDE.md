@@ -2,6 +2,13 @@
 
 Use `outputs/article-importers/articles-template.xlsx` for every article type. Add articles only to the **Articles** sheet; the **Example** and **Instructions** sheets are never imported.
 
+The last two columns are automatic helpers:
+
+- `audit_status` shows `PASS`, `REVIEW`, or `BLOCKED` as the row is edited.
+- `audit_warnings` explains missing fields, duplicate permanent IDs or slugs, article-structure issues, and SEO-length guidance.
+
+Do not type over those formula columns. They are prefilled for 1,000 rows and are never imported into Sanity. Fix `BLOCKED` rows before importing; assess `REVIEW` messages editorially. The spreadsheet checks are deliberately fast and local. Run `npm run audit:articles` before publishing for deeper checks against live Sanity documents, links, references, and publication state.
+
 ## Before importing
 
 - `company_slug` must already exist in Sanity. Separate multiple companies with semicolons; the first is treated as the primary company.
@@ -44,5 +51,7 @@ npm run import:articles:publish -- "outputs/article-importers/articles-template.
 ```
 
 Use the dedicated `:check` and `:publish` commands exactly as shown. This keeps the safety mode inside the command instead of relying on trailing flags that Windows may omit. Without the publish command, even rows marked `published` are safely imported as drafts. Existing articles are matched by permanent `import_id` first, manually uploaded images and other fields are preserved, and unchanged articles are skipped.
+
+Rows containing only prefilled audit formulas are ignored by the importer, so unused prepared rows cannot create empty or phantom articles.
 
 `People featured` and `Concepts` can be managed either from the spreadsheet or in Sanity. A populated spreadsheet cell replaces that article's corresponding references. A blank cell preserves the references already stored in Sanity.
