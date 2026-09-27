@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -11,8 +10,6 @@ export type Company = {
   industry: string | null;
   foundedYear: number | null;
   description: string | null;
-  logoUrl: string | null;
-  logoAlt: string | null;
 };
 
 type CompanyDirectoryProps = {
@@ -29,7 +26,7 @@ export default function CompanyDirectory({
   companies,
   excludeSlug,
   title = "Explore Companies",
-  description = "Find company stories, strategies, business models, people and key numbers.",
+  description = "Find company profiles, articles, people and key numbers.",
   previewLimit,
   showViewAll = false,
   initialSearch = "",
@@ -108,12 +105,8 @@ export default function CompanyDirectory({
             {displayedCompanies.map((company) => (
               <Link key={company._id} href={`/companies/${company.slug}`} className="group flex min-h-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200 bg-white p-2">
-                    {company.logoUrl ? (
-                      <Image src={company.logoUrl} alt={company.logoAlt || `${company.name} logo`} width={96} height={64} className="h-full w-full object-contain" />
-                    ) : (
-                      <span className="text-lg font-extrabold text-zinc-700">{company.name?.charAt(0).toUpperCase() || "?"}</span>
-                    )}
+                  <div aria-hidden="true" className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-lg font-extrabold text-zinc-700">
+                    {company.name?.charAt(0).toUpperCase() || "?"}
                   </div>
                   <span className="text-lg text-zinc-400 transition group-hover:translate-x-0.5 group-hover:text-zinc-950">→</span>
                 </div>

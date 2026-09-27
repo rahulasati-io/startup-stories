@@ -11,9 +11,7 @@ export const COMPANIES_QUERY = defineQuery(/* groq */ `
     "slug": slug.current,
     "industry": coalesce(industryCategory->name, industry),
     foundedYear,
-    description,
-    "logoUrl": logo.asset->url,
-    "logoAlt": coalesce(logo.alt, name + " logo")
+    description
   }
 `);
 

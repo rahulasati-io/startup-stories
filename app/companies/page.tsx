@@ -8,7 +8,7 @@ import { client } from "@/sanity/lib/client";
 
 export const metadata: Metadata = {
   title: "Companies | MisterStory",
-  description: "Explore company profiles, business models, strategies, founders and key numbers.",
+  description: "Explore company profiles, articles, people and key numbers.",
 };
 
 export default async function CompaniesPage({

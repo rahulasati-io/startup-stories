@@ -536,3 +536,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Article bylines now show the precise Published or Updated time in Indian Standard Time alongside the date.
 - **Scope:** Directory cards remain date-only to keep the browsing interface compact.
 - **Reason:** Rahul wanted readers to see when an article actually went live, not only the calendar date.
+
+### 2026-09-27 — Removed public company-logo dependency
+
+- **Status:** Implemented
+- **Change:** Removed logo requests and logo rendering from company-page headers, the company directory and group-company cards. Directory and group cards now use consistent company-initial badges, while the company header uses the reclaimed width for its name and description.
+- **Preserved:** Existing logo fields, uploaded Sanity assets and the optional logo importer remain untouched so logos can be restored later without repeating uploads.
+- **Reason:** Logos are not part of the current launch workflow, created inconsistent coverage and added avoidable image-loading work.
