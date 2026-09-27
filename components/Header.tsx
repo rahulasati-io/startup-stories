@@ -7,6 +7,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 const navigation = [
   { href: "/companies", label: "Companies" },
   { href: "/people", label: "People" },
+  { href: "/authors", label: "Authors" },
   { href: "/articles", label: "Articles" },
 ];
 

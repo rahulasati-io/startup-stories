@@ -568,3 +568,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Performance:** Person-page queries no longer request the profile photo because the public page does not render it.
 - **Preserved:** The Sanity photo field and uploaded assets remain untouched so portrait support can be restored later without re-uploading images.
 - **Reason:** Profile photos are not part of the current launch workflow and would create the same incomplete-coverage problem as company logos.
+
+### 2026-09-27 — Made the Authors area publicly discoverable
+
+- **Status:** Implemented
+- **Directory:** Added `/authors` with search by author name, role, education or experience, plus published-article counts and links to the existing individual author profiles.
+- **Discovery:** Added Authors to the desktop/mobile header, footer, global search suggestions, full search results and sitemap.
+- **Profiles:** Existing `/authors/[slug]` pages remain the canonical author pages and continue to show verified biography, education, experience, LinkedIn and published work.
+- **Reason:** Individual author pages already existed but lacked a public directory and navigation entry, making them difficult to find except through an article byline.

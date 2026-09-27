@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EMPTY_SEARCH_RESULTS, type GlobalSearchResults } from "@/lib/global-search";
 
-type SearchItem = { id: string; kind: "Company" | "Person" | "Article"; title: string; subtitle: string; href: string };
+type SearchItem = { id: string; kind: "Company" | "Person" | "Author" | "Article"; title: string; subtitle: string; href: string };
 
 const searchIcon = <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
 
@@ -24,6 +24,7 @@ export default function GlobalSearch() {
   const items = useMemo<SearchItem[]>(() => [
     ...results.companies.map((item) => ({ id: item._id, kind: "Company" as const, title: item.name, subtitle: item.industry || "Company", href: `/companies/${item.slug}` })),
     ...results.people.map((item) => ({ id: item._id, kind: "Person" as const, title: item.name, subtitle: item.role || "Person", href: `/people/${item.slug}` })),
+    ...results.authors.map((item) => ({ id: item._id, kind: "Author" as const, title: item.name, subtitle: item.role || "MisterStory author", href: `/authors/${item.slug}` })),
     ...results.articles.map((item) => ({ id: item._id, kind: "Article" as const, title: item.title, subtitle: [item.category, item.company].filter(Boolean).join(" · ") || "Article", href: `/articles/${item.slug}` })),
   ], [results]);
 
@@ -96,7 +97,7 @@ export default function GlobalSearch() {
     if (term.length < 2) return <p className="px-4 py-8 text-center text-sm text-zinc-500">Type at least two letters to search.</p>;
     if (loading) return <p className="px-4 py-8 text-center text-sm text-zinc-500">Searching…</p>;
     if (error) return <p className="px-4 py-8 text-center text-sm text-red-700">Search is temporarily unavailable. Please try again.</p>;
-    if (!items.length) return <p className="px-4 py-8 text-center text-sm text-zinc-500">No matching companies, people or articles.</p>;
+    if (!items.length) return <p className="px-4 py-8 text-center text-sm text-zinc-500">No matching companies, people, authors or articles.</p>;
 
     let itemIndex = -1;
     const group = (label: string, groupItems: SearchItem[]) => groupItems.length ? <div>
@@ -114,6 +115,7 @@ export default function GlobalSearch() {
     return <>
       {group("Companies", items.filter((item) => item.kind === "Company"))}
       {group("People", items.filter((item) => item.kind === "Person"))}
+      {group("Authors", items.filter((item) => item.kind === "Author"))}
       {group("Articles", items.filter((item) => item.kind === "Article"))}
       <Link href={`/search?q=${encodeURIComponent(term)}`} onClick={() => { setOpen(false); setMobileOpen(false); }} className="mt-2 block border-t border-zinc-100 px-4 py-3 text-center text-sm font-bold text-amber-800 hover:bg-amber-50">View all results →</Link>
       <p className="sr-only" aria-live="polite">{items.length} results found</p>
@@ -125,8 +127,8 @@ export default function GlobalSearch() {
     <div className="relative hidden max-w-md md:block">
       <form onSubmit={(event) => { event.preventDefault(); submit(); }} className="flex h-10 items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-4 transition focus-within:border-zinc-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-zinc-100">
         <span className="text-zinc-500">{searchIcon}</span>
-        <label htmlFor="global-search" className="sr-only">Search companies, people and articles</label>
-        <input id="global-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded={open} aria-controls="global-search-results" autoComplete="off" value={query} onFocus={() => setOpen(true)} onChange={(event) => { changeQuery(event.target.value); setOpen(true); }} onKeyDown={handleKeys} placeholder="Search companies, people, articles…" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-500" />
+        <label htmlFor="global-search" className="sr-only">Search companies, people, authors and articles</label>
+        <input id="global-search" type="search" role="combobox" aria-autocomplete="list" aria-expanded={open} aria-controls="global-search-results" autoComplete="off" value={query} onFocus={() => setOpen(true)} onChange={(event) => { changeQuery(event.target.value); setOpen(true); }} onKeyDown={handleKeys} placeholder="Search MisterStory…" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-zinc-500" />
       </form>
       {open && <div id="global-search-results" className="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-[min(34rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-zinc-200 bg-white py-1 shadow-2xl">{resultList()}</div>}
     </div>
@@ -138,7 +140,7 @@ export default function GlobalSearch() {
         <div className="flex items-center gap-3">
           <form onSubmit={(event) => { event.preventDefault(); submit(); }} className="flex h-11 flex-1 items-center gap-2 rounded-full border border-zinc-300 bg-zinc-50 px-4 focus-within:border-zinc-500">
             <span className="text-zinc-500">{searchIcon}</span>
-            <label htmlFor="mobile-global-search" className="sr-only">Search companies, people and articles</label>
+            <label htmlFor="mobile-global-search" className="sr-only">Search companies, people, authors and articles</label>
             <input ref={mobileInputRef} id="mobile-global-search" type="search" value={query} onChange={(event) => changeQuery(event.target.value)} onKeyDown={handleKeys} autoComplete="off" placeholder="Search MisterStory…" className="min-w-0 flex-1 bg-transparent text-base outline-none" />
           </form>
           <button type="button" onClick={() => setMobileOpen(false)} className="text-sm font-semibold text-zinc-700">Cancel</button>

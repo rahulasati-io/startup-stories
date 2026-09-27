@@ -3,10 +3,11 @@ import { defineQuery } from "next-sanity";
 export type GlobalSearchResults = {
   companies: { _id: string; name: string; slug: string; industry: string | null }[];
   people: { _id: string; name: string; slug: string; role: string | null }[];
+  authors: { _id: string; name: string; slug: string; role: string | null }[];
   articles: { _id: string; title: string; slug: string; category: string | null; company: string | null }[];
 };
 
-export const EMPTY_SEARCH_RESULTS: GlobalSearchResults = { companies: [], people: [], articles: [] };
+export const EMPTY_SEARCH_RESULTS: GlobalSearchResults = { companies: [], people: [], authors: [], articles: [] };
 
 export const GLOBAL_SEARCH_QUERY = defineQuery(/* groq */ `
   {
@@ -23,6 +24,17 @@ export const GLOBAL_SEARCH_QUERY = defineQuery(/* groq */ `
     },
     "people": *[
       _type == "founder" &&
+      defined(name) &&
+      defined(slug.current) &&
+      (name match $search || slug.current match $search || role match $search)
+    ] | order(name asc)[0...4] {
+      _id,
+      name,
+      "slug": slug.current,
+      role
+    },
+    "authors": *[
+      _type == "author" &&
       defined(name) &&
       defined(slug.current) &&
       (name match $search || slug.current match $search || role match $search)
@@ -72,6 +84,17 @@ export const GLOBAL_SEARCH_PAGE_QUERY = defineQuery(/* groq */ `
       "slug": slug.current,
       role
     },
+    "authors": *[
+      _type == "author" &&
+      defined(name) &&
+      defined(slug.current) &&
+      (name match $search || slug.current match $search || role match $search)
+    ] | order(name asc)[0...30] {
+      _id,
+      name,
+      "slug": slug.current,
+      role
+    },
     "articles": *[
       _type == "post" &&
       !(_id in path("drafts.**")) &&
@@ -98,4 +121,3 @@ export function toSearchMatch(value: string) {
     .map((part) => `${part}*`)
     .join(" ");
 }
-
