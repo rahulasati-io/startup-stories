@@ -650,3 +650,15 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Replaced the plain header and footer text with a reusable white `MisterStory` wordmark on a near-black rounded background. Added a matching stacked-text square mark for browser and mobile icons.
 - **Files:** The reusable vector artwork lives in `public/brand`, while Next.js serves generated favicon, general icon and Apple touch-icon assets from the root app segment.
 - **Reason:** The public website needed a consistent visual identity instead of relying only on unstyled text branding.
+
+### Post-launch — Operating roadmap and deferred housekeeping
+
+- **Status:** Planned
+- **Daily publishing routine:** Define a sustainable schedule for researching, drafting, checking, importing and publishing articles and shorter news posts. Include ownership, quality checks and a simple daily/weekly target rather than publishing without review.
+- **Caching and indexing:** Document how Sanity, Next.js and Vercel caching affect article updates, how revalidation works, and how this differs from Google crawling and indexing. Create one reliable publish/update workflow so fresh articles and corrections appear promptly without unnecessary cache clearing.
+- **Content expansion:** Continue populating the site with basic company profiles, people profiles and articles. Prioritize complete, interconnected records over isolated pages.
+- **Authority and traction:** Build authoritative, source-backed evergreen articles alongside timely business-news coverage. Use clear original analysis, internal linking, author attribution and update dates to improve trust and search visibility.
+- **Monetisation:** Evaluate Google AdSense or a suitable alternative only after the site has enough original content, stable traffic, policy compliance and an acceptable reading experience. Define restrained ad placements before enabling ads.
+- **Privacy housekeeping:** Update the Privacy Policy so it accurately explains the currently enabled, cookie-free Vercel Web Analytics.
+- **Contact housekeeping:** Replace the temporary Gmail contact address with `hello@misterstory.in` after domain email or forwarding is configured.
+- **Reason:** These are the next recurring and post-launch tasks after the core website, production domain, sitemap, Search Console, analytics and first logo were completed.
