@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 280" role="img" aria-labelledby="title description">
+  <title id="title">MisterStory</title>
+  <desc id="description">The MisterStory name in white on a dark rounded background.</desc>
+  <rect x="20" y="20" width="1240" height="240" rx="58" fill="#18181b"/>
+  <text
+    x="640"
+    y="194"
+    fill="#fff"
+    font-family="Manrope, Arial, Helvetica, sans-serif"
+    font-size="158"
+    font-weight="800"
+    letter-spacing="-9"
+    text-anchor="middle"
+  >MisterStory</text>
+</svg>

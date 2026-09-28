@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { defineQuery } from "next-sanity";
+import SiteLogo from "@/components/SiteLogo";
 import { sanityFetch } from "@/sanity/lib/live";
 
 const FOOTER_COMPANIES_QUERY = defineQuery(/* groq */ `
@@ -32,7 +33,9 @@ export default async function Footer() {
     <footer className="bg-zinc-950 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-4 md:px-8 md:py-16">
         <div>
-          <Link href="/" className="text-2xl font-extrabold tracking-tight">MisterStory</Link>
+          <Link href="/" aria-label="MisterStory home" className="inline-block">
+            <SiteLogo className="h-10 w-auto" />
+          </Link>
           <p className="mt-4 max-w-sm text-sm leading-6 text-zinc-400">
             Stories, strategies and numbers that explain how interesting businesses work.
           </p>

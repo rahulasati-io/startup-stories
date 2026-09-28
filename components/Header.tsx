@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import GlobalSearch from "@/components/GlobalSearch";
+import SiteLogo from "@/components/SiteLogo";
 
 const navigation = [
   { href: "/companies", label: "Companies" },
@@ -18,7 +19,9 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-5 md:h-20 md:gap-6 md:px-8">
-          <Link href="/" className="shrink-0 text-2xl font-extrabold tracking-tight text-zinc-950">MisterStory</Link>
+          <Link href="/" aria-label="MisterStory home" className="shrink-0">
+            <SiteLogo className="h-8 w-auto md:h-9" />
+          </Link>
 
           <GlobalSearch />
 
@@ -45,7 +48,9 @@ export default function Header() {
       {menuOpen && (
         <div className="fixed inset-0 z-[60] bg-white">
           <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-5">
-            <Link href="/" onClick={() => setMenuOpen(false)} className="text-2xl font-extrabold tracking-tight">MisterStory</Link>
+            <Link href="/" aria-label="MisterStory home" onClick={() => setMenuOpen(false)}>
+              <SiteLogo className="h-8 w-auto" />
+            </Link>
             <button
               type="button"
               aria-label="Close menu"

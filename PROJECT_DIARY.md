@@ -643,3 +643,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Planned setup:** Create a MisterStory GA4 web data stream for `https://misterstory.in`, store its `G-...` Measurement ID in Vercel, add consent-aware tracking, update the privacy information, deploy through beta and verify the Realtime report.
 - **Preserved:** Keep Vercel Web Analytics enabled as the lightweight, cookie-free source for basic page, referrer, country and device reporting.
 - **Reason:** GA4 will provide deeper acquisition, campaign, user-journey and newsletter-conversion reporting, but it is not necessary for the website to launch.
+
+### 2026-09-29 — Added the first MisterStory logo system
+
+- **Status:** Implemented
+- **Change:** Replaced the plain header and footer text with a reusable white `MisterStory` wordmark on a near-black rounded background. Added a matching stacked-text square mark for browser and mobile icons.
+- **Files:** The reusable vector artwork lives in `public/brand`, while Next.js serves generated favicon, general icon and Apple touch-icon assets from the root app segment.
+- **Reason:** The public website needed a consistent visual identity instead of relying only on unstyled text branding.
