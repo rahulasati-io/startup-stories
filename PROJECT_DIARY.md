@@ -636,3 +636,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Behaviour:** Production page views and anonymous visitor information will appear in the Vercel Analytics dashboard after the updated website is deployed and visited.
 - **Privacy:** The integration uses Vercel's cookie-free, anonymized Web Analytics and does not add an advertising tracker.
 - **Reason:** Rahul needs basic launch visibility into traffic, popular pages, referrers, countries, devices and browsers.
+
+### Post-launch — Add Google Analytics 4
+
+- **Status:** Deferred until after the initial launch
+- **Planned setup:** Create a MisterStory GA4 web data stream for `https://misterstory.in`, store its `G-...` Measurement ID in Vercel, add consent-aware tracking, update the privacy information, deploy through beta and verify the Realtime report.
+- **Preserved:** Keep Vercel Web Analytics enabled as the lightweight, cookie-free source for basic page, referrer, country and device reporting.
+- **Reason:** GA4 will provide deeper acquisition, campaign, user-journey and newsletter-conversion reporting, but it is not necessary for the website to launch.
