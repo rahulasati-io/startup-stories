@@ -628,3 +628,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** The Contact and Privacy pages now read the public email address from one shared configuration file. `rahul13asati@gmail.com` is the temporary launch address.
 - **Future switch:** When `hello@misterstory.in` is ready, changing the shared value once will update every public use of the address.
 - **Reason:** Email forwarding should not delay launch, while centralization avoids searching through several pages during the later domain-email transition.
+
+### 2026-09-29 — Enabled privacy-friendly website analytics
+
+- **Status:** Implemented
+- **Change:** Enabled Vercel Web Analytics on the existing Hobby plan and added its official Next.js tracking component to the root layout.
+- **Behaviour:** Production page views and anonymous visitor information will appear in the Vercel Analytics dashboard after the updated website is deployed and visited.
+- **Privacy:** The integration uses Vercel's cookie-free, anonymized Web Analytics and does not add an advertising tracker.
+- **Reason:** Rahul needs basic launch visibility into traffic, popular pages, referrers, countries, devices and browsers.
