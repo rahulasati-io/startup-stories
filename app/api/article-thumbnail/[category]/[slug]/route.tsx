@@ -3,7 +3,6 @@ import { defineQuery } from "next-sanity";
 import {
   getBusinessModelPalette,
   getBusinessModelPattern,
-  isBusinessModelCategory,
   type ThumbnailPalette,
 } from "@/lib/business-model-thumbnail";
 import { client } from "@/sanity/lib/client";
@@ -18,6 +17,7 @@ const THUMBNAIL_QUERY = defineQuery(/* groq */ `
   ][0] {
     title,
     thumbnailTitle,
+    "categoryTitle": category->title,
     "companyName": coalesce(company[0]->name, "MisterStory"),
     "industry": coalesce(company[0]->industryCategory->name, company[0]->industry)
   }
@@ -26,6 +26,7 @@ const THUMBNAIL_QUERY = defineQuery(/* groq */ `
 type ThumbnailArticle = {
   title: string;
   thumbnailTitle?: string;
+  categoryTitle?: string;
   companyName: string;
   industry?: string;
 };
@@ -142,12 +143,6 @@ export async function GET(
 ) {
   const { category, slug } = await params;
 
-  if (!isBusinessModelCategory(category)) {
-    return new Response("Automatic thumbnail is not enabled for this category.", {
-      status: 404,
-    });
-  }
-
   const article = await client.fetch<ThumbnailArticle | null>(
     THUMBNAIL_QUERY,
     { category, slug },
@@ -156,9 +151,17 @@ export async function GET(
 
   if (!article) return new Response("Article not found.", { status: 404 });
 
-  const palette = getBusinessModelPalette(article.companyName);
-  const pattern = getBusinessModelPattern(article.companyName, article.industry);
+  const thumbnailSeed = `${article.companyName}:${category}:${slug}`;
+  const palette = getBusinessModelPalette(thumbnailSeed);
+  const pattern = getBusinessModelPattern(thumbnailSeed, article.industry);
   const displayTitle = article.thumbnailTitle || article.title;
+  const categoryLabel =
+    article.categoryTitle ||
+    category
+      .split("-")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
   return new ImageResponse(
     (
@@ -196,7 +199,7 @@ export async function GET(
               letterSpacing: 2.5,
             }}
           >
-            BUSINESS MODEL
+            {categoryLabel.toUpperCase()}
           </div>
           <div style={{ display: "flex", fontSize: 24, fontWeight: 800, letterSpacing: 3 }}>
             MISTERSTORY

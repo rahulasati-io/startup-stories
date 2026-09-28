@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { absoluteUrl } from "@/lib/site-url";
 import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
-import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
+import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 
 const ARTICLE_QUERY = defineQuery(/* groq */ `
   *[
@@ -202,7 +202,7 @@ export async function generateMetadata({
   const canonicalUrl = absoluteUrl(
     `/articles/${article.slug}`,
   );
-  const generatedThumbnail = getBusinessModelThumbnailPath(
+  const generatedThumbnail = getGeneratedArticleThumbnailPath(
     article.categorySlug,
     article.slug,
     article._updatedAt,
@@ -355,7 +355,7 @@ export default async function ArticlePage({
 
   const heroImage = article.mainImage?.asset
     ? urlFor(article.mainImage).width(1600).url()
-    : getBusinessModelThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
+    : getGeneratedArticleThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
 
   return (
     <>

@@ -614,3 +614,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Added a clearly visible, confirmation-protected Unpublish action to Author documents in Sanity Studio. Unpublishing retains the author draft instead of deleting the record.
 - **Publishing decision:** Rahul remains the only published author for now. Articles assigned to other authors are reassigned to Rahul before those author profiles are unpublished, preventing broken article bylines and strong-reference errors.
 - **Reason:** MisterStory should publicly show only the author who is currently active, while retaining the other prepared author records for possible later use.
+
+### 2026-09-28 — Extended generated thumbnails to every article category
+
+- **Status:** Implemented
+- **Change:** The automatic MisterStory thumbnail fallback now applies to every published article category, not only Business Model articles. The thumbnail badge uses the article's actual category, and the category, company and article slug contribute to stable visual variation.
+- **Priority:** A custom social image remains first choice on article cards, followed by a custom main image. The generated thumbnail appears only when neither custom image is available. On the article page, a custom main image remains the first choice.
+- **Reason:** Every article needs a useful visual without requiring manual thumbnail production, while custom editorial artwork must continue to override automation.

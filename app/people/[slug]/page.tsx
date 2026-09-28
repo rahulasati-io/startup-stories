@@ -8,7 +8,7 @@ import CompanyRow from "@/components/CompanyRow";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Newsletter from "@/components/Newsletter";
-import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
+import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import PeopleRow from "@/components/PeopleRow";
 import { absoluteUrl } from "@/lib/site-url";
 import { client } from "@/sanity/lib/client";
@@ -44,7 +44,7 @@ const PERSON_QUERY = defineQuery(/* groq */ `
       publishedAt,
       contentUpdatedAt,
       seoDescription,
-      "imageUrl": mainImage.asset->url,
+      "imageUrl": coalesce(socialImage.asset->url, mainImage.asset->url),
       "imageAlt": coalesce(mainImage.alt, title),
       "category": category->{title, "slug": slug.current}
     }
@@ -217,7 +217,7 @@ export default async function PersonPage({ params }: Props) {
             <h2 className="mt-3 text-3xl font-semibold">Articles about {person.name}</h2>
             <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {relatedArticles.map((article) => {
-                const imageUrl = article.imageUrl || getBusinessModelThumbnailPath(article.category?.slug, article.slug, article._updatedAt);
+                const imageUrl = article.imageUrl || getGeneratedArticleThumbnailPath(article.category?.slug, article.slug, article._updatedAt);
                 return (
                 <Link key={article._id} href={`/articles/${article.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg">
                   {imageUrl ? (

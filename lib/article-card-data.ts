@@ -1,5 +1,5 @@
 import { defineQuery } from "next-sanity";
-import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
+import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 
 export type ArticleCardData = {
   _id: string;
@@ -54,5 +54,5 @@ export function articleHref(article: ArticleCardData) {
 }
 
 export function articleImageUrl(article: ArticleCardData) {
-  return article.socialImageUrl || article.mainImageUrl || getBusinessModelThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
+  return article.socialImageUrl || article.mainImageUrl || getGeneratedArticleThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
 }

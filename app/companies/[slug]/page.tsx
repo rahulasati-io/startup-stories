@@ -10,7 +10,7 @@ import CompanyRow from "@/components/CompanyRow";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Newsletter from "@/components/Newsletter";
-import { getBusinessModelThumbnailPath } from "@/lib/business-model-thumbnail";
+import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import { absoluteUrl } from "@/lib/site-url";
 import { DEFAULT_SEO_TEMPLATES, fillSeoTemplate, SEO_SETTINGS_QUERY, type SeoSettings } from "@/sanity/lib/seo";
 
@@ -34,6 +34,7 @@ const relatedArticlesQuery = defineQuery(/* groq */ `
     publishedAt,
     contentUpdatedAt,
     seoDescription,
+    socialImage { asset },
     mainImage { asset, alt },
     category->{title, "slug": slug.current}
   }
@@ -43,12 +44,12 @@ type ImageSource=Parameters<typeof urlFor>[0];
 type Company={_id:string;name:string;description?:string;industry?:string;foundedYear?:number;founders?:string[];body?:PortableTextBlock[];seoTitle?:string;seoDescription?:string;parentCompany?:{_id:string;name:string;slug?:string};founderProfiles?:{_id:string;name:string;slug?:string;role?:string}[]};
 type GroupCompany={_id:string;name:string;slug?:string;industry?:string;description?:string};
 type CompanyPerson={_id:string;relationship:string;roleTitle?:string;startDate?:string;endDate?:string;status:string;notes?:string;person?:{_id:string;name:string;slug?:string;role?:string}};
-type RelatedArticle={_id:string;_updatedAt:string;title:string;slug:string;publishedAt?:string;contentUpdatedAt?:string;seoDescription?:string;mainImage?:{asset?:ImageSource;alt?:string};category?:{title?:string;slug?:string}};
+type RelatedArticle={_id:string;_updatedAt:string;title:string;slug:string;publishedAt?:string;contentUpdatedAt?:string;seoDescription?:string;socialImage?:{asset?:ImageSource};mainImage?:{asset?:ImageSource;alt?:string};category?:{title?:string;slug?:string}};
 type FundingRound={_id:string;round:string;date?:string;amount?:number;currency?:string;investors?:string[];notes?:string};
 type TimelineEvent={_id:string;date?:string;title:string;description?:string};
 type CompanyMetric={_id:string;label:string;value:string;period?:string;notes?:string};
 const section=(eyebrow:string,title:string,body:React.ReactNode,id?:string)=><section id={id} className="mx-auto max-w-6xl scroll-mt-28 px-5 pb-12 md:px-8 md:pb-16"><div className="rounded-3xl border border-zinc-200 bg-white p-7">{eyebrow&&<p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">{eyebrow}</p>}<h2 className={`${eyebrow?"mt-3 ":""}text-3xl font-semibold tracking-tight`}>{title}</h2><div className="mt-6">{body}</div></div></section>;
-const articleLinks=(articles:RelatedArticle[])=><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{articles.map((article)=>{const image=article.mainImage?.asset?urlFor(article.mainImage).width(720).height(378).url():getBusinessModelThumbnailPath(article.category?.slug,article.slug,article._updatedAt);return <Link key={article._id} href={`/articles/${article.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-md">{image&&<img src={image} alt={article.mainImage?.alt||`${article.title} thumbnail`} className="aspect-[1200/630] w-full object-cover"/>}<div className="p-5"><p className="text-xs font-bold uppercase tracking-[.12em] text-amber-700">{article.category?.title||"Article"}</p><h3 className="mt-2 text-lg font-semibold leading-snug group-hover:text-amber-800">{article.title}</h3>{article.seoDescription&&<p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-600">{article.seoDescription}</p>}<p className="mt-4 text-sm font-semibold text-amber-700">Read full analysis →</p></div></Link>})}</div>;
+const articleLinks=(articles:RelatedArticle[])=><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{articles.map((article)=>{const image=article.socialImage?.asset?urlFor(article.socialImage).width(720).height(378).url():article.mainImage?.asset?urlFor(article.mainImage).width(720).height(378).url():getGeneratedArticleThumbnailPath(article.category?.slug,article.slug,article._updatedAt);return <Link key={article._id} href={`/articles/${article.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-md">{image&&<img src={image} alt={article.mainImage?.alt||`${article.title} thumbnail`} className="aspect-[1200/630] w-full object-cover"/>}<div className="p-5"><p className="text-xs font-bold uppercase tracking-[.12em] text-amber-700">{article.category?.title||"Article"}</p><h3 className="mt-2 text-lg font-semibold leading-snug group-hover:text-amber-800">{article.title}</h3>{article.seoDescription&&<p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-600">{article.seoDescription}</p>}<p className="mt-4 text-sm font-semibold text-amber-700">Read full analysis →</p></div></Link>})}</div>;
 
 export async function generateMetadata({params}:Props):Promise<Metadata>{
  const {slug}=await params;

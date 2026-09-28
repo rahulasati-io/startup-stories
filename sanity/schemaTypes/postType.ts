@@ -48,7 +48,7 @@ export const postType = defineType({
       title: "Hero Image",
       type: "image",
       description:
-        "Optional. Business Model articles receive an automatic MisterStory thumbnail when this is empty.",
+        "Optional. Articles receive an automatic MisterStory thumbnail when no custom image is supplied.",
       options: {
         hotspot: true,
       },

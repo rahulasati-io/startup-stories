@@ -5,8 +5,9 @@ export type ThumbnailPalette = {
   panel: string;
 };
 
-// Sixty hand-picked palettes are retained in the library. Generated thumbnails
-// use the first thirty light-background palettes so dark text stays easy to read.
+// Sixty hand-picked palettes are retained in the library. Generated article
+// thumbnails use the first thirty light-background palettes so dark text stays
+// easy to read across every editorial category.
 export const BUSINESS_MODEL_PALETTES: readonly ThumbnailPalette[] = [
   { background: "#FFF7ED", foreground: "#431407", accent: "#EA580C", panel: "#FED7AA" },
   { background: "#FEF2F2", foreground: "#450A0A", accent: "#DC2626", panel: "#FECACA" },
@@ -70,16 +71,6 @@ export const BUSINESS_MODEL_PALETTES: readonly ThumbnailPalette[] = [
   { background: "#172033", foreground: "#F4F7FB", accent: "#93B4F5", panel: "#2D3B59" },
 ];
 
-export function isBusinessModelCategory(category?: string | null) {
-  const value = category?.trim().toLowerCase();
-  return [
-    "business-model",
-    "business-models",
-    "how-companies-make-money",
-    "how-it-makes-money",
-  ].includes(value || "");
-}
-
 function stableHash(value: string) {
   let hash = 2166136261;
   for (let index = 0; index < value.length; index += 1) {
@@ -91,7 +82,7 @@ function stableHash(value: string) {
 
 export const BUSINESS_MODEL_PATTERN_COUNT = 21;
 export const BUSINESS_MODEL_LIGHT_PALETTE_COUNT = 30;
-export const BUSINESS_MODEL_THUMBNAIL_VERSION = "8";
+export const GENERATED_ARTICLE_THUMBNAIL_VERSION = "9";
 
 export function getBusinessModelPattern(companyName: string, industry?: string | null) {
   const value = industry?.trim().toLowerCase() || "";
@@ -111,13 +102,13 @@ export function getBusinessModelPalette(companyName: string) {
   ];
 }
 
-export function getBusinessModelThumbnailPath(
+export function getGeneratedArticleThumbnailPath(
   categorySlug?: string | null,
   articleSlug?: string | null,
   contentVersion?: string | null,
 ) {
-  if (!articleSlug || !isBusinessModelCategory(categorySlug)) return null;
-  const params = new URLSearchParams({ v: BUSINESS_MODEL_THUMBNAIL_VERSION });
+  if (!articleSlug || !categorySlug) return null;
+  const params = new URLSearchParams({ v: GENERATED_ARTICLE_THUMBNAIL_VERSION });
   if (contentVersion) params.set("content", contentVersion);
-  return `/api/article-thumbnail/${encodeURIComponent(categorySlug!)}/${encodeURIComponent(articleSlug)}?${params.toString()}`;
+  return `/api/article-thumbnail/${encodeURIComponent(categorySlug)}/${encodeURIComponent(articleSlug)}?${params.toString()}`;
 }
