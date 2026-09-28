@@ -548,7 +548,7 @@ MisterStory is a research-led website explaining companies, the people behind th
 
 - **Status:** Implemented
 - **Change:** Added `audit_status` and `audit_warnings` as the final two columns in the master article workbook. Each populated article row now updates automatically to `PASS`, `REVIEW`, or `BLOCKED` and explains missing required fields, duplicate slugs or permanent import IDs, article structure concerns, thumbnail-title length, and SEO-length guidance.
-- **Safety:** Audit formulas are prepared for up to 1,000 rows but are not sent to Sanity. The importer now ignores rows that contain formulas but no actual article input, preventing empty records and keeping large future workbooks safe.
+- **Safety:** Audit formulas are prepared for up to 200 rows but are not sent to Sanity. This keeps the workbook responsive while leaving room beyond the current 100 articles. The importer ignores rows that contain formulas but no actual article input, preventing empty records and keeping future workbooks safe.
 - **Workflow:** The in-sheet result is an immediate writing aid. The existing `npm run audit:articles` command remains the final pre-publication check because it can compare the workbook with Sanity, validate live references, and confirm publication state.
 - **Workbook reliability:** Kept the generated workbook free of Excel table objects and retained normal filters and dropdowns, avoiding the table-repair warning seen in an earlier generated file.
 - **Reason:** Rahul wanted problems shown beside each article while editing so bulk updates can be corrected without repeatedly opening a separate audit report.
@@ -592,3 +592,18 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Optional guidance:** Explain how Gmail users can move the first newsletter to Primary. Do not claim that the website can automatically favourite, trust or whitelist the sender.
 - **Dependency:** Configure and verify the final MisterStory sending address and domain authentication before building this flow.
 - **Reason:** This can improve subscriber onboarding and email deliverability, but it is not required for the initial launch.
+
+### 2026-09-27 — Updated article SEO descriptions
+
+- **Status:** Implemented in the article importer workbook
+- **Change:** Added the supplied SEO meta descriptions for 30 company articles, from Ola Electric and PB Fintech through HAL and Solar Industries.
+- **Preserved:** Article slugs, titles, bodies, publication statuses, spreadsheet formulas, filters, frozen rows, dropdowns and audit sheets remain unchanged.
+- **Verification:** The workbook passed structural checks, formula-error checks and a check-only Sanity importer run across all 100 article rows.
+- **Reason:** The descriptions now summarize the specific revenue drivers and financial context covered by each article instead of relying on shorter generic descriptions.
+
+### 2026-09-28 — Made homepage topics reflect published coverage
+
+- **Status:** Implemented
+- **Change:** Removed empty homepage topics such as Moats, Pricing Power and Brand Building. The section now highlights Business Models, Fintech, Distribution, Electric Vehicles, Automotive, Artificial Intelligence, Space Technology and Food Delivery.
+- **Behaviour:** Every topic displays its current matching article count and is automatically hidden when no published article matches it.
+- **Reason:** Homepage topic links should lead directly to useful collections rather than empty search results or themes that MisterStory has not covered yet.

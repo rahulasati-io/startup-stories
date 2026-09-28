@@ -30,7 +30,7 @@ export default async function Home() {
         <IntentCards />
 
         {/* Explore businesses by idea */}
-        <Topics />
+        <Topics articles={articles} />
 
         {/* Fresh content */}
         <LatestStories articles={articles.slice(4, 8)} />

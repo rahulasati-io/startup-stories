@@ -7,7 +7,7 @@ The last two columns are automatic helpers:
 - `audit_status` shows `PASS`, `REVIEW`, or `BLOCKED` as the row is edited.
 - `audit_warnings` explains missing fields, duplicate permanent IDs or slugs, article-structure issues, and SEO-length guidance.
 
-Do not type over those formula columns. They are prefilled for 1,000 rows and are never imported into Sanity. Fix `BLOCKED` rows before importing; assess `REVIEW` messages editorially. The spreadsheet checks are deliberately fast and local. Run `npm run audit:articles` before publishing for deeper checks against live Sanity documents, links, references, and publication state.
+Do not type over those formula columns. They are prefilled for 200 rows and are never imported into Sanity. Fix `BLOCKED` rows before importing; assess `REVIEW` messages editorially. The spreadsheet checks are deliberately fast and local. Run `npm run audit:articles` before publishing for deeper checks against live Sanity documents, links, references, and publication state.
 
 ## Before importing
 
