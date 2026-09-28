@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { TrustPage, TrustSection } from "@/components/TrustPage";
-
-const CONTACT_EMAIL = "hello@misterstory.in";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Contact MisterStory",

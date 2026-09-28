@@ -621,3 +621,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** The automatic MisterStory thumbnail fallback now applies to every published article category, not only Business Model articles. The thumbnail badge uses the article's actual category, and the category, company and article slug contribute to stable visual variation.
 - **Priority:** A custom social image remains first choice on article cards, followed by a custom main image. The generated thumbnail appears only when neither custom image is available. On the article page, a custom main image remains the first choice.
 - **Reason:** Every article needs a useful visual without requiring manual thumbnail production, while custom editorial artwork must continue to override automation.
+
+### 2026-09-28 — Centralized the temporary public contact address
+
+- **Status:** Implemented
+- **Change:** The Contact and Privacy pages now read the public email address from one shared configuration file. `rahul13asati@gmail.com` is the temporary launch address.
+- **Future switch:** When `hello@misterstory.in` is ready, changing the shared value once will update every public use of the address.
+- **Reason:** Email forwarding should not delay launch, while centralization avoids searching through several pages during the later domain-email transition.

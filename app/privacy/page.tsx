@@ -3,8 +3,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { TrustList, TrustPage, TrustSection } from "@/components/TrustPage";
-
-const CONTACT_EMAIL = "hello@misterstory.in";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | MisterStory",
