@@ -607,3 +607,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Change:** Removed empty homepage topics such as Moats, Pricing Power and Brand Building. The section now highlights Business Models, Fintech, Distribution, Electric Vehicles, Automotive, Artificial Intelligence, Space Technology and Food Delivery.
 - **Behaviour:** Every topic displays its current matching article count and is automatically hidden when no published article matches it.
 - **Reason:** Homepage topic links should lead directly to useful collections rather than empty search results or themes that MisterStory has not covered yet.
+
+### 2026-09-28 — Simplified the published author roster
+
+- **Status:** Implemented
+- **Change:** Added a clearly visible, confirmation-protected Unpublish action to Author documents in Sanity Studio. Unpublishing retains the author draft instead of deleting the record.
+- **Publishing decision:** Rahul remains the only published author for now. Articles assigned to other authors are reassigned to Rahul before those author profiles are unpublished, preventing broken article bylines and strong-reference errors.
+- **Reason:** MisterStory should publicly show only the author who is currently active, while retaining the other prepared author records for possible later use.

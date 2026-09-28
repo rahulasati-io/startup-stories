@@ -13,6 +13,7 @@ import {apiVersion, dataset, projectId} from './sanity/env'
 import {schema} from './sanity/schemaTypes'
 import {structure} from './sanity/structure'
 import {ArticlePublishAction} from './sanity/actions/ArticlePublishAction'
+import {AuthorUnpublishAction} from './sanity/actions/AuthorUnpublishAction'
 
 const companyRecordTemplates = [
   ['companyPersonRole', 'Person role'],
@@ -45,6 +46,17 @@ export default defineConfig({
   },
   document: {
     actions: (previousActions, context) => {
+      if (context.schemaType === 'author') {
+        const publishAction = previousActions.find((action) => action.action === 'publish')
+        const remainingActions = previousActions.filter(
+          (action) => action.action !== 'publish' && action.action !== 'unpublish',
+        )
+
+        return [publishAction, AuthorUnpublishAction, ...remainingActions].filter(
+          (action): action is NonNullable<typeof action> => Boolean(action),
+        )
+      }
+
       if (context.schemaType !== 'post') return previousActions
 
       return previousActions.map((action) =>
