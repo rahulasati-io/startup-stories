@@ -671,3 +671,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Editorial choice:** Evergreen stories use the `Article` type rather than `NewsArticle`. A search action was not added because Google no longer shows the sitelinks search-box feature.
 - **Reason:** Structured data helps search engines understand page meaning, authorship, publishing relationships and navigation. It supports eligibility for applicable search enhancements but does not guarantee rankings or rich results.
 - **Follow-up:** After deployment, test representative article, company and people URLs in Google Rich Results Test and Schema.org Validator.
+
+### 2026-09-30 — Improved company editing, overview formatting and dark-mode safety
+
+- **Status:** Implemented
+- **Company overviews:** Spreadsheet imports now convert Markdown headings, paragraphs, emphasis, links, lists and quotes into real Portable Text blocks. The company page renders those blocks with consistent nested heading and body styles.
+- **Existing content:** Audited the current Sanity records before deployment. The inspected company content already uses structured heading blocks, so no bulk content rewrite was required.
+- **Studio usability:** Added a visible Edit action to every row in the custom Companies table; the company name remains an edit link as well.
+- **Theme behaviour:** MisterStory now explicitly declares a light colour scheme instead of changing only the global canvas in device dark mode and leaving light components mismatched.
+- **Reason:** Company information must remain structured and readable, editing controls must be discoverable, and device preferences must not make navigation or headings disappear.

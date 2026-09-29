@@ -138,10 +138,10 @@ export function CompaniesManager() {
           </Flex>
         ) : (
           <Card border radius={2} overflow="auto">
-            <table style={{ borderCollapse: "collapse", minWidth: 1050, width: "100%" }}>
+            <table style={{ borderCollapse: "collapse", minWidth: 1130, width: "100%" }}>
               <thead>
                 <tr>
-                  {["Company", "Slug", "Industry", "Meta title", "Meta description", "Status", "Updated"].map((label) => (
+                  {["Company", "Slug", "Industry", "Meta title", "Meta description", "Status", "Updated", "Actions"].map((label) => (
                     <th key={label} style={{ borderBottom: "1px solid var(--card-border-color)", padding: 14, textAlign: "left" }}>
                       <Text muted size={1} weight="semibold">{label}</Text>
                     </th>
@@ -172,6 +172,15 @@ export function CompaniesManager() {
                       </Badge>
                     </td>
                     <td style={{ borderBottom: "1px solid var(--card-border-color)", padding: 14 }}><Text muted size={1}>{formatDate(company._updatedAt)}</Text></td>
+                    <td style={{ borderBottom: "1px solid var(--card-border-color)", padding: 10 }}>
+                      <IntentLink
+                        intent="edit"
+                        params={{ id: company.documentId, type: "company" }}
+                        style={{ textDecoration: "none" }}
+                      >
+                        <Button mode="ghost" text="Edit" />
+                      </IntentLink>
+                    </td>
                   </tr>
                 ))}
               </tbody>

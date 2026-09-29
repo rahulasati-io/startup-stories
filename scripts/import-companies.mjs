@@ -1,6 +1,7 @@
 import path from "path";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
+import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
 
 const filePath = process.argv[2];
 const companyFilter = process.argv.find((argument) => argument.startsWith("--company="))?.split("=")[1];
@@ -61,7 +62,6 @@ const portableText = (value, keyPrefix = "content") => clean(value).split(/\r?\n
   const { children, markDefs } = inlinePortableText(normalizedText.replace(/^##\s+/, ""), index, keyPrefix);
   return { _key: `${keyPrefix}-${index}`, _type: "block", style: isHeading ? "h2" : "normal", children, markDefs };
 }).filter((block) => block.children.length);
-const plainPortableText = (value) => clean(value).split(/\r?\n\s*\r?\n/).map((text, index) => ({ _key: `overview-${index}`, _type: "block", style: "normal", children: [{ _key: `span-${index}`, _type: "span", text, marks: [] }], markDefs: [] })).filter((block) => block.children[0].text);
 const required = (row, fields, sheet, rowNumber) => fields.forEach((field) => { if (!clean(row[field])) throw new Error(`${sheet} row ${rowNumber}: ${field} is required.`); });
 const reference = (id) => ({ _type: "reference", _ref: id });
 const verification = (row) => ({
@@ -142,7 +142,7 @@ async function run() {
     const slug = clean(row.company_slug);
     if (slugs.has(slug)) throw new Error(`Companies row ${index + 2}: duplicate company_slug "${slug}".`);
     slugs.add(slug);
-    const overview = plainPortableText(row.company_overview);
+    const overview = markdownToPortableText(row.company_overview, `company-${slug}`);
     const industryName = clean(row.industry);
     const industryId = industryName ? industryIdBySlug.get(slugify(industryName)) : undefined;
     const data = { _type: "company", name: clean(row.company_name), slug: { _type: "slug", current: slug }, industryCategory: industryId ? reference(industryId) : undefined, foundedYear: clean(row.founded_year) ? Number(row.founded_year) : undefined, founders: split(row.founders), description: clean(row.short_description) || undefined, seoTitle: clean(row.meta_title || row.seo_title) || undefined, seoDescription: clean(row.meta_description || row.seo_description) || undefined, ...(overview.length ? { body: overview } : {}) };

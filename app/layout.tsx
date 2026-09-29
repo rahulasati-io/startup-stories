@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import JsonLd from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/site-url";
@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   title: "MisterStory",
   description:
     "Stories, strategy and numbers that explain how interesting businesses work.",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
