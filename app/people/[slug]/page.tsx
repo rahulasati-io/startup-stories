@@ -4,13 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
+import type { Person as PersonSchema, WithContext } from "schema-dts";
 import CompanyRow from "@/components/CompanyRow";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import JsonLd from "@/components/JsonLd";
 import Newsletter from "@/components/Newsletter";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import PeopleRow from "@/components/PeopleRow";
 import { absoluteUrl } from "@/lib/site-url";
+import { breadcrumbJsonLd, portableTextToPlainText } from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
 import { DEFAULT_SEO_TEMPLATES, fillSeoTemplate, SEO_SETTINGS_QUERY, type SeoSettings } from "@/sanity/lib/seo";
 
@@ -146,9 +149,39 @@ export default async function PersonPage({ params }: Props) {
     }, new Map<string, CompanyRole>()).values(),
   );
   const relatedArticles = person.relatedArticles ?? [];
+  const canonicalUrl = absoluteUrl(`/people/${slug}`);
+  const sameAs = [person.linkedinUrl, person.website].filter((url): url is string => Boolean(url));
+  const personJsonLd: WithContext<PersonSchema> = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${canonicalUrl}#person`,
+    name: person.name,
+    url: canonicalUrl,
+    jobTitle: person.role,
+    description: person.seoDescription || portableTextToPlainText(person.bio),
+    sameAs: sameAs.length ? sameAs : undefined,
+    affiliation: associatedCompanies.flatMap((item) =>
+      item.company
+        ? [{
+            "@type": "Organization" as const,
+            "@id": item.company.slug
+              ? `${absoluteUrl(`/companies/${item.company.slug}`)}#organization`
+              : undefined,
+            name: item.company.name,
+            url: item.company.slug ? absoluteUrl(`/companies/${item.company.slug}`) : undefined,
+          }]
+        : [],
+    ),
+  };
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "People", path: "/people" },
+    { name: person.name, path: `/people/${slug}` },
+  ]);
 
   return (
     <>
+      <JsonLd data={[personJsonLd, breadcrumb]} />
       <Header />
       <main className="min-h-screen bg-[#f7f6f2] text-zinc-950">
         <section className="border-b border-zinc-200">

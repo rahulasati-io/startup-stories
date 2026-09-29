@@ -662,3 +662,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Privacy housekeeping:** Update the Privacy Policy so it accurately explains the currently enabled, cookie-free Vercel Web Analytics.
 - **Contact housekeeping:** Replace the temporary Gmail contact address with `hello@misterstory.in` after domain email or forwarding is configured.
 - **Reason:** These are the next recurring and post-launch tasks after the core website, production domain, sitemap, Search Console, analytics and first logo were completed.
+
+### 2026-09-30 — Added site-wide structured data
+
+- **Status:** Implemented and production-build verified
+- **Change:** Added Schema.org JSON-LD for the MisterStory website and publisher, articles, companies, people, authors and page breadcrumbs.
+- **Data source:** The markup reuses existing Sanity fields, canonical URLs, publication/update dates, article-company links and profile relationships. It does not require a new spreadsheet or extra CMS fields.
+- **Editorial choice:** Evergreen stories use the `Article` type rather than `NewsArticle`. A search action was not added because Google no longer shows the sitelinks search-box feature.
+- **Reason:** Structured data helps search engines understand page meaning, authorship, publishing relationships and navigation. It supports eligibility for applicable search enhancements but does not guarantee rankings or rich results.
+- **Follow-up:** After deployment, test representative article, company and people URLs in Google Rich Results Test and Schema.org Validator.

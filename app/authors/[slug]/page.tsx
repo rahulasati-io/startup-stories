@@ -2,12 +2,19 @@ import { PortableText, type PortableTextBlock } from "@portabletext/react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
+import type { Person as PersonSchema, WithContext } from "schema-dts";
 import ArticleCard from "@/components/ArticleCard";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import JsonLd from "@/components/JsonLd";
 import Newsletter from "@/components/Newsletter";
 import type { ArticleCardData } from "@/lib/article-card-data";
 import { absoluteUrl } from "@/lib/site-url";
+import {
+  breadcrumbJsonLd,
+  MISTERSTORY_ORGANIZATION_ID,
+  portableTextToPlainText,
+} from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
 
 const AUTHOR_QUERY = defineQuery(/* groq */ `
@@ -82,8 +89,27 @@ export default async function AuthorPage({ params }: Props) {
   const author = await getAuthor(slug);
   if (!author) notFound();
 
+  const canonicalUrl = absoluteUrl(`/authors/${author.slug}`);
+  const authorJsonLd: WithContext<PersonSchema> = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": `${canonicalUrl}#person`,
+    name: author.name,
+    url: canonicalUrl,
+    jobTitle: author.role,
+    description: portableTextToPlainText(author.bio) || `${author.name}, author at MisterStory.`,
+    sameAs: author.linkedinUrl ? [author.linkedinUrl] : undefined,
+    worksFor: { "@id": MISTERSTORY_ORGANIZATION_ID },
+  };
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Authors", path: "/authors" },
+    { name: author.name, path: `/authors/${author.slug}` },
+  ]);
+
   return (
     <>
+      <JsonLd data={[authorJsonLd, breadcrumb]} />
       <Header />
       <main className="min-h-screen bg-[#f7f6f2] text-zinc-950">
         <section className="border-b border-zinc-200">

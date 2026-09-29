@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import JsonLd from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/site-url";
+import {
+  misterStoryOrganizationJsonLd,
+  misterStoryWebsiteJsonLd,
+} from "@/lib/structured-data";
 import { SanityLive } from "@/sanity/lib/live";
 import "./globals.css";
 
@@ -19,6 +24,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <JsonLd
+          data={[
+            misterStoryOrganizationJsonLd(),
+            misterStoryWebsiteJsonLd(),
+          ]}
+        />
         {children}
         <SanityLive />
         <Analytics />

@@ -3,8 +3,10 @@ import type { PortableTextBlock } from "@portabletext/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
+import type { Article as ArticleSchema, WithContext } from "schema-dts";
 import ArticleCard from "@/components/ArticleCard";
 import ArticleSidebar, { type SidebarCompany } from "@/components/ArticleSidebar";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
@@ -12,6 +14,11 @@ import Header from "@/components/Header";
 import { absoluteUrl } from "@/lib/site-url";
 import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
+import {
+  breadcrumbJsonLd,
+  MISTERSTORY_ORGANIZATION_ID,
+  MISTERSTORY_WEBSITE_ID,
+} from "@/lib/structured-data";
 
 const ARTICLE_QUERY = defineQuery(/* groq */ `
   *[
@@ -357,8 +364,52 @@ export default async function ArticlePage({
     ? urlFor(article.mainImage).width(1600).url()
     : getGeneratedArticleThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
 
+  const canonicalUrl = absoluteUrl(`/articles/${article.slug}`);
+  const structuredImage = article.socialImage?.asset
+    ? urlFor(article.socialImage).width(1200).height(630).url()
+    : article.mainImage?.asset
+      ? urlFor(article.mainImage).width(1200).height(630).url()
+      : heroImage
+        ? absoluteUrl(heroImage)
+        : undefined;
+  const articleJsonLd: WithContext<ArticleSchema> = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${canonicalUrl}#article`,
+    headline: article.title,
+    description: article.seoDescription,
+    url: canonicalUrl,
+    mainEntityOfPage: canonicalUrl,
+    image: structuredImage,
+    datePublished: article.publishedAt,
+    dateModified: article.contentUpdatedAt || article._updatedAt || article.publishedAt,
+    author: article.author
+      ? {
+          "@type": "Person",
+          name: article.author.name,
+          url: article.author.slug
+            ? absoluteUrl(`/authors/${article.author.slug}`)
+            : undefined,
+        }
+      : { "@id": MISTERSTORY_ORGANIZATION_ID },
+    publisher: { "@id": MISTERSTORY_ORGANIZATION_ID },
+    isPartOf: { "@id": MISTERSTORY_WEBSITE_ID },
+    about: article.companies?.map((company) => ({
+      "@type": "Organization",
+      "@id": `${absoluteUrl(`/companies/${company.slug}`)}#organization`,
+      name: company.name,
+      url: absoluteUrl(`/companies/${company.slug}`),
+    })),
+  };
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Articles", path: "/articles" },
+    { name: article.title, path: `/articles/${article.slug}` },
+  ]);
+
   return (
     <>
+    <JsonLd data={[articleJsonLd, breadcrumb]} />
     <Header />
     <main className="bg-[#f7f6f2]">
       <article className="w-full px-4 py-12 sm:px-6 md:px-10 md:py-16 lg:px-14 lg:py-20">
