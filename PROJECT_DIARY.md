@@ -680,3 +680,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Studio usability:** Added a visible Edit action to every row in the custom Companies table; the company name remains an edit link as well.
 - **Theme behaviour:** MisterStory now explicitly declares a light colour scheme instead of changing only the global canvas in device dark mode and leaving light components mismatched.
 - **Reason:** Company information must remain structured and readable, editing controls must be discoverable, and device preferences must not make navigation or headings disappear.
+
+### 2026-09-30 — Standardized generated article thumbnails for discovery
+
+- **Status:** Implemented
+- **Change:** System-generated article thumbnails now render at `1200×675`, a true 16:9 ratio, and their cache version was increased so existing articles receive the new output automatically.
+- **Display:** Generated images retain 16:9 on article cards and article hero sections instead of being cropped back to the former ratio. Article-card image slots now use a consistent 16:9 presentation.
+- **Crawling:** The generated-thumbnail endpoint is no longer hidden by the general `/api/` robots rule. Search and newsletter API routes remain blocked from crawling.
+- **Scope:** Custom images uploaded through Sanity are not regenerated or modified.
+- **Reason:** Large, crawlable 16:9 images provide a stronger fallback for Google Discover, social previews and article browsing while preserving editorial overrides.

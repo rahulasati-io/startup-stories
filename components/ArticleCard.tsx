@@ -18,7 +18,7 @@ export default function ArticleCard({ article, compact = false }: { article: Art
   return (
     <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
       <Link href={articleHref(article)} className="block h-full">
-        <div className="relative aspect-[1200/630] overflow-hidden bg-gradient-to-br from-zinc-800 via-zinc-600 to-amber-200">
+        <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-zinc-800 via-zinc-600 to-amber-200">
           {imageUrl && <Image src={imageUrl} alt={article.title} fill unoptimized={isGeneratedThumbnail} sizes={compact ? "(max-width: 640px) 100vw, 25vw" : "(max-width: 768px) 100vw, 33vw"} className="object-cover transition duration-300 group-hover:scale-[1.02]" />}
         </div>
         <div className={compact ? "p-4" : "p-5"}>

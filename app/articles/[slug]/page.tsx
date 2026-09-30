@@ -363,6 +363,7 @@ export default async function ArticlePage({
   const heroImage = article.mainImage?.asset
     ? urlFor(article.mainImage).width(1600).url()
     : getGeneratedArticleThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
+  const isGeneratedHero = Boolean(heroImage) && !article.mainImage?.asset;
 
   const canonicalUrl = absoluteUrl(`/articles/${article.slug}`);
   const structuredImage = article.socialImage?.asset
@@ -457,7 +458,7 @@ export default async function ArticlePage({
         <div className="mt-10 grid items-start gap-10 xl:grid-cols-[minmax(0,880px)_minmax(280px,320px)]">
           <div className="min-w-0">
             {heroImage && (
-              <div className="aspect-[16/9] overflow-hidden rounded-3xl md:aspect-[16/8]">
+              <div className={`aspect-video overflow-hidden rounded-3xl ${isGeneratedHero ? "" : "md:aspect-[16/8]"}`}>
                 <img
                   src={heroImage}
                   alt={article.mainImage?.alt || article.title}
