@@ -689,3 +689,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Crawling:** The generated-thumbnail endpoint is no longer hidden by the general `/api/` robots rule. Search and newsletter API routes remain blocked from crawling.
 - **Scope:** Custom images uploaded through Sanity are not regenerated or modified.
 - **Reason:** Large, crawlable 16:9 images provide a stronger fallback for Google Discover, social previews and article browsing while preserving editorial overrides.
+
+### 2026-09-30 — Improved homepage image loading
+
+- **Status:** Implemented
+- **Change:** The four article thumbnails visible in the homepage hero are now preloaded so the browser starts downloading them immediately. Images farther down the page remain lazy-loaded.
+- **Data caching:** Homepage company and article queries now reuse published Sanity results for up to 60 seconds instead of waiting for fresh network requests on every visit.
+- **Publishing impact:** Newly published or edited content can take up to approximately one minute to appear on the homepage; individual content pages retain their existing update behaviour.
+- **Reason:** Live measurements showed generated images were already small, while request timing and late browser discovery were the larger causes of visible loading delay.

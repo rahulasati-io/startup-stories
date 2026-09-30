@@ -13,8 +13,8 @@ import { client } from "@/sanity/lib/client";
 
 export default async function Home() {
   const [companiesResult, articlesResult] = await Promise.allSettled([
-    client.fetch<Company[]>(COMPANIES_QUERY, {}, { perspective: "published", cache: "no-store", signal: AbortSignal.timeout(6000) }),
-    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", cache: "no-store", signal: AbortSignal.timeout(6000) }),
+    client.fetch<Company[]>(COMPANIES_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) }),
+    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) }),
   ]);
   const companies = companiesResult.status === "fulfilled" ? companiesResult.value : [];
   const articles = articlesResult.status === "fulfilled" ? articlesResult.value : [];

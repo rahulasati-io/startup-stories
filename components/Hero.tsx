@@ -21,7 +21,7 @@ export default function Hero({ companies, featuredArticles }: { companies: Compa
       <HomepageCompanySearch companies={companies} />
 
       {/* Discovery stories */}
-      {featuredArticles.length > 0 && <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{featuredArticles.map((article) => <ArticleCard key={article._id} article={article} compact />)}</div>}
+      {featuredArticles.length > 0 && <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{featuredArticles.map((article) => <ArticleCard key={article._id} article={article} compact preloadImage />)}</div>}
     </section>
   );
 }
