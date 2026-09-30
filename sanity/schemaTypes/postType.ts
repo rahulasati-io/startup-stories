@@ -1,15 +1,37 @@
-import { defineArrayMember, defineField, defineType } from "sanity";
+import { ALL_FIELDS_GROUP, defineArrayMember, defineField, defineType } from "sanity";
 
 export const postType = defineType({
   name: "post",
   title: "Article",
   type: "document",
+  __experimental_formPreviewTitle: false,
+
+  groups: [
+    {
+      name: "writing",
+      title: "Writing",
+      default: true,
+    },
+    {
+      name: "connections",
+      title: "Connections",
+    },
+    {
+      name: "publishing",
+      title: "SEO & publishing",
+    },
+    {
+      ...ALL_FIELDS_GROUP,
+      hidden: true,
+    },
+  ],
 
   fields: [
     defineField({
       name: "title",
       title: "Title",
       type: "string",
+      group: "writing",
       validation: (Rule) => Rule.required(),
     }),
 
@@ -17,6 +39,7 @@ export const postType = defineType({
       name: "thumbnailTitle",
       title: "Thumbnail Title",
       type: "string",
+      group: "writing",
       description:
         "Optional shorter title used only inside the automatic thumbnail. The article heading and SEO title stay unchanged.",
       validation: (Rule) =>
@@ -27,6 +50,7 @@ export const postType = defineType({
       name: "slug",
       title: "Slug",
       type: "slug",
+      group: "publishing",
       description: "Enter the slug manually.",
       validation: (Rule) => Rule.required().custom((value) => {
         if (!value?.current) return "A slug is required before this article can be published.";
@@ -41,12 +65,14 @@ export const postType = defineType({
       type: "string",
       readOnly: true,
       hidden: true,
+      group: "publishing",
     }),
 
     defineField({
       name: "mainImage",
       title: "Hero Image",
       type: "image",
+      group: "publishing",
       description:
         "Optional. Articles receive an automatic MisterStory thumbnail when no custom image is supplied.",
       options: {
@@ -65,6 +91,8 @@ export const postType = defineType({
       name: "body",
       title: "Article Body",
       type: "blockContent",
+      group: "writing",
+      description: "Tip: click inside the editor and press Ctrl+Enter to write in full-screen mode.",
       validation: (Rule) => Rule.required(),
     }),
 
@@ -72,6 +100,7 @@ export const postType = defineType({
       name: "category",
       title: "Article Category",
       type: "reference",
+      group: "connections",
       to: [{ type: "category" }],
       validation: (Rule) => Rule.required(),
     }),
@@ -81,6 +110,7 @@ export const postType = defineType({
       title: "Companies",
       description: "Link every company that is substantially discussed in this article. Add at least one company.",
       type: "array",
+      group: "connections",
       of: [
         defineArrayMember({
           type: "reference",
@@ -95,6 +125,7 @@ export const postType = defineType({
       title: "People featured",
       description: "Select only people who are directly discussed in this article. This controls which person profile pages show the article.",
       type: "array",
+      group: "connections",
       of: [
         defineArrayMember({
           type: "reference",
@@ -108,6 +139,7 @@ export const postType = defineType({
       name: "concepts",
       title: "Concepts",
       type: "array",
+      group: "connections",
       of: [
         defineArrayMember({
           type: "reference",
@@ -121,6 +153,7 @@ export const postType = defineType({
       name: "author",
       title: "Author",
       type: "reference",
+      group: "connections",
       to: [{ type: "author" }],
       validation: (Rule) => Rule.required(),
     }),
@@ -129,6 +162,7 @@ export const postType = defineType({
       name: "publishedAt",
       title: "First Published",
       type: "datetime",
+      group: "publishing",
       description: "Set automatically the first time this article goes live.",
       readOnly: true,
     }),
@@ -137,6 +171,7 @@ export const postType = defineType({
       name: "contentUpdatedAt",
       title: "Last Content Update",
       type: "datetime",
+      group: "publishing",
       description: "Set automatically when a previously published article is changed and published again.",
       readOnly: true,
     }),
@@ -147,6 +182,7 @@ export const postType = defineType({
       description:
         "Mark an article as Popular only when you want it promoted in article sidebars. Leave Standard selected for normal articles.",
       type: "string",
+      group: "publishing",
       initialValue: "standard",
       options: {
         list: [
@@ -161,12 +197,14 @@ export const postType = defineType({
       name: "seoTitle",
       title: "SEO Title",
       type: "string",
+      group: "publishing",
     }),
 
     defineField({
       name: "seoDescription",
       title: "SEO Meta Description",
       type: "text",
+      group: "publishing",
       rows: 3,
     }),
 
@@ -174,6 +212,7 @@ export const postType = defineType({
       name: "socialImage",
       title: "Social Image",
       type: "image",
+      group: "publishing",
     }),
   ],
 

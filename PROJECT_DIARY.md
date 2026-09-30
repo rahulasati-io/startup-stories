@@ -678,6 +678,16 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Company overviews:** Spreadsheet imports now convert Markdown headings, paragraphs, emphasis, links, lists and quotes into real Portable Text blocks. The company page renders those blocks with consistent nested heading and body styles.
 - **Existing content:** Audited the current Sanity records before deployment. The inspected company content already uses structured heading blocks, so no bulk content rewrite was required.
 - **Studio usability:** Added a visible Edit action to every row in the custom Companies table; the company name remains an edit link as well.
+
+### 2026-10-01 — Simplified article and company editing in Sanity Studio
+
+- **Status:** Implemented locally, pending deployment and visual review
+- **Restore point:** Tagged the previous code as `sanity-layout-before-2026-10-01` so the complete earlier Studio layout can be restored if required.
+- **Articles:** Reorganized the form into Writing, Connections, and SEO & publishing tabs. Writing is the default and shows only the title, optional thumbnail title, and article body.
+- **Companies:** Reorganized the form into Overview, People & group, and SEO & media tabs. Overview is the default and keeps the company overview in the main editing workflow.
+- **Writing space:** Removed the duplicated large document-preview heading from article and company forms. Added the built-in Portable Text full-screen shortcut guidance (`Ctrl+Enter`) directly beside both rich-text editors.
+- **Preserved:** No Sanity fields, document values, importer mappings, public queries, or URLs were changed. Field groups affect only the Studio editing interface.
+- **Reason:** Rahul wants article and company content to occupy most of the editor while secondary relationships and SEO fields remain available without making the primary writing screen long and cluttered.
 - **Theme behaviour:** MisterStory now explicitly declares a light colour scheme instead of changing only the global canvas in device dark mode and leaving light components mismatched.
 - **Reason:** Company information must remain structured and readable, editing controls must be discoverable, and device preferences must not make navigation or headings disappear.
 
