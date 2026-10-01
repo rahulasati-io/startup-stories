@@ -1,4 +1,5 @@
 import type { StructureResolver } from "sanity/structure";
+import { ArticlesManager } from "./components/ArticlesManager";
 import { CompaniesManager } from "./components/CompaniesManager";
 
 export const structure: StructureResolver = (S) =>
@@ -9,7 +10,9 @@ export const structure: StructureResolver = (S) =>
         .title("Companies")
         .child(S.component(CompaniesManager).id("companies-manager").title("Companies")),
       S.documentTypeListItem("founder").title("People"),
-      S.documentTypeListItem("post").title("Articles"),
+      S.listItem()
+        .title("Articles")
+        .child(S.component(ArticlesManager).id("articles-manager").title("Articles")),
 
       S.listItem()
         .title("SEO Settings")

@@ -707,3 +707,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Data caching:** Homepage company and article queries now reuse published Sanity results for up to 60 seconds instead of waiting for fresh network requests on every visit.
 - **Publishing impact:** Newly published or edited content can take up to approximately one minute to appear on the homepage; individual content pages retain their existing update behaviour.
 - **Reason:** Live measurements showed generated images were already small, while request timing and late browser discovery were the larger causes of visible loading delay.
+# 1 October 2026 - Clear article publication states in Sanity
+
+- Replaced the default Articles list with a searchable article manager.
+- Split articles into mutually exclusive views: Draft only, Live + unpublished changes, and Published/current.
+- Added plain-language status labels so a live article with pending edits is not mistaken for a duplicate article.
+- Confirmed the current dataset contains 104 articles: 0 draft-only, 102 live articles with unpublished changes, and 2 published/current articles.
+- No drafts were published or discarded during this change.
