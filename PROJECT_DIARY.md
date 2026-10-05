@@ -714,3 +714,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Added plain-language status labels so a live article with pending edits is not mistaken for a duplicate article.
 - Confirmed the current dataset contains 104 articles: 0 draft-only, 102 live articles with unpublished changes, and 2 published/current articles.
 - No drafts were published or discarded during this change.
+# 5 October 2026 - Sitemap index for content-type monitoring
+
+- Replaced the single combined sitemap with a sitemap index at the existing `/sitemap.xml` address.
+- Added separate sitemaps for static pages, companies, articles, people, and authors/topics.
+- Kept Search Console and `robots.txt` pointed at `/sitemap.xml`, so the existing submission remains valid.
+- Child sitemaps include only published Sanity documents with valid slugs and retain Sanity update dates.
+- Added temporary-error responses for Sanity outages so crawlers do not mistake a failed fetch for an intentionally empty sitemap.
