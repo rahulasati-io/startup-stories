@@ -59,6 +59,7 @@ export default async function Footer() {
           <nav className="mt-4 space-y-3 text-sm text-zinc-300" aria-label="About and legal navigation">
             <Link href="/about" className="block hover:text-white">About</Link>
             <Link href="/editorial-policy" className="block hover:text-white">Editorial Policy</Link>
+            <a href="/feed.xml" className="block hover:text-white">RSS Feed</a>
             <Link href="/contact" className="block hover:text-white">Contact</Link>
             <Link href="/privacy" className="block hover:text-white">Privacy Policy</Link>
             <Link href="/terms" className="block hover:text-white">Terms of Use</Link>

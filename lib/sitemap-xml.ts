@@ -8,7 +8,7 @@ const XML_HEADERS = {
   "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
 };
 
-function escapeXml(value: string) {
+export function escapeXml(value: string) {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")

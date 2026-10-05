@@ -721,3 +721,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Kept Search Console and `robots.txt` pointed at `/sitemap.xml`, so the existing submission remains valid.
 - Child sitemaps include only published Sanity documents with valid slugs and retain Sanity update dates.
 - Added temporary-error responses for Sanity outages so crawlers do not mistake a failed fetch for an intentionally empty sitemap.
+# 5 October 2026 - RSS feed for recent articles
+
+- Added an RSS 2.0 feed at `/feed.xml` containing the 50 most recently published or meaningfully updated live articles.
+- Included article URLs, first-published dates, update dates, summaries, authors, categories and custom or generated thumbnails.
+- Excluded Sanity drafts by using the published content perspective.
+- Added automatic RSS discovery metadata, a footer link and a second Sitemap directive in `robots.txt`.
+- Kept the RSS feed separate from the complete XML sitemap index; the feed represents recent changes rather than the complete URL inventory.

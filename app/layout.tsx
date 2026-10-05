@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import JsonLd from "@/components/JsonLd";
-import { SITE_URL } from "@/lib/site-url";
+import { absoluteUrl, SITE_URL } from "@/lib/site-url";
 import {
   misterStoryOrganizationJsonLd,
   misterStoryWebsiteJsonLd,
@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   title: "MisterStory",
   description:
     "Stories, strategy and numbers that explain how interesting businesses work.",
+  alternates: {
+    types: {
+      "application/rss+xml": absoluteUrl("/feed.xml"),
+    },
+  },
 };
 
 export const viewport: Viewport = {
