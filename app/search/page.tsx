@@ -5,7 +5,11 @@ import Header from "@/components/Header";
 import { EMPTY_SEARCH_RESULTS, GLOBAL_SEARCH_PAGE_QUERY, toSearchMatch, type GlobalSearchResults } from "@/lib/global-search";
 import { client } from "@/sanity/lib/client";
 
-export const metadata: Metadata = { title: "Search | MisterStory", description: "Search MisterStory companies, people, authors and articles." };
+export const metadata: Metadata = {
+  title: "Search | MisterStory",
+  description: "Search MisterStory companies, people, authors and articles.",
+  robots: { index: false, follow: true },
+};
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
   const rawQuery = (await searchParams).q;

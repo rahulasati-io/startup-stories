@@ -728,3 +728,9 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Excluded Sanity drafts by using the published content perspective.
 - Added automatic RSS discovery metadata, a footer link and a second Sitemap directive in `robots.txt`.
 - Kept the RSS feed separate from the complete XML sitemap index; the feed represents recent changes rather than the complete URL inventory.
+
+# 5 October 2026 - Search results excluded from indexing
+
+- Added `noindex, follow` metadata to `/search` and every query variation such as `/search?q=zomato`.
+- Search engines can continue following company, people, author and article links shown in results, but the result pages themselves should not appear in Google.
+- Kept public company, people, author and article pages indexable.
