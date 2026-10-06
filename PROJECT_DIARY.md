@@ -777,3 +777,18 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Matched visible breadcrumb links to the existing structured breadcrumb data used by search engines.
 - Added missing BreadcrumbList structured data to topic pages.
 - Kept directory pages uncluttered because their location is already clear from the page heading and global navigation.
+
+# 6 October 2026 - Limited company-page people previews
+
+- Limited the initially visible "People behind the company" section to four profiles on every company page.
+- Added a "View all" control whenever a company has more than four linked people, with an option to collapse the expanded list again.
+- Preserved every person and company relationship in Sanity; the limit changes only the initial page presentation.
+- Reason: keep company pages concise while retaining access to complete leadership and founder information.
+
+# 7 October 2026 - Article image crop and compression tool
+
+- Added an optional image optimizer inside the Sanity Hero Image and Social Image fields.
+- The tool centre-crops by default, supports left/centre/right and top/centre/bottom focal choices, resizes to 1200×675, and compresses the result as a JPG before uploading it to Sanity.
+- Preserved Sanity's standard image selector and hotspot controls so editors can continue using the normal workflow when required.
+- Existing images are unchanged; the optimizer applies only when an editor chooses a new file through the new control.
+- Status: Implemented.

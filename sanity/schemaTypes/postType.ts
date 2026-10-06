@@ -1,4 +1,5 @@
 import { ALL_FIELDS_GROUP, defineArrayMember, defineField, defineType } from "sanity";
+import OptimizedArticleImageInput from "../components/OptimizedArticleImageInput";
 
 export const postType = defineType({
   name: "post",
@@ -77,6 +78,9 @@ export const postType = defineType({
         "Optional. Articles receive an automatic MisterStory thumbnail when no custom image is supplied.",
       options: {
         hotspot: true,
+      },
+      components: {
+        input: OptimizedArticleImageInput,
       },
       fields: [
         defineField({
@@ -213,6 +217,13 @@ export const postType = defineType({
       title: "Social Image",
       type: "image",
       group: "publishing",
+      description: "Optional. Use the optimizer below to prepare a lightweight 16:9 image.",
+      options: {
+        hotspot: true,
+      },
+      components: {
+        input: OptimizedArticleImageInput,
+      },
     }),
   ],
 
