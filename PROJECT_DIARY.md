@@ -756,3 +756,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Preserved the existing People, Authors and Articles headings because those directories already use an H1.
 - Added Home as the first item in the shared desktop and mobile navigation; the MisterStory logo continues to link home as a second shortcut.
 - Reason: give the Companies directory a clear primary heading for visitors and search engines while making homepage navigation explicit.
+
+# 6 October 2026 - Merged duplicate Jamsetji Tata profiles
+
+- Retained `jamsetji-tata` as the single person profile and linked it to both Tata Power and Tata Sons.
+- Preserved the stronger biography and added the official Tata source URL to the retained spreadsheet profile.
+- Removed the obsolete `jamsetji-nusserwanji-tata` Sanity profile and its superseded Tata Power relationship only after verifying the replacement relationships.
+- Added a permanent redirect from `/people/jamsetji-nusserwanji-tata` to `/people/jamsetji-tata` so old links and search signals reach the retained page.
