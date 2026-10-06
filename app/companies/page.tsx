@@ -4,11 +4,13 @@ import { COMPANIES_QUERY } from "@/components/CompanyRow";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Newsletter from "@/components/Newsletter";
+import { absoluteUrl } from "@/lib/site-url";
 import { client } from "@/sanity/lib/client";
 
 export const metadata: Metadata = {
   title: "Companies | MisterStory",
   description: "Explore company profiles, articles, people and key numbers.",
+  alternates: { canonical: absoluteUrl("/companies") },
 };
 
 export default async function CompaniesPage({

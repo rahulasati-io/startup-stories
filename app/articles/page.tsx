@@ -4,11 +4,13 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Newsletter from "@/components/Newsletter";
 import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
+import { absoluteUrl } from "@/lib/site-url";
 import { client } from "@/sanity/lib/client";
 
 export const metadata: Metadata = {
   title: "Business Articles | MisterStory",
   description: "Explore business models, company strategies, founder stories and detailed business analysis from MisterStory.",
+  alternates: { canonical: absoluteUrl("/articles") },
 };
 
 export default async function ArticlesPage({ searchParams }: { searchParams: Promise<{ q?: string | string[]; category?: string | string[] }> }) {

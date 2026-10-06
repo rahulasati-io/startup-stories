@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import IntentCards from "@/components/IntentCards";
@@ -10,6 +11,11 @@ import { COMPANIES_QUERY } from "@/components/CompanyRow";
 import type { Company } from "@/components/CompanyDirectory";
 import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
 import { client } from "@/sanity/lib/client";
+import { absoluteUrl } from "@/lib/site-url";
+
+export const metadata: Metadata = {
+  alternates: { canonical: absoluteUrl("/") },
+};
 
 export default async function Home() {
   const [companiesResult, articlesResult] = await Promise.allSettled([

@@ -742,3 +742,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Confirmed the production build and TypeScript checks pass on the patched version.
 - Lint continues to pass with the two previously known non-blocking inline-image performance warnings.
 - Did not run `npm audit fix --force`; remaining dependency findings are being handled separately to avoid unsafe or breaking Sanity changes.
+
+# 6 October 2026 - Canonical URLs for primary directories
+
+- Added explicit canonical metadata for the homepage, Companies, People and Articles directories.
+- Confirmed the Authors directory already had its canonical URL and preserved it.
+- Filtered and searched directory URLs now point search engines to their clean directory URL without changing the visible page or navigation.
+- Reason: consolidate ranking signals and reduce the chance that query-parameter variations are treated as duplicate standalone pages.
