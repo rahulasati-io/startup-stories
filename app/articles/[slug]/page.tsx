@@ -7,6 +7,7 @@ import { defineQuery } from "next-sanity";
 import type { Article as ArticleSchema, WithContext } from "schema-dts";
 import ArticleCard from "@/components/ArticleCard";
 import ArticleSidebar, { type SidebarCompany } from "@/components/ArticleSidebar";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
@@ -415,6 +416,8 @@ export default async function ArticlePage({
     <Header />
     <main className="bg-[#f7f6f2]">
       <article className="w-full px-4 py-12 sm:px-6 md:px-10 md:py-16 lg:px-14 lg:py-20">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Articles", href: "/articles" }, { label: article.title }]} />
+        <div className="mt-8">
         {article.category && (
           article.categorySlug ? (
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
@@ -424,6 +427,7 @@ export default async function ArticlePage({
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">{article.category}</p>
           )
         )}
+        </div>
 
         <h1 className="mt-4 max-w-[1220px] text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
           {article.title}

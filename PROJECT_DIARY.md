@@ -770,3 +770,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Preserved manually uploaded Sanity images as the first choice and automatic generated thumbnails as the fallback.
 - Added explicit responsive sizes and stable aspect-ratio containers to reduce layout movement and avoid downloading unnecessarily large display images.
 - Kept Next.js image proxy optimization disabled, so Sanity images continue loading directly from its CDN without restoring the earlier private-IP proxy error.
+
+# 6 October 2026 - Visible breadcrumbs on detail pages
+
+- Added compact, mobile-scrollable breadcrumbs to company, people, author, article and topic detail pages.
+- Matched visible breadcrumb links to the existing structured breadcrumb data used by search engines.
+- Added missing BreadcrumbList structured data to topic pages.
+- Kept directory pages uncluttered because their location is already clear from the page heading and global navigation.

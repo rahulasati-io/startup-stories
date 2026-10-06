@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
 import ArticleDirectory from "@/components/ArticleDirectory";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import JsonLd from "@/components/JsonLd";
 import Newsletter from "@/components/Newsletter";
 import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
 import { absoluteUrl } from "@/lib/site-url";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
 
 const TOPIC_QUERY = defineQuery(/* groq */ `
@@ -49,11 +52,20 @@ export default async function TopicPage({ params }: Props) {
   if (!topic) notFound();
 
   const articles = allArticles.filter((article) => article.categorySlug === topic.slug);
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Articles", path: "/articles" },
+    { name: topic.title, path: `/topics/${topic.slug}` },
+  ]);
 
   return (
     <>
+      <JsonLd data={breadcrumb} />
       <Header />
       <main className="bg-[#f7f6f2]">
+        <div className="mx-auto max-w-7xl px-5 pt-8 md:px-8">
+          <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Articles", href: "/articles" }, { label: topic.title }]} />
+        </div>
         <ArticleDirectory
           articles={articles}
           initialCategory={topic.title}

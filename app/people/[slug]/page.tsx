@@ -8,6 +8,7 @@ import type { Person as PersonSchema, WithContext } from "schema-dts";
 import CompanyRow from "@/components/CompanyRow";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import Newsletter from "@/components/Newsletter";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
@@ -186,7 +187,8 @@ export default async function PersonPage({ params }: Props) {
       <main className="min-h-screen bg-[#f7f6f2] text-zinc-950">
         <section className="border-b border-zinc-200">
           <div className="mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
-            <div className="max-w-4xl">
+            <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "People", href: "/people" }, { label: person.name }]} />
+            <div className="mt-8 max-w-4xl">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-amber-700">Person profile</p>
               <h1 className="mt-3 text-5xl font-semibold tracking-[-.04em] md:text-6xl">{person.name}</h1>
               {person.role && <p className="mt-4 text-lg text-zinc-600">{person.role}</p>}
