@@ -1,5 +1,6 @@
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
@@ -458,10 +459,12 @@ export default async function ArticlePage({
         <div className="mt-10 grid items-start gap-10 xl:grid-cols-[minmax(0,880px)_minmax(280px,320px)]">
           <div className="min-w-0">
             {heroImage && (
-              <div className={`aspect-video overflow-hidden rounded-3xl ${isGeneratedHero ? "" : "md:aspect-[16/8]"}`}>
-                <img
+              <div className={`relative aspect-video overflow-hidden rounded-3xl ${isGeneratedHero ? "" : "md:aspect-[16/8]"}`}>
+                <Image
                   src={heroImage}
                   alt={article.mainImage?.alt || article.title}
+                  fill
+                  sizes="(min-width: 1280px) 880px, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2.5rem)"
                   className="h-full w-full object-cover object-center"
                 />
               </div>

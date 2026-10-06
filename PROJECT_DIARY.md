@@ -763,3 +763,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Preserved the stronger biography and added the official Tata source URL to the retained spreadsheet profile.
 - Removed the obsolete `jamsetji-nusserwanji-tata` Sanity profile and its superseded Tata Power relationship only after verifying the replacement relationships.
 - Added a permanent redirect from `/people/jamsetji-nusserwanji-tata` to `/people/jamsetji-tata` so old links and search signals reach the retained page.
+
+# 6 October 2026 - Improved remaining article image rendering
+
+- Replaced the two remaining ordinary HTML image elements with Next.js Image components on article pages and company-page article cards.
+- Preserved manually uploaded Sanity images as the first choice and automatic generated thumbnails as the fallback.
+- Added explicit responsive sizes and stable aspect-ratio containers to reduce layout movement and avoid downloading unnecessarily large display images.
+- Kept Next.js image proxy optimization disabled, so Sanity images continue loading directly from its CDN without restoring the earlier private-IP proxy error.
