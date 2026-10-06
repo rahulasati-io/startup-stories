@@ -78,7 +78,7 @@ export default function CompanyDirectory({
     <section id="company-deep-dives" className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-16">
       <div className="max-w-2xl">
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">Company directory</p>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-950 md:text-3xl">{title}</h2>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-950 md:text-3xl">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-zinc-600">{description}</p>
       </div>
 

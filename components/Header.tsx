@@ -6,6 +6,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import SiteLogo from "@/components/SiteLogo";
 
 const navigation = [
+  { href: "/", label: "Home" },
   { href: "/companies", label: "Companies" },
   { href: "/people", label: "People" },
   { href: "/authors", label: "Authors" },

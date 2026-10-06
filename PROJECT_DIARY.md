@@ -749,3 +749,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Confirmed the Authors directory already had its canonical URL and preserved it.
 - Filtered and searched directory URLs now point search engines to their clean directory URL without changing the visible page or navigation.
 - Reason: consolidate ranking signals and reduce the chance that query-parameter variations are treated as duplicate standalone pages.
+
+# 6 October 2026 - Companies heading and homepage navigation
+
+- Changed the existing Companies directory title from an H2 to the page's single H1 without adding or repeating visible copy.
+- Preserved the existing People, Authors and Articles headings because those directories already use an H1.
+- Added Home as the first item in the shared desktop and mobile navigation; the MisterStory logo continues to link home as a second shortcut.
+- Reason: give the Companies directory a clear primary heading for visitors and search engines while making homepage navigation explicit.
