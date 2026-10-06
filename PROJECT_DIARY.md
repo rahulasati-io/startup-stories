@@ -734,3 +734,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Added `noindex, follow` metadata to `/search` and every query variation such as `/search?q=zomato`.
 - Search engines can continue following company, people, author and article links shown in results, but the result pages themselves should not appear in Google.
 - Kept public company, people, author and article pages indexable.
+
+# 6 October 2026 - Patched Next.js security vulnerabilities
+
+- Upgraded `next` and `eslint-config-next` together from `16.3.2` to `16.3.8`.
+- Removed the critical Next.js findings reported by the dependency security audit, including the issue affecting generated images.
+- Confirmed the production build and TypeScript checks pass on the patched version.
+- Lint continues to pass with the two previously known non-blocking inline-image performance warnings.
+- Did not run `npm audit fix --force`; remaining dependency findings are being handled separately to avoid unsafe or breaking Sanity changes.
