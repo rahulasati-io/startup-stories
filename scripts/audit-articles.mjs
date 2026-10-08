@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
+import { isValidArticleSlug } from "../lib/article-slug.mjs";
 
 const args = process.argv.slice(2);
 const option = (name) => args.find((argument) => argument.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -34,7 +35,7 @@ const normalizedCategory = (value) => {
   if (category === "people & leadership" || category === "people and leadership") return "people-leadership";
   return category;
 };
-const validSlug = (value) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(clean(value));
+const validSlug = isValidArticleSlug;
 const countWords = (body) => (body || [])
   .flatMap((block) => block.children || [])
   .map((child) => clean(child.text))
@@ -109,7 +110,7 @@ for (const article of articles) {
 
   if (!importId) problems.push(issue("ERROR", "missing_import_id", "Sanity article has no permanent import_id."));
   if (importId && (articlesByImportId.get(importId)?.length || 0) > 1) problems.push(issue("ERROR", "duplicate_import_id", `More than one published Sanity article uses import_id ${importId}.`));
-  if (!slug || !validSlug(slug)) problems.push(issue("ERROR", "invalid_slug", "Article slug is missing or invalid."));
+  if (!validSlug(article.slug)) problems.push(issue("ERROR", "invalid_slug", "Article slug is missing or invalid."));
   if (slug && (articlesBySlug.get(slug)?.length || 0) > 1) problems.push(issue("ERROR", "duplicate_slug", `More than one published Sanity article uses slug ${slug}.`));
   if (!clean(article.title)) problems.push(issue("ERROR", "missing_title", "Article title is missing."));
   if (clean(article.title) && (articlesByTitle.get(clean(article.title).toLowerCase())?.length || 0) > 1) problems.push(issue("WARNING", "duplicate_title", "Another published article has the same title."));

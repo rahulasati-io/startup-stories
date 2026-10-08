@@ -54,4 +54,6 @@ Use the dedicated `:check` and `:publish` commands exactly as shown. This keeps 
 
 Rows containing only prefilled audit formulas are ignored by the importer, so unused prepared rows cannot create empty or phantom articles.
 
+Article slugs must match `^[a-z0-9]+(?:-[a-z0-9]+)*$` exactly. Spaces (including at either end), uppercase letters, repeated hyphens, and leading/trailing hyphens block import before any writes, even for drafts. Slugs are never trimmed or repaired automatically. Studio Publish also blocks invalid slugs and other schema errors. Google Sheets exports must pass this same importer; this repository has no direct Sheets publisher. Sanity API credentials can bypass Studio schema rules, so any external publisher must validate before sending mutations.
+
 `People featured` and `Concepts` can be managed either from the spreadsheet or in Sanity. A populated spreadsheet cell replaces that article's corresponding references. A blank cell preserves the references already stored in Sanity.

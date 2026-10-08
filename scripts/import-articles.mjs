@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
+import { assertArticleSlug, isValidArticleSlug } from "../lib/article-slug.mjs";
 
 const args = process.argv.slice(2);
 const filePath = args.find((argument) => !argument.startsWith("--"));
@@ -26,7 +27,7 @@ if (!worksheet) throw new Error('The workbook needs an "Articles" sheet. Example
 const clean = (value) => value === undefined || value === null ? "" : String(value).trim();
 const split = (value) => clean(value).split(";").map(clean).filter(Boolean);
 const reference = (id) => ({ _type: "reference", _ref: id });
-const validSlug = (slug) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+const validSlug = isValidArticleSlug;
 const categoryAliases = new Map([
   ["business model", "business-model"],
   ["business-model", "business-model"],
@@ -72,7 +73,7 @@ async function run() {
   const inputs = filtered.map((row, index) => {
     const rowNumber = index + 2;
     const importId = clean(row.import_id);
-    const slug = clean(row.article_slug);
+    const slug = row.article_slug;
     const title = clean(row.title);
     const thumbnailTitle = clean(row.thumbnail_title) || undefined;
     const companySlugs = split(row.company_slug);
@@ -88,7 +89,7 @@ async function run() {
     const missing = [["import_id", importId], ["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["article_tag", categoryInput], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) throw new Error(`Articles row ${rowNumber}: ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required.`);
     if (!validSlug(importId)) throw new Error(`Articles row ${rowNumber}: import_id must use lowercase letters, numbers and hyphens only.`);
-    if (!validSlug(slug)) throw new Error(`Articles row ${rowNumber}: article_slug must use lowercase letters, numbers and hyphens only.`);
+    assertArticleSlug(slug, `Articles row ${rowNumber}: article_slug`);
     if (importIds.has(importId)) throw new Error(`Articles row ${rowNumber}: duplicate import_id "${importId}".`);
     if (slugs.has(slug)) throw new Error(`Articles row ${rowNumber}: duplicate article_slug "${slug}".`);
     if (!["draft", "published"].includes(status)) throw new Error(`Articles row ${rowNumber}: status must be draft or published.`);
@@ -202,6 +203,7 @@ async function run() {
           : { publishedAt: source.publishedAt || now }
         : {};
       const document = { ...source, ...values, ...dateValues, _id: shouldPublish ? baseId : `drafts.${baseId}` };
+      assertArticleSlug(document.slug?.current, `Article ${document._id}`);
       if (shouldPublish) {
         let transaction = client.transaction().createOrReplace(document);
         if (existing.draft) transaction = transaction.delete(existing.draft._id);

@@ -1,5 +1,6 @@
 import { ALL_FIELDS_GROUP, defineArrayMember, defineField, defineType } from "sanity";
 import OptimizedArticleImageInput from "../components/OptimizedArticleImageInput";
+import { ARTICLE_SLUG_ERROR, isValidArticleSlug } from "../../lib/article-slug.mjs";
 
 export const postType = defineType({
   name: "post",
@@ -55,7 +56,7 @@ export const postType = defineType({
       description: "Enter the slug manually.",
       validation: (Rule) => Rule.required().custom((value) => {
         if (!value?.current) return "A slug is required before this article can be published.";
-        return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.current) || "Use lowercase letters, numbers and hyphens only.";
+        return isValidArticleSlug(value.current) || ARTICLE_SLUG_ERROR;
       }),
     }),
 
