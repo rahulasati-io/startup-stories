@@ -801,3 +801,26 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Prevented query-only and Sanity system fields such as `slugValue` and `_system` from being copied back into article documents.
 - Publishing or retaining genuine editorial drafts remains unchanged.
 - Status: Implemented.
+
+# 2026-10-09 — Generated thumbnails can be stored permanently in Sanity
+
+- **Status:** Implemented
+- Added an idempotent thumbnail-materialization command that renders the existing generated article design once, uploads the resulting `1200×675` image to Sanity, and attaches it as the article's main image.
+- Existing manual main images are always preserved and skipped. If an article has an unpublished draft, the same image reference is applied to both the published document and its draft so a later publish cannot accidentally remove it.
+- The dynamic thumbnail route remains available only as a fallback for new articles until the materialization command is run.
+- **Reason:** Direct Sanity CDN images avoid regenerating thumbnails during page requests and should provide faster, simpler image delivery.
+
+# 2026-10-09 — Corrected a malformed Quanfluence article URL
+
+- **Status:** Implemented
+- Corrected the published Quanfluence article slug from `quanfluence-quantum-computer-funding   Copy` to `quanfluence-quantum-computer-funding` without publishing its other draft changes.
+- Added a permanent redirect from the malformed encoded URL to the corrected article URL so previously shared links remain usable after deployment.
+
+# 2026-10-09 — Enforced article slug validation at publishing boundaries
+
+- **Status:** Implemented
+- Shared strict slug validation between the article schema, custom Studio Publish action, Excel importer, and audit. Invalid raw input is rejected rather than trimmed; final newlines are rejected too.
+- The custom Publish action now waits for validation and blocks schema errors before changing dates or publishing. Imports validate all selected rows before writes and recheck the final document slug.
+- **Reason:** The user requested prevention of malformed published article URLs, including the Quanfluence Copy suffix.
+- Confirmed live Quanfluence already uses `quanfluence-quantum-computer-funding`; no content mutation was needed. Preserved the pending permanent redirect and existing config. No direct Google Sheets publisher or publishing API exists in this checkout.
+- Website/Studio deployment is still required for these guards and the pending redirect. No unrelated changes were published.

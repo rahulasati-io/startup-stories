@@ -11,7 +11,9 @@
     "import:logos": "node --env-file=.env.local scripts/import-company-logos.mjs",
     "import:articles": "node --env-file=.env.local scripts/import-articles.mjs",
     "import:articles:check": "node --env-file=.env.local scripts/import-articles.mjs --dry-run",
-    "import:articles:publish": "node --env-file=.env.local scripts/import-articles.mjs --publish"
+    "import:articles:publish": "node --env-file=.env.local scripts/import-articles.mjs --publish",
+    "materialize:thumbnails": "node --env-file=.env.local scripts/materialize-article-thumbnails.mjs",
+    "materialize:thumbnails:write": "node --env-file=.env.local scripts/materialize-article-thumbnails.mjs --write"
   },
   "dependencies": {
     "@portabletext/react": "^8.0.1",

@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         destination: "/people/jamsetji-tata",
         permanent: true,
       },
+      {
+        source: "/articles/quanfluence-quantum-computer-funding%20%20%20Copy",
+        destination: "/articles/quanfluence-quantum-computer-funding",
+        permanent: true,
+      },
     ];
   },
   images: {
