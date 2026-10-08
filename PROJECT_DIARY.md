@@ -792,3 +792,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Preserved Sanity's standard image selector and hotspot controls so editors can continue using the normal workflow when required.
 - Existing images are unchanged; the optimizer applies only when an editor chooses a new file through the new control.
 - Status: Implemented.
+
+# 9 October 2026 - Prevented identical article drafts
+
+- Audited every published article with an unpublished Sanity draft before changing any content.
+- Found 101 drafts identical to their live articles, three with only internal metadata differences, and one genuine thumbnail-title update.
+- Updated the spreadsheet importer so an unchanged published article is skipped instead of receiving an identical draft when `--publish` is omitted.
+- Prevented query-only and Sanity system fields such as `slugValue` and `_system` from being copied back into article documents.
+- Publishing or retaining genuine editorial drafts remains unchanged.
+- Status: Implemented.

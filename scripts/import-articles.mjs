@@ -40,7 +40,16 @@ const categoryAliases = new Map([
 const same = (left, right) => isDeepStrictEqual(left ?? null, right ?? null);
 const controlledFields = ["importId", "title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription"];
 const publicContentFields = ["title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription"];
-const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => !["_rev", "_createdAt", "_updatedAt"].includes(field)));
+const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => ![
+  "_id",
+  "_rev",
+  "_createdAt",
+  "_updatedAt",
+  "_system",
+  // Computed only by the importer query so records can be matched by slug.
+  // It is not an article field and must never be written back to Sanity.
+  "slugValue",
+].includes(field)));
 const changed = (document, values, fields = controlledFields) => fields.some((field) => !same(document?.[field], values[field]));
 const progress = (done, total) => { if (done % 20 === 0 || done === total) console.log(`Articles: ${done}/${total} checked`); };
 
@@ -171,13 +180,16 @@ async function run() {
       comparedPublicFields.push("concepts");
     }
     const shouldPublish = input.status === "published" && allowPublish;
-    if (input.status === "published" && !allowPublish) heldAsDraft += 1;
     const comparison = shouldPublish ? existing.published : (existing.draft || existing.published);
-    if (comparison && !changed(comparison, values, comparedFields) && (shouldPublish ? Boolean(existing.published) : Boolean(existing.draft))) {
+    // Do not manufacture an identical draft merely because a published row is
+    // imported without --publish. A draft is useful only when sheet-controlled
+    // fields actually differ from the current draft or published document.
+    if (comparison && !changed(comparison, values, comparedFields)) {
       skipped += 1;
       progress(index + 1, inputs.length);
       continue;
     }
+    if (input.status === "published" && !allowPublish) heldAsDraft += 1;
     if (!dryRun) {
       const baseId = existing.published?._id || existing.draft?._id.replace(/^drafts\./, "") || randomUUID();
       const source = stripSystem(existing.draft || existing.published || {});
