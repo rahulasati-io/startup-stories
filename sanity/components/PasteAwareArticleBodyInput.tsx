@@ -1,6 +1,6 @@
 "use client";
 
-import type {OnPasteFn, PortableTextInputProps} from "sanity";
+import {PortableTextInput, type OnPasteFn, type PortableTextInputProps} from "sanity";
 
 type TableRow = {
   _key: string;
@@ -57,10 +57,34 @@ function rowsFromTabs(text: string) {
   return normalizeRows(rows);
 }
 
+function rowsFromMarkdown(text: string) {
+  const lines = text
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length < 3 || !lines[0].includes("|") || !lines[1].includes("|")) return null;
+
+  const separatorCell = /^:?-{3,}:?$/;
+  const splitRow = (line: string) => {
+    const withoutEdges = line.replace(/^\|/, "").replace(/\|$/, "");
+    return withoutEdges.split(/(?<!\\)\|/).map((cell) => cell.replace(/\\\|/g, "|").trim());
+  };
+  const separator = splitRow(lines[1]);
+  if (separator.length < 2 || !separator.every((cell) => separatorCell.test(cell.replace(/\s/g, "")))) {
+    return null;
+  }
+
+  return normalizeRows([splitRow(lines[0]), ...lines.slice(2).map(splitRow)]);
+}
+
 export default function PasteAwareArticleBodyInput(props: PortableTextInputProps) {
   const onPaste: OnPasteFn = (data) => {
     const clipboard = data.event.clipboardData;
-    const rows = rowsFromHtml(clipboard.getData("text/html")) || rowsFromTabs(clipboard.getData("text/plain"));
+    const plainText = clipboard.getData("text/plain");
+    const rows = rowsFromHtml(clipboard.getData("text/html"))
+      || rowsFromTabs(plainText)
+      || rowsFromMarkdown(plainText);
     if (!rows) return undefined;
 
     data.event.preventDefault();
@@ -75,5 +99,5 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
     };
   };
 
-  return props.renderDefault({...props, onPaste} as PortableTextInputProps);
+  return <PortableTextInput {...props} onPaste={onPaste} />;
 }
