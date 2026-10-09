@@ -29,7 +29,7 @@ export async function getCompanyDirectoryText() {
   const companies = await client.fetch<DirectoryCompany[]>(
     COMPANY_DIRECTORY_QUERY,
     {},
-    {perspective: "published", next: {revalidate: 3600}},
+    {perspective: "published", cache: "no-store"},
   );
 
   const entries = companies.map((company) => {
@@ -49,4 +49,3 @@ export async function getCompanyDirectoryText() {
     "",
   ].join("\n");
 }
-

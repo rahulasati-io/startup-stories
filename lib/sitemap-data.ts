@@ -36,7 +36,7 @@ export async function getContentSitemap(types: SitemapDocumentType[]): Promise<S
   const documents = await client.fetch<SitemapDocument[]>(
     CONTENT_SITEMAP_QUERY,
     {types},
-    {perspective: "published"},
+    {perspective: "published", cache: "no-store"},
   );
 
   return documents.flatMap((document) => {

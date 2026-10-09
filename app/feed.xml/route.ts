@@ -69,7 +69,7 @@ export async function GET() {
     const articles = await client.fetch<FeedArticle[]>(
       FEED_QUERY,
       {},
-      {perspective: "published", next: {revalidate: 900}},
+      {perspective: "published", cache: "no-store"},
     );
 
     const newestUpdate = articles[0]
@@ -123,7 +123,7 @@ export async function GET() {
     return new Response(xml, {
       headers: {
         "Content-Type": "application/rss+xml; charset=utf-8",
-        "Cache-Control": "public, s-maxage=900, stale-while-revalidate=86400",
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {

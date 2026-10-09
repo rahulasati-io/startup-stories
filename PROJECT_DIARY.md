@@ -851,3 +851,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Added an optional comma-separated SEO Keywords field with duplicate and excessive-keyword warnings. Keywords are exposed in page metadata and Article structured data, while the article title remains the fallback when no separate SEO title is supplied.
 - Updated the spreadsheet importer to accept optional `seo_keywords` (or `keywords`) and to permit a blank `company_slug`. Updated the audit so company-free articles are no longer treated as publishing failures.
 - **Reason:** Publishing controls should prevent incomplete public articles without forcing irrelevant company relationships or unnecessary SEO fields.
+
+# 2026-10-09 — Faster published-content discovery and cache refresh
+
+- **Status:** Implemented in code; the secure Sanity webhook needs one-time production configuration.
+- Published-content sitemaps, the company directory and the RSS feed now read the current published Sanity dataset on every request instead of retaining one-hour or longer cached copies.
+- Added a signed `/api/revalidate` endpoint that can refresh public pages and indexes immediately after Sanity publishes or changes a company, person, article, author or category.
+- Drafts remain excluded from public pages and machine-readable discovery files.
+- **Reason:** Newly published and updated content should become visible to visitors and crawlers quickly without sacrificing the site's normal cached page speed.

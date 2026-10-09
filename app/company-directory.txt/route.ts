@@ -1,13 +1,13 @@
 import {getCompanyDirectoryText} from "@/lib/ai-content-directory";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     return new Response(await getCompanyDirectoryText(), {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {
@@ -22,4 +22,3 @@ export async function GET() {
     });
   }
 }
-
