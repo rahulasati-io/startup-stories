@@ -75,5 +75,60 @@ export const blockContentType = defineType({
         }
       ]
     }),
+    defineArrayMember({
+      name: 'articleTable',
+      title: 'Table',
+      type: 'object',
+      fields: [
+        {
+          name: 'caption',
+          title: 'Caption',
+          type: 'string',
+        },
+        {
+          name: 'headerRow',
+          title: 'Use first row as headings',
+          type: 'boolean',
+          initialValue: true,
+        },
+        {
+          name: 'rows',
+          title: 'Rows',
+          type: 'array',
+          validation: (Rule) => Rule.required().min(2),
+          of: [
+            {
+              name: 'articleTableRow',
+              title: 'Row',
+              type: 'object',
+              fields: [
+                {
+                  name: 'cells',
+                  title: 'Cells',
+                  type: 'array',
+                  validation: (Rule) => Rule.required().min(2),
+                  of: [{type: 'string'}],
+                },
+              ],
+              preview: {
+                select: {cells: 'cells'},
+                prepare: ({cells}) => ({title: Array.isArray(cells) ? cells.join(' · ') : 'Table row'}),
+              },
+            },
+          ],
+        },
+      ],
+      preview: {
+        select: {caption: 'caption', rows: 'rows'},
+        prepare: ({caption, rows}) => {
+          const rowCount = Array.isArray(rows) ? rows.length : 0
+          const columnCount = rowCount && Array.isArray(rows[0]?.cells) ? rows[0].cells.length : 0
+          return {
+            title: caption || 'Pasted table',
+            subtitle: `${rowCount} rows × ${columnCount} columns`,
+          }
+        },
+      },
+    }),
   ],
 })

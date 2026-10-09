@@ -824,3 +824,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Reason:** The user requested prevention of malformed published article URLs, including the Quanfluence Copy suffix.
 - Confirmed live Quanfluence already uses `quanfluence-quantum-computer-funding`; no content mutation was needed. Preserved the pending permanent redirect and existing config. No direct Google Sheets publisher or publishing API exists in this checkout.
 - Website/Studio deployment is still required for these guards and the pending redirect. No unrelated changes were published.
+# 2026-10-09 — Article tables can be pasted directly into Sanity
+
+- **Status:** Implemented
+- The Sanity article-body editor now detects tables copied from Excel, Google Sheets, Word and Google Docs and converts them into structured table blocks on paste.
+- Editors do not need to create rows or cells manually. The first pasted row is treated as the table header, while captions and the header-row setting remain editable in Sanity.
+- Article pages render these tables responsively with horizontal scrolling on small screens.
+- The spreadsheet article importer has not yet been changed to detect Markdown tables; this phase covers direct manual pasting in Sanity only.
+- **Reason:** Rahul wants a low-friction workflow where a complete table can be copied and pasted into an article without using table-building controls.

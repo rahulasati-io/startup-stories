@@ -1,5 +1,6 @@
 import { ALL_FIELDS_GROUP, defineArrayMember, defineField, defineType } from "sanity";
 import OptimizedArticleImageInput from "../components/OptimizedArticleImageInput";
+import PasteAwareArticleBodyInput from "../components/PasteAwareArticleBodyInput";
 import { ARTICLE_SLUG_ERROR, isValidArticleSlug } from "../../lib/article-slug.mjs";
 
 export const postType = defineType({
@@ -97,7 +98,10 @@ export const postType = defineType({
       title: "Article Body",
       type: "blockContent",
       group: "writing",
-      description: "Tip: click inside the editor and press Ctrl+Enter to write in full-screen mode.",
+      description: "Paste tables directly from Excel, Google Sheets, Word or Google Docs. Press Ctrl+Enter for full-screen writing.",
+      components: {
+        input: PasteAwareArticleBodyInput,
+      },
       validation: (Rule) => Rule.required(),
     }),
 

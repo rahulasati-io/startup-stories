@@ -135,6 +135,54 @@ type Article = {
   };
 };
 
+type ArticleTableRow = {
+  _key?: string;
+  cells?: string[];
+};
+
+type ArticleTableValue = {
+  caption?: string;
+  headerRow?: boolean;
+  rows?: ArticleTableRow[];
+};
+
+function ArticleTable({value}: {value: ArticleTableValue}) {
+  const rows = (value.rows || []).filter((row) => Array.isArray(row.cells));
+  if (!rows.length) return null;
+  const width = Math.max(...rows.map((row) => row.cells?.length || 0));
+  const cells = (row: ArticleTableRow) =>
+    Array.from({length: width}, (_, index) => row.cells?.[index] || "");
+  const heading = value.headerRow !== false ? rows[0] : null;
+  const body = heading ? rows.slice(1) : rows;
+
+  return (
+    <figure className="my-9">
+      <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <table className="w-full min-w-[640px] border-collapse text-left text-[15px] leading-6 text-zinc-700">
+          {value.caption && (
+            <caption className="border-b border-zinc-200 bg-zinc-50 px-5 py-3 text-left text-sm font-semibold text-zinc-800">
+              {value.caption}
+            </caption>
+          )}
+          {heading && (
+            <thead className="bg-zinc-950 text-white">
+              <tr>{cells(heading).map((cell, index) => <th key={index} scope="col" className="px-5 py-3.5 font-semibold">{cell}</th>)}</tr>
+            </thead>
+          )}
+          <tbody>
+            {body.map((row, rowIndex) => (
+              <tr key={row._key || rowIndex} className="border-t border-zinc-200 first:border-t-0 even:bg-zinc-50/70">
+                {cells(row).map((cell, cellIndex) => <td key={cellIndex} className="px-5 py-3 align-top">{cell}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-zinc-500 md:hidden">Swipe sideways to view the full table.</p>
+    </figure>
+  );
+}
+
 function calculateReadingTime(body: PortableTextBlock[] = []) {
   const text = body
     .filter((block) => block?._type === "block")
@@ -251,6 +299,9 @@ export async function generateMetadata({
 }
 
 const portableTextComponents: PortableTextComponents = {
+  types: {
+    articleTable: ({value}) => <ArticleTable value={value as ArticleTableValue} />,
+  },
   block: {
     normal: ({ children }) => (
       <p className="mb-6 text-[18px] leading-[1.85] text-zinc-700">
