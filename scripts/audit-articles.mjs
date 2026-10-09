@@ -116,7 +116,6 @@ for (const article of articles) {
   if (clean(article.title) && (articlesByTitle.get(clean(article.title).toLowerCase())?.length || 0) > 1) problems.push(issue("WARNING", "duplicate_title", "Another published article has the same title."));
   if (!article.category?.slug) problems.push(issue("ERROR", "missing_category", "Article category is missing or unresolved."));
   if (!article.author?.slug || !article.author?.name) problems.push(issue("ERROR", "missing_author", "Author is missing or unresolved."));
-  if (!Array.isArray(article.companies) || article.companies.length === 0) problems.push(issue("ERROR", "missing_company", "No company is linked."));
   if ((article.companies || []).some((company) => !company?.slug || !company?.name)) problems.push(issue("ERROR", "unresolved_company", "At least one linked company is unresolved."));
 
   const publicationDate = article.publishedAt ? new Date(article.publishedAt) : null;

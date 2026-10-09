@@ -39,8 +39,8 @@ const categoryAliases = new Map([
   ["people-leadership", "people-leadership"],
 ]);
 const same = (left, right) => isDeepStrictEqual(left ?? null, right ?? null);
-const controlledFields = ["importId", "title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription"];
-const publicContentFields = ["title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription"];
+const controlledFields = ["importId", "title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription", "seoKeywords"];
+const publicContentFields = ["title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription", "seoKeywords"];
 const stripSystem = (document) => Object.fromEntries(Object.entries(document).filter(([field]) => ![
   "_id",
   "_rev",
@@ -79,23 +79,26 @@ async function run() {
     const companySlugs = split(row.company_slug);
     const categoryInput = clean(row.article_tag) || clean(row.category_slug);
     const categorySlug = categoryAliases.get(categoryInput.toLowerCase()) || categoryInput;
-    const authorSlug = clean(row.author_slug);
+    const authorSlug = clean(row.author_slug) || "rahul";
     const hasPeopleSlugs = clean(row.people_slugs) !== "";
     const peopleSlugs = split(row.people_slugs);
     const hasConceptSlugs = clean(row.concept_slugs) !== "";
     const conceptSlugs = split(row.concept_slugs);
     const bodyMarkdown = clean(row.article_body);
     const status = (clean(row.status) || "draft").toLowerCase();
-    const missing = [["import_id", importId], ["article_slug", slug], ["company_slug", companySlugs.length], ["title", title], ["article_tag", categoryInput], ["author_slug", authorSlug], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
+    const seoDescription = clean(row.seo_description) || undefined;
+    const seoKeywords = clean(row.seo_keywords || row.keywords) || undefined;
+    const missing = [["import_id", importId], ["article_slug", slug], ["title", title], ["article_tag", categoryInput], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) throw new Error(`Articles row ${rowNumber}: ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required.`);
     if (!validSlug(importId)) throw new Error(`Articles row ${rowNumber}: import_id must use lowercase letters, numbers and hyphens only.`);
     assertArticleSlug(slug, `Articles row ${rowNumber}: article_slug`);
     if (importIds.has(importId)) throw new Error(`Articles row ${rowNumber}: duplicate import_id "${importId}".`);
     if (slugs.has(slug)) throw new Error(`Articles row ${rowNumber}: duplicate article_slug "${slug}".`);
     if (!["draft", "published"].includes(status)) throw new Error(`Articles row ${rowNumber}: status must be draft or published.`);
+    if (status === "published" && allowPublish && !seoDescription) throw new Error(`Articles row ${rowNumber}: seo_description is required when publishing.`);
     importIds.add(importId);
     slugs.add(slug);
-    return { rowNumber, importId, slug, title, thumbnailTitle, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription: clean(row.seo_description) || undefined };
+    return { rowNumber, importId, slug, title, thumbnailTitle, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription, seoKeywords };
   });
 
   const companySlugs = [...new Set(inputs.flatMap((input) => input.companySlugs))];
@@ -167,6 +170,7 @@ async function run() {
       author: reference(authorsBySlug.get(input.authorSlug)),
       seoTitle: input.seoTitle,
       seoDescription: input.seoDescription,
+      seoKeywords: input.seoKeywords,
     };
     const comparedFields = [...controlledFields];
     const comparedPublicFields = [...publicContentFields];

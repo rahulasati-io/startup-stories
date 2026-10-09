@@ -2,12 +2,26 @@ import { ALL_FIELDS_GROUP, defineArrayMember, defineField, defineType } from "sa
 import OptimizedArticleImageInput from "../components/OptimizedArticleImageInput";
 import PasteAwareArticleBodyInput from "../components/PasteAwareArticleBodyInput";
 import { ARTICLE_SLUG_ERROR, isValidArticleSlug } from "../../lib/article-slug.mjs";
+import {apiVersion} from "../env";
 
 export const postType = defineType({
   name: "post",
   title: "Article",
   type: "document",
   __experimental_formPreviewTitle: false,
+  initialValue: async (_, context) => {
+    const authorId = await context.getClient({apiVersion}).fetch<string | null>(/* groq */ `
+      *[
+        _type == "author" &&
+        slug.current == "rahul" &&
+        !(_id in path("drafts.**"))
+      ][0]._id
+    `);
+
+    return authorId
+      ? {author: {_type: "reference", _ref: authorId}}
+      : {};
+  },
 
   groups: [
     {
@@ -102,7 +116,7 @@ export const postType = defineType({
       components: {
         input: PasteAwareArticleBodyInput,
       },
-      validation: (Rule) => Rule.required(),
+      validation: (Rule) => Rule.required().min(1),
     }),
 
     defineField({
@@ -117,7 +131,7 @@ export const postType = defineType({
     defineField({
       name: "company",
       title: "Companies",
-      description: "Link every company that is substantially discussed in this article. Add at least one company.",
+      description: "Optional. Link every company that is substantially discussed. Leave this blank when the article is not about a specific company.",
       type: "array",
       group: "connections",
       of: [
@@ -126,7 +140,7 @@ export const postType = defineType({
           to: [{ type: "company" }],
         }),
       ],
-      validation: (Rule) => Rule.required().min(1).unique(),
+      validation: (Rule) => Rule.unique(),
     }),
 
     defineField({
@@ -215,6 +229,27 @@ export const postType = defineType({
       type: "text",
       group: "publishing",
       rows: 3,
+      description: "Required before publishing. Summarise the article accurately in natural language; avoid keyword stuffing.",
+      validation: (Rule) => [
+        Rule.required().error("Add an SEO meta description before publishing."),
+        Rule.min(120).max(170).warning("Aim for roughly 120–170 characters so the description reads well in search results."),
+      ],
+    }),
+
+    defineField({
+      name: "seoKeywords",
+      title: "SEO Keywords",
+      type: "string",
+      group: "publishing",
+      description: "Optional. Enter 3–8 specific topic phrases separated by commas. Use natural variations and avoid repeating the same keyword.",
+      validation: (Rule) => Rule.custom((value) => {
+        if (!value) return true;
+        const keywords = value.split(",").map((keyword) => keyword.trim()).filter(Boolean);
+        const unique = new Set(keywords.map((keyword) => keyword.toLowerCase()));
+        if (keywords.length > 10) return "Use no more than 10 focused keyword phrases.";
+        if (unique.size !== keywords.length) return "Remove repeated keyword phrases.";
+        return true;
+      }).warning(),
     }),
 
     defineField({

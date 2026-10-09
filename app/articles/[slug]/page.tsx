@@ -65,6 +65,7 @@ const ARTICLE_QUERY = defineQuery(/* groq */ `
     },
     seoTitle,
     seoDescription,
+    seoKeywords,
     socialImage{
       asset
     }
@@ -130,6 +131,7 @@ type Article = {
   }[];
   seoTitle?: string;
   seoDescription?: string;
+  seoKeywords?: string;
   socialImage?: {
     asset?: Parameters<typeof urlFor>[0];
   };
@@ -272,10 +274,15 @@ export async function generateMetadata({
       : generatedThumbnail
         ? absoluteUrl(generatedThumbnail)
         : undefined;
+  const keywords = article.seoKeywords
+    ?.split(",")
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
 
   return {
     title: article.seoTitle || article.title,
     description: article.seoDescription || undefined,
+    keywords: keywords?.length ? keywords : undefined,
     alternates: {
       canonical: canonicalUrl,
     },
@@ -432,6 +439,7 @@ export default async function ArticlePage({
     "@id": `${canonicalUrl}#article`,
     headline: article.title,
     description: article.seoDescription,
+    keywords: article.seoKeywords,
     url: canonicalUrl,
     mainEntityOfPage: canonicalUrl,
     image: structuredImage,

@@ -832,3 +832,22 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Article pages render these tables responsively with horizontal scrolling on small screens.
 - The spreadsheet article importer has not yet been changed to detect Markdown tables; this phase covers direct manual pasting in Sanity only.
 - **Reason:** Rahul wants a low-friction workflow where a complete table can be copied and pasted into an article without using table-building controls.
+
+# 2026-10-09 — Added AI-readable site and company directories
+
+- **Status:** Implemented.
+- Added `/company-directory.txt`, an automatically generated list of every published company, its canonical MisterStory URL, and its industry when available.
+- Added `/llms.txt`, a concise Markdown guide to MisterStory's primary directories, machine-readable resources, editorial standards, and policies.
+- The company directory reads published Sanity records and refreshes automatically, so new published company pages do not require manual maintenance.
+- Kept the existing XML sitemaps unchanged for search engines. The plain-text directory primarily supports editorial AI workflows, while `llms.txt` is an experimental aid for compatible AI agents and does not promise rankings or citations.
+- **Reason:** AI writing tools sometimes fail to parse XML sitemaps. These routes provide simpler verified URLs without misrepresenting an emerging convention as a guaranteed discovery signal.
+
+# 2026-10-09 — Tightened article publishing requirements
+
+- **Status:** Implemented.
+- Company references are now optional because some useful articles discuss markets, policies, technologies, or concepts without substantially covering a specific company.
+- New manually created articles default to the published Rahul Asati author record. The spreadsheet importer also uses the `rahul` author slug when `author_slug` is blank.
+- The Studio Publish action remains hidden until the article has a title, valid slug, meaningful body, category, author, and SEO meta description, with schema validation providing the field-level explanation.
+- Added an optional comma-separated SEO Keywords field with duplicate and excessive-keyword warnings. Keywords are exposed in page metadata and Article structured data, while the article title remains the fallback when no separate SEO title is supplied.
+- Updated the spreadsheet importer to accept optional `seo_keywords` (or `keywords`) and to permit a blank `company_slug`. Updated the audit so company-free articles are no longer treated as publishing failures.
+- **Reason:** Publishing controls should prevent incomplete public articles without forcing irrelevant company relationships or unnecessary SEO fields.
