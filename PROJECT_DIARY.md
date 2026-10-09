@@ -860,3 +860,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Configured the matching production-only Vercel secret and enabled Sanity webhook. Ordinary publishing and unpublishing now trigger the refresh automatically, so a separate Postman cache-clear request is not needed.
 - Drafts remain excluded from public pages and machine-readable discovery files.
 - **Reason:** Newly published and updated content should become visible to visitors and crawlers quickly without sacrificing the site's normal cached page speed.
+
+# 2026-10-09 — Meaningful article sitemap modification dates
+
+- **Status:** Implemented.
+- Article sitemap entries now use `contentUpdatedAt` for meaningful editorial revisions, fall back to `publishedAt` for the initial publication, and use Sanity's `_updatedAt` only when neither editorial date exists.
+- Company, people, author and topic sitemap entries continue using their Sanity modification time because those document types do not have a separate editorial-update field.
+- **Reason:** Sitemap `lastmod` should communicate substantive article publication or revision dates instead of changing for insignificant CMS metadata activity.

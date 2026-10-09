@@ -8,7 +8,7 @@ type SitemapDocumentType = "company" | "founder" | "post" | "category" | "author
 type SitemapDocument = {
   _type: SitemapDocumentType;
   slug: string;
-  _updatedAt: string;
+  lastModified: string;
 };
 
 const CONTENT_SITEMAP_QUERY = defineQuery(/* groq */ `
@@ -19,7 +19,10 @@ const CONTENT_SITEMAP_QUERY = defineQuery(/* groq */ `
   ] | order(_updatedAt desc) {
     _type,
     "slug": slug.current,
-    _updatedAt
+    "lastModified": select(
+      _type == "post" => coalesce(contentUpdatedAt, publishedAt, _updatedAt),
+      _updatedAt
+    )
   }
 `);
 
@@ -43,7 +46,7 @@ export async function getContentSitemap(types: SitemapDocumentType[]): Promise<S
     const path = documentPath(document);
     if (!path) return [];
 
-    return [{url: absoluteUrl(path), lastModified: document._updatedAt}];
+    return [{url: absoluteUrl(path), lastModified: document.lastModified}];
   });
 }
 
