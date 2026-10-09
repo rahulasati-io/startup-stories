@@ -854,8 +854,9 @@ MisterStory is a research-led website explaining companies, the people behind th
 
 # 2026-10-09 — Faster published-content discovery and cache refresh
 
-- **Status:** Implemented in code; the secure Sanity webhook needs one-time production configuration.
+- **Status:** Implemented and active in production.
 - Published-content sitemaps, the company directory and the RSS feed now read the current published Sanity dataset on every request instead of retaining one-hour or longer cached copies.
 - Added a signed `/api/revalidate` endpoint that can refresh public pages and indexes immediately after Sanity publishes or changes a company, person, article, author or category.
+- Configured the matching production-only Vercel secret and enabled Sanity webhook. Ordinary publishing and unpublishing now trigger the refresh automatically, so a separate Postman cache-clear request is not needed.
 - Drafts remain excluded from public pages and machine-readable discovery files.
 - **Reason:** Newly published and updated content should become visible to visitors and crawlers quickly without sacrificing the site's normal cached page speed.
