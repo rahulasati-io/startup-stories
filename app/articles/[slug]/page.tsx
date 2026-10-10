@@ -423,7 +423,6 @@ export default async function ArticlePage({
   const heroImage = article.mainImage?.asset
     ? urlFor(article.mainImage).width(1600).url()
     : getGeneratedArticleThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
-  const isGeneratedHero = Boolean(heroImage) && !article.mainImage?.asset;
 
   const canonicalUrl = absoluteUrl(`/articles/${article.slug}`);
   const structuredImage = article.socialImage?.asset
@@ -474,25 +473,13 @@ export default async function ArticlePage({
     <JsonLd data={[articleJsonLd, breadcrumb]} />
     <Header />
     <main className="bg-[#f7f6f2]">
-      <article className="w-full px-4 py-12 sm:px-6 md:px-10 md:py-16 lg:px-14 lg:py-20">
+      <article className="w-full px-4 py-8 sm:px-6 md:px-10 md:py-10 lg:px-14 lg:py-12">
         <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Articles", href: "/articles" }, { label: article.title }]} />
-        <div className="mt-8">
-        {article.category && (
-          article.categorySlug ? (
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">
-              <Link href={`/topics/${article.categorySlug}`} className="hover:underline">{article.category}</Link>
-            </p>
-          ) : (
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-700">{article.category}</p>
-          )
-        )}
-        </div>
-
-        <h1 className="mt-4 max-w-[1220px] text-4xl font-semibold tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-6xl">
+        <h1 className="mt-6 max-w-[1220px] text-4xl font-semibold leading-[1.08] tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-[3.25rem]">
           {article.title}
         </h1>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
           {article.author && (
             article.author.slug
               ? <span>By <Link href={`/authors/${article.author.slug}`} className="font-semibold text-zinc-700 hover:underline">{article.author.name}</Link></span>
@@ -519,10 +506,10 @@ export default async function ArticlePage({
           )}
         </div>
 
-        <div className="mt-10 grid items-start gap-10 xl:grid-cols-[minmax(0,880px)_minmax(280px,320px)]">
+        <div className="mt-6 grid items-start gap-10 xl:grid-cols-[minmax(0,880px)_minmax(280px,320px)]">
           <div className="min-w-0">
             {heroImage && (
-              <div className={`relative aspect-video overflow-hidden rounded-3xl ${isGeneratedHero ? "" : "md:aspect-[16/8]"}`}>
+              <div className="relative aspect-video overflow-hidden rounded-3xl md:aspect-[2/1]">
                 <Image
                   src={heroImage}
                   alt={article.mainImage?.alt || article.title}
@@ -534,7 +521,7 @@ export default async function ArticlePage({
             )}
 
             {articleHeadings.length > 0 && (
-              <details className="mt-6 rounded-2xl border border-zinc-200 bg-white px-5 py-4">
+              <details className="mt-4 rounded-2xl border border-zinc-200 bg-white px-5 py-4">
                 <summary className="cursor-pointer font-bold text-zinc-950">What&apos;s covered</summary>
                 <ol className="mt-4 space-y-2 border-t border-zinc-200 pt-4">
                   {articleHeadings.map((heading) => (
@@ -548,7 +535,7 @@ export default async function ArticlePage({
               </details>
             )}
 
-            <div className="mt-10 w-full md:mt-12">
+            <div className="mt-6 w-full md:mt-8">
               <PortableText
                 value={article.body || []}
                 components={portableTextComponents}

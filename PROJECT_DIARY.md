@@ -890,3 +890,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Validation runs before any Sanity read or write. If profiles are missing, the importer stops, lists every missing person name and slug, and confirms that no Sanity records were written.
 - Filtered company or person imports validate the selected import scope, while an unfiltered bulk import validates everyone in the workbook.
 - **Reason:** A People relationship row should not silently create a public person page when its corresponding profile record has not been prepared.
+
+# 2026-10-10 — Brought article content higher on the page
+
+- **Status:** Implemented locally.
+- Removed the visible article-category eyebrow from individual article pages while retaining category data for cards, filters, related content, topic pages and structured metadata.
+- Reduced top padding, title size and the gaps around article metadata and the hero image.
+- Shortened the desktop hero presentation to a 2:1 frame while retaining the mobile 16:9 frame.
+- Tightened the collapsed What's covered card and the gap before the article body so readers reach the first paragraph substantially earlier.
+- Preserved breadcrumbs, the article H1, author, reading time and publication/update time.
