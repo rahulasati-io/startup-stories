@@ -210,7 +210,7 @@ export default async function PersonPage({ params }: Props) {
           </nav>
         </div>
 
-        <div id="about" className="mx-auto grid max-w-6xl scroll-mt-36 gap-6 px-5 py-12 md:grid-cols-[minmax(0,2.35fr)_minmax(260px,.8fr)] md:px-8 md:py-16">
+        <div id="about" className={`mx-auto grid max-w-6xl items-start scroll-mt-36 gap-6 px-5 py-12 md:px-8 md:py-16 ${associatedCompanies.length > 0 ? "md:grid-cols-[minmax(0,2.35fr)_minmax(260px,.8fr)]" : "md:grid-cols-1"}`}>
           <article className="rounded-3xl border border-zinc-200 bg-white p-7 md:p-9">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Background</p>
             <h2 className="mt-3 text-3xl font-semibold">About {person.name}</h2>
@@ -222,7 +222,7 @@ export default async function PersonPage({ params }: Props) {
           </article>
 
           {associatedCompanies.length > 0 && (
-            <aside id="associated-companies" className="scroll-mt-36 rounded-3xl border border-zinc-200 bg-white p-7">
+            <aside id="associated-companies" className="scroll-mt-36 rounded-3xl border border-zinc-200 bg-white p-7 md:sticky md:top-28">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Connections</p>
               <h2 className="mt-3 text-2xl font-semibold">Associated companies</h2>
               <div className="mt-5 divide-y divide-zinc-100">

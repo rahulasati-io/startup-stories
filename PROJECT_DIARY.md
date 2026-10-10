@@ -867,3 +867,26 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Article sitemap entries now use `contentUpdatedAt` for meaningful editorial revisions, fall back to `publishedAt` for the initial publication, and use Sanity's `_updatedAt` only when neither editorial date exists.
 - Company, people, author and topic sitemap entries continue using their Sanity modification time because those document types do not have a separate editorial-update field.
 - **Reason:** Sitemap `lastmod` should communicate substantive article publication or revision dates instead of changing for insignificant CMS metadata activity.
+
+# 2026-10-10 — Prevented stretched company-facts cards
+
+- **Status:** Implemented locally.
+- Top-aligned the company overview grid so the shorter Company facts card no longer stretches to match a long company overview.
+- Made the compact facts card sticky on desktop so useful company information remains visible while a reader moves through a long overview; mobile pages retain the normal stacked layout.
+- Applied the change in the shared company template, so it covers Swara Baby Products and every other company page without content-specific editing.
+- **Reason:** Long company overviews previously produced a tall, mostly empty facts card that looked unfinished and wasted the right-hand column.
+
+# 2026-10-10 — Prevented stretched person-profile sidebars
+
+- **Status:** Implemented locally.
+- Top-aligned the person biography grid so Associated companies remains a compact card instead of stretching to the height of a long biography.
+- Made the connections card sticky on desktop and allowed biographies with no associated companies to use the full content grid instead of reserving an empty sidebar column.
+- Applied the change in the shared person-profile template, so all current and future people pages inherit it automatically.
+
+# 2026-10-10 — Blocked incomplete people imports before Sanity writes
+
+- **Status:** Implemented locally.
+- The company importer now requires every selected person in the People sheet to have a matching `person_slug` row in Person Profiles.
+- Validation runs before any Sanity read or write. If profiles are missing, the importer stops, lists every missing person name and slug, and confirms that no Sanity records were written.
+- Filtered company or person imports validate the selected import scope, while an unfiltered bulk import validates everyone in the workbook.
+- **Reason:** A People relationship row should not silently create a public person page when its corresponding profile record has not been prepared.

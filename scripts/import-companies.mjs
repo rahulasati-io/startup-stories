@@ -108,6 +108,31 @@ async function run() {
     (!personFilter || clean(row.person_slug || row.founder_slug) === personFilter)
   );
   if (personFilter && !peopleRows.length) throw new Error(`No People row found for person_slug "${personFilter}".`);
+  const people = [...peopleRows.reduce((unique, row, index) => {
+    const slug = clean(row.person_slug || row.founder_slug);
+    const name = clean(row.person_name || row.founder_name);
+    if (!slug || !name) throw new Error(`People row ${index + 2}: person_slug and person_name are required.`);
+    const existing = unique.get(slug);
+    if (existing && clean(existing.person_name || existing.founder_name) !== name) throw new Error(`People row ${index + 2}: person_slug "${slug}" is used for more than one name.`);
+    if (!existing) unique.set(slug, row);
+    return unique;
+  }, new Map()).values()];
+  const profileBySlug = rows("Person Profiles").reduce((profiles, row, index) => {
+    const slug = clean(row.person_slug);
+    if (!slug) throw new Error(`Person Profiles row ${index + 2}: person_slug is required.`);
+    if (profiles.has(slug)) throw new Error(`Person Profiles row ${index + 2}: duplicate person_slug "${slug}".`);
+    profiles.set(slug, row);
+    return profiles;
+  }, new Map());
+  const missingProfiles = people.filter((row) => !profileBySlug.has(clean(row.person_slug || row.founder_slug)));
+  if (missingProfiles.length) {
+    const missingList = missingProfiles
+      .map((row) => `- ${clean(row.person_name || row.founder_name)} (${clean(row.person_slug || row.founder_slug)})`)
+      .join("\n");
+    throw new Error(
+      `Import blocked: found ${missingProfiles.length} person${missingProfiles.length === 1 ? "" : "s"} in the People sheet but not in Person Profiles:\n${missingList}\nAdd a matching Person Profiles row for every listed person and run the importer again. No Sanity records were written.`,
+    );
+  }
   const personCompanySlugs = new Set(peopleRows.map((row) => clean(row.company_slug)).filter(Boolean));
   const companies = rows("Companies").filter((row) =>
     personFilter ? personCompanySlugs.has(clean(row.company_slug)) : (!companyFilter || clean(row.company_slug) === companyFilter)
@@ -176,22 +201,6 @@ async function run() {
     if (currentParentId !== parentId) await client.patch(companyIds.get(slug)).set({ parentCompany: reference(parentId) }).commit();
   });
 
-  const people = [...peopleRows.reduce((unique, row, index) => {
-    const slug = clean(row.person_slug || row.founder_slug);
-    const name = clean(row.person_name || row.founder_name);
-    if (!slug || !name) throw new Error(`People row ${index + 2}: person_slug and person_name are required.`);
-    const existing = unique.get(slug);
-    if (existing && clean(existing.person_name || existing.founder_name) !== name) throw new Error(`People row ${index + 2}: person_slug "${slug}" is used for more than one name.`);
-    if (!existing) unique.set(slug, row);
-    return unique;
-  }, new Map()).values()];
-  const profileBySlug = rows("Person Profiles").reduce((profiles, row, index) => {
-    const slug = clean(row.person_slug);
-    if (!slug) throw new Error(`Person Profiles row ${index + 2}: person_slug is required.`);
-    if (profiles.has(slug)) throw new Error(`Person Profiles row ${index + 2}: duplicate person_slug "${slug}".`);
-    profiles.set(slug, row);
-    return profiles;
-  }, new Map());
   const personIds = new Map();
   const personInputs = people.map((row, index) => {
     const slug = clean(row.person_slug || row.founder_slug);
