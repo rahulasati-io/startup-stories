@@ -186,14 +186,13 @@ export default async function PersonPage({ params }: Props) {
       <Header />
       <main className="min-h-screen bg-[#f7f6f2] text-zinc-950">
         <section className="border-b border-zinc-200">
-          <div className="mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
+          <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10 lg:py-12">
             <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "People", href: "/people" }, { label: person.name }]} />
-            <div className="mt-8 max-w-4xl">
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-amber-700">Person profile</p>
-              <h1 className="mt-3 text-5xl font-semibold tracking-[-.04em] md:text-6xl">{person.name}</h1>
-              {person.role && <p className="mt-4 text-lg text-zinc-600">{person.role}</p>}
+            <div className="mt-6 max-w-4xl">
+              <h1 className="text-4xl font-semibold leading-[1.08] tracking-[-.04em] sm:text-5xl md:text-[3.25rem]">{person.name}</h1>
+              {person.role && <p className="mt-3 text-lg text-zinc-600">{person.role}</p>}
               {(person.website || person.linkedinUrl) && (
-                <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold">
+                <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
                   {person.linkedinUrl && <a href={person.linkedinUrl} target="_blank" rel="noreferrer" className="rounded-full border border-zinc-300 bg-white px-4 py-2 hover:border-zinc-500">LinkedIn ↗</a>}
                   {person.website && <a href={person.website} target="_blank" rel="noreferrer" className="rounded-full border border-zinc-300 bg-white px-4 py-2 hover:border-zinc-500">Website ↗</a>}
                 </div>
@@ -204,13 +203,13 @@ export default async function PersonPage({ params }: Props) {
 
         <div className="sticky top-16 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur md:top-20">
           <nav aria-label={`${person.name} page sections`} className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-5 md:px-8">
-            <a href="#about" className="shrink-0 border-b-2 border-amber-700 py-4 text-xs font-semibold text-amber-800">About</a>
-            {associatedCompanies.length > 0 && <a href="#associated-companies" className="shrink-0 border-b-2 border-transparent py-4 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</a>}
-            {relatedArticles.length > 0 && <a href="#related-articles" className="shrink-0 border-b-2 border-transparent py-4 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</a>}
+            <a href="#about" className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">About</a>
+            {associatedCompanies.length > 0 && <a href="#associated-companies" className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</a>}
+            {relatedArticles.length > 0 && <a href="#related-articles" className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</a>}
           </nav>
         </div>
 
-        <div id="about" className={`mx-auto grid max-w-6xl items-start scroll-mt-36 gap-6 px-5 py-12 md:px-8 md:py-16 ${associatedCompanies.length > 0 ? "md:grid-cols-[minmax(0,2.35fr)_minmax(260px,.8fr)]" : "md:grid-cols-1"}`}>
+        <div id="about" className={`mx-auto grid max-w-6xl items-start scroll-mt-36 gap-6 px-5 py-8 md:px-8 md:py-12 ${associatedCompanies.length > 0 ? "md:grid-cols-[minmax(0,2.35fr)_minmax(260px,.8fr)]" : "md:grid-cols-1"}`}>
           <article className="rounded-3xl border border-zinc-200 bg-white p-7 md:p-9">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Background</p>
             <h2 className="mt-3 text-3xl font-semibold">About {person.name}</h2>

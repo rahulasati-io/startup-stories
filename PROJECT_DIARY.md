@@ -899,3 +899,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Shortened the desktop hero presentation to a 2:1 frame while retaining the mobile 16:9 frame.
 - Tightened the collapsed What's covered card and the gap before the article body so readers reach the first paragraph substantially earlier.
 - Preserved breadcrumbs, the article H1, author, reading time and publication/update time.
+
+# 2026-10-10 — Compacted company and person page introductions
+
+- **Status:** Implemented locally.
+- Removed the decorative Company Deep Dive and Person profile eyebrow labels while retaining breadcrumbs and the primary H1 headings.
+- Reduced hero padding, desktop title sizes and the gaps around descriptions, role details, profile links and company facts.
+- Tightened the company section-navigation offset, person navigation height and spacing before each page's main overview content.
+- Preserved company industry/founded badges, person role and external profile links, and all existing SEO and structured data.
