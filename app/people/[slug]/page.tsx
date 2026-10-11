@@ -203,7 +203,7 @@ export default async function PersonPage({ params }: Props) {
 
         <div className="sticky top-16 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur md:top-20">
           <nav aria-label={`${person.name} page sections`} className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-5 md:px-8">
-            <a href="#about" className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">About</a>
+            <a href="#about" className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">Biography</a>
             {associatedCompanies.length > 0 && <a href="#associated-companies" className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</a>}
             {relatedArticles.length > 0 && <a href="#related-articles" className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</a>}
           </nav>
@@ -211,8 +211,7 @@ export default async function PersonPage({ params }: Props) {
 
         <div id="about" className={`mx-auto grid max-w-6xl items-start scroll-mt-36 gap-6 px-5 py-8 md:px-8 md:py-12 ${associatedCompanies.length > 0 ? "md:grid-cols-[minmax(0,2.35fr)_minmax(260px,.8fr)]" : "md:grid-cols-1"}`}>
           <article className="rounded-3xl border border-zinc-200 bg-white p-7 md:p-9">
-            <p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Background</p>
-            <h2 className="mt-3 text-3xl font-semibold">About {person.name}</h2>
+            <h2 className="text-3xl font-semibold">Biography</h2>
             {person.bio?.length ? (
               <div className="mt-7 max-w-none"><PortableText value={person.bio} components={biographyComponents} /></div>
             ) : (

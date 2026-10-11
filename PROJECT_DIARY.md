@@ -907,3 +907,21 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Reduced hero padding, desktop title sizes and the gaps around descriptions, role details, profile links and company facts.
 - Tightened the company section-navigation offset, person navigation height and spacing before each page's main overview content.
 - Preserved company industry/founded badges, person role and external profile links, and all existing SEO and structured data.
+
+# 2026-10-11 — Created a scalable financial-data entry workbook
+
+- **Status:** Created; no website importer or database connection has been added yet.
+- Added a separate `financial-data.xlsx` workbook so company financial observations do not make the existing company and people workbook harder to manage.
+- Uses one row for one company, metric, reporting period and accounting basis instead of creating separate company or year sheets.
+- Added company and metric dropdowns, standard choices for periods, currencies, scales, accounting basis, data type and review status.
+- Added automatic conversion from reported units such as lakhs and crores into base units, stable record keys, required-field checks and duplicate warnings.
+- Included the current company-slug list from `companies.xlsx`, a reusable metric list, filters, frozen identifying columns and a concise entry guide.
+- **Reason:** Rahul needs a manageable interim workflow for collecting financial data across many companies before PostgreSQL becomes the permanent structured-data store.
+
+# 2026-10-11 — Simplified company and people overview headings
+
+- **Status:** Implemented locally.
+- Replaced the repeated `{company name} at a glance` heading and its separate eyebrow with one consistent `Company overview` H2 on every company page.
+- Replaced `About {person name}` and the separate `Background` eyebrow with one consistent `Biography` H2 on every people page.
+- Updated the first people-page section-navigation label from `About` to `Biography` while preserving its existing anchor.
+- **Reason:** The company or person name already appears as the page H1, so repeating it immediately below added visual noise without improving navigation or meaning.
