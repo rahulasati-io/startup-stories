@@ -934,3 +934,10 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Retained the existing 512×512 PNG icon and 180×180 Apple touch icon used by modern browsers and devices.
 - Added a repeatable favicon-generation script so future brand changes can rebuild the browser icon from the canonical 512×512 source without manual conversion.
 - **Reason:** Google had already discovered the MisterStory icon, but the first favicon offered by the site contained only a 32×32 image. The multi-size file removes that remaining technical weakness while preserving the approved design.
+
+# 2026-10-12 — Added immediate feedback when opening articles
+
+- **Status:** Implemented locally.
+- Added a lightweight loading view for individual article routes, including a clear screen-reader status and a layout-shaped skeleton for the title, hero image, article body and sidebar.
+- The loading boundary allows Next.js to partially prefetch dynamic article routes and display feedback immediately while Sanity-backed article data finishes loading.
+- **Reason:** Article-card clicks from company pages could take several seconds without changing the screen, making a working navigation look unresponsive.
