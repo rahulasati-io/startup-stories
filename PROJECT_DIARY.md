@@ -925,3 +925,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Replaced `About {person name}` and the separate `Background` eyebrow with one consistent `Biography` H2 on every people page.
 - Updated the first people-page section-navigation label from `About` to `Biography` while preserving its existing anchor.
 - **Reason:** The company or person name already appears as the page H1, so repeating it immediately below added visual noise without improving navigation or meaning.
+
+# 2026-10-12 — Strengthened Google favicon compatibility
+
+- **Status:** Implemented locally.
+- Kept the established black-and-white MisterStory icon and its stable root URLs.
+- Rebuilt `favicon.ico` as a multi-size icon containing 48, 16, 32, 96 and 192 pixel variants, with the Google-recommended 48-pixel version listed first.
+- Retained the existing 512×512 PNG icon and 180×180 Apple touch icon used by modern browsers and devices.
+- Added a repeatable favicon-generation script so future brand changes can rebuild the browser icon from the canonical 512×512 source without manual conversion.
+- **Reason:** Google had already discovered the MisterStory icon, but the first favicon offered by the site contained only a 32×32 image. The multi-size file removes that remaining technical weakness while preserving the approved design.
