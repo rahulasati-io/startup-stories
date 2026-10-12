@@ -941,3 +941,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Added a lightweight loading view for individual article routes, including a clear screen-reader status and a layout-shaped skeleton for the title, hero image, article body and sidebar.
 - The loading boundary allows Next.js to partially prefetch dynamic article routes and display feedback immediately while Sanity-backed article data finishes loading.
 - **Reason:** Article-card clicks from company pages could take several seconds without changing the screen, making a working navigation look unresponsive.
+
+# 2026-10-12 — Centred article layouts across desktop sizes
+
+- **Status:** Implemented locally.
+- Added the same centred `max-w-7xl` boundary used by the site header and supporting article sections to the main article header, hero, body and sidebar layout.
+- Replaced the fixed 880-pixel article column with a flexible main column and a stable 320-pixel sidebar at extra-large widths.
+- Preserved the existing single-column tablet and mobile layout.
+- **Reason:** On wide desktops and at reduced browser zoom, the fixed columns stayed attached to the left edge and left a disproportionately large empty area on the right. The shared article template now distributes spare space evenly without requiring visitors to change device settings.

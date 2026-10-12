@@ -473,7 +473,7 @@ export default async function ArticlePage({
     <JsonLd data={[articleJsonLd, breadcrumb]} />
     <Header />
     <main className="bg-[#f7f6f2]">
-      <article className="w-full px-4 py-8 sm:px-6 md:px-10 md:py-10 lg:px-14 lg:py-12">
+      <article className="mx-auto w-full max-w-7xl px-5 py-8 md:px-8 md:py-10 lg:py-12">
         <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Articles", href: "/articles" }, { label: article.title }]} />
         <h1 className="mt-6 max-w-[1220px] text-4xl font-semibold leading-[1.08] tracking-[-0.03em] text-zinc-950 sm:text-5xl md:text-[3.25rem]">
           {article.title}
@@ -506,7 +506,7 @@ export default async function ArticlePage({
           )}
         </div>
 
-        <div className="mt-6 grid items-start gap-10 xl:grid-cols-[minmax(0,880px)_minmax(280px,320px)]">
+        <div className="mt-6 grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-10">
           <div className="min-w-0">
             {heroImage && (
               <div className="relative aspect-video overflow-hidden rounded-3xl md:aspect-[2/1]">
