@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import Newsletter from "@/components/Newsletter";
+import PortableTextLink from "@/components/PortableTextLink";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import PeopleRow from "@/components/PeopleRow";
 import { absoluteUrl } from "@/lib/site-url";
@@ -97,11 +98,7 @@ const biographyComponents: PortableTextComponents = {
   },
   marks: {
     strong: ({ children }) => <strong className="font-semibold text-zinc-950">{children}</strong>,
-    link: ({ children, value }) => (
-      <a href={value?.href} target="_blank" rel="noopener noreferrer" className="font-medium text-amber-700 underline decoration-amber-300 underline-offset-4 hover:text-amber-900">
-        {children}
-      </a>
-    ),
+    link: PortableTextLink,
   },
 };
 

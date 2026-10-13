@@ -9,6 +9,7 @@ import ArticleCard from "@/components/ArticleCard";
 import ArticleSidebar, { type SidebarCompany } from "@/components/ArticleSidebar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
+import PortableTextLink from "@/components/PortableTextLink";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
@@ -359,16 +360,7 @@ const portableTextComponents: PortableTextComponents = {
       <strong className="font-semibold text-zinc-950">{children}</strong>
     ),
 
-    link: ({ children, value }) => (
-      <a
-        href={value?.href}
-        className="font-medium text-zinc-950 underline decoration-zinc-400 underline-offset-4 hover:decoration-zinc-900"
-        target={value?.blank ? "_blank" : undefined}
-        rel={value?.blank ? "noreferrer" : undefined}
-      >
-        {children}
-      </a>
-    ),
+    link: PortableTextLink,
   },
 };
 

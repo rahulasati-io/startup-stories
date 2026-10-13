@@ -949,3 +949,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Replaced the fixed 880-pixel article column with a flexible main column and a stable 320-pixel sidebar at extra-large widths.
 - Preserved the existing single-column tablet and mobile layout.
 - **Reason:** On wide desktops and at reduced browser zoom, the fixed columns stayed attached to the left edge and left a disproportionately large empty area on the right. The shared article template now distributes spare space evenly without requiring visitors to change device settings.
+
+# 2026-10-13 — Standardised links inside rich text
+
+- **Status:** Implemented locally.
+- MisterStory links inside article bodies, company overviews and person biographies now use dark underlined text and remain in the same browser tab.
+- External links remain amber and open in a new tab with safe relationship attributes.
+- Absolute `https://misterstory.in/...` links imported from spreadsheets are converted to internal Next.js navigation at render time.
+- **Reason:** Imported internal links looked like red warning text on person and company pages and behaved like external links, even though they led to another MisterStory page.
