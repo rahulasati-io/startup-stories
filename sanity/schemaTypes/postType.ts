@@ -112,7 +112,7 @@ export const postType = defineType({
       title: "Article Body",
       type: "blockContent",
       group: "writing",
-      description: "Paste tables directly from Excel, Google Sheets, Word or Google Docs. Press Ctrl+Enter for full-screen writing.",
+      description: "Paste formatted text and tables directly from Excel, Google Sheets, Word or Google Docs. Use Focus writing for a larger editor.",
       components: {
         input: PasteAwareArticleBodyInput,
       },

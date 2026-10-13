@@ -1,5 +1,8 @@
 "use client";
 
+import {ExpandIcon} from "@sanity/icons/Expand";
+import {Box, Button, Card, Flex, Stack, Text} from "@sanity/ui";
+import {useState} from "react";
 import {
   PortableTextInput,
   type OnPasteFn,
@@ -276,6 +279,9 @@ function rowsFromTabs(text: string) {
 }
 
 export default function PasteAwareArticleBodyInput(props: PortableTextInputProps) {
+  const [focusSession, setFocusSession] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const onPaste: OnPasteFn = (data) => {
     const clipboard = data.event.clipboardData;
     const plainText = clipboard.getData("text/plain");
@@ -288,5 +294,39 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
     return {path: data.path, insert};
   };
 
-  return <PortableTextInput {...props} onPaste={onPaste} />;
+  return (
+    <Stack space={3}>
+      <Card border padding={3} radius={2} tone="transparent">
+        <Flex align="center" gap={3} justify="space-between" wrap="wrap">
+          <Box flex={1} style={{minWidth: 240}}>
+            <Text size={1} weight="semibold">Writing workspace</Text>
+            <Box marginTop={2}>
+              <Text muted size={1}>
+                Open a distraction-free editor with more room for long articles, headings, links and tables.
+              </Text>
+            </Box>
+          </Box>
+          <Button
+            disabled={isFullscreen}
+            icon={ExpandIcon}
+            onClick={() => setFocusSession((session) => session + 1)}
+            text={isFullscreen ? "Writing mode active" : "Focus writing"}
+            tone="primary"
+          />
+        </Flex>
+      </Card>
+      <Box style={{minHeight: "46vh"}}>
+        <PortableTextInput
+          key={`article-body-${focusSession}`}
+          {...props}
+          initialFullscreen={focusSession > 0}
+          onFullScreenChange={(fullscreen) => {
+            setIsFullscreen(fullscreen);
+            props.onFullScreenChange?.(fullscreen);
+          }}
+          onPaste={onPaste}
+        />
+      </Box>
+    </Stack>
+  );
 }

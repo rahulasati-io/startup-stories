@@ -957,3 +957,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - External links remain amber and open in a new tab with safe relationship attributes.
 - Absolute `https://misterstory.in/...` links imported from spreadsheets are converted to internal Next.js navigation at render time.
 - **Reason:** Imported internal links looked like red warning text on person and company pages and behaved like external links, even though they led to another MisterStory page.
+
+# 2026-10-14 — Improved Sanity article-editor responsiveness and writing space
+
+- **Status:** Implemented locally.
+- Stopped the custom Articles directory from downloading and rebuilding its complete list after every article mutation or autosave.
+- Added an explicit `Refresh list` control, loading feedback and a recoverable error state to the Articles directory.
+- Added a prominent `Focus writing` control above the article body. It opens Sanity's full-screen Portable Text editor while preserving headings, links, lists and the existing mixed text-and-table paste support.
+- Increased the normal article-body workspace height so longer content remains easier to read even outside full-screen mode.
+- **Reason:** Editing could feel unresponsive because every keystroke-triggered autosave caused an unrelated full-list request, while the main writing area offered too little visible space for reviewing long articles.

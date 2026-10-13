@@ -1,9 +1,10 @@
 "use client";
 
 import {AddIcon} from "@sanity/icons/Add";
+import {RefreshIcon} from "@sanity/icons/Refresh";
 import {SearchIcon} from "@sanity/icons/Search";
 import {Badge, Box, Button, Card, Flex, Spinner, Stack, Text, TextInput} from "@sanity/ui";
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useClient} from "sanity";
 import {IntentLink} from "sanity/router";
 
@@ -50,11 +51,17 @@ export function ArticlesManager() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    let active = true;
+  const load = useCallback(async (mode: "initial" | "refresh" = "refresh") => {
+    const requestId = ++requestIdRef.current;
+    if (mode === "initial") setLoading(true);
+    else setRefreshing(true);
+    setLoadError("");
 
-    const load = async () => {
+    try {
       const rows = await client.fetch<ArticleRow[]>(
         `*[_type == "post" && !(_id in path("versions.**"))]{
           _id,
@@ -87,22 +94,31 @@ export function ArticlesManager() {
         return {...current, documentId, status};
       });
 
-      if (active) {
+      if (requestId === requestIdRef.current) {
         setArticles(merged);
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      if (requestId === requestIdRef.current) {
+        setLoadError(error instanceof Error ? error.message : "The article list could not be loaded.");
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  }, [client]);
 
-    void load();
-    const subscription = client
-      .listen('*[_type == "post"]', {}, {includeResult: false, visibility: "query"})
-      .subscribe(() => void load());
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => {
+      void load("initial");
+    }, 0);
 
     return () => {
-      active = false;
-      subscription.unsubscribe();
+      window.clearTimeout(initialLoad);
+      requestIdRef.current += 1;
     };
-  }, [client]);
+  }, [load]);
 
   const counts = useMemo(
     () => ({
@@ -146,9 +162,19 @@ export function ArticlesManager() {
               </Text>
             </Box>
           </Box>
-          <IntentLink intent="create" params={{type: "post"}} style={{textDecoration: "none"}}>
-            <Button icon={AddIcon} text="Create article" tone="primary" />
-          </IntentLink>
+          <Flex gap={2} wrap="wrap">
+            <Button
+              disabled={loading || refreshing}
+              icon={RefreshIcon}
+              loading={refreshing}
+              mode="ghost"
+              onClick={() => void load("refresh")}
+              text="Refresh list"
+            />
+            <IntentLink intent="create" params={{type: "post"}} style={{textDecoration: "none"}}>
+              <Button icon={AddIcon} text="Create article" tone="primary" />
+            </IntentLink>
+          </Flex>
         </Flex>
 
         <Flex gap={2} wrap="wrap">
@@ -170,6 +196,18 @@ export function ArticlesManager() {
           placeholder="Search by title, slug, company or category"
           value={search}
         />
+
+        {loadError && (
+          <Card border padding={4} radius={2} tone="critical">
+            <Stack space={3}>
+              <Text size={1} weight="semibold">The article list could not be refreshed.</Text>
+              <Text size={1}>{loadError}</Text>
+              <Box>
+                <Button onClick={() => void load("refresh")} text="Try again" />
+              </Box>
+            </Stack>
+          </Card>
+        )}
 
         {loading ? (
           <Flex align="center" gap={3} justify="center" padding={6}>
