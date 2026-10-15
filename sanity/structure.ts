@@ -15,6 +15,15 @@ export const structure: StructureResolver = (S) =>
         .child(S.component(ArticlesManager).id("articles-manager").title("Articles")),
 
       S.listItem()
+        .title("Homepage Settings")
+        .child(
+          S.document()
+            .schemaType("homepageSettings")
+            .documentId("homepageSettings")
+            .title("Homepage Settings"),
+        ),
+
+      S.listItem()
         .title("SEO Settings")
         .child(S.document().schemaType("seoSettings").documentId("seoSettings").title("SEO Settings")),
 

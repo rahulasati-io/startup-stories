@@ -9,9 +9,13 @@
     "lint": "eslint",
     "audit:articles": "node --env-file=.env.local scripts/audit-articles.mjs",
     "import:logos": "node --env-file=.env.local scripts/import-company-logos.mjs",
+    "import:companies": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx",
+    "import:companies:check": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --dry-run",
     "import:articles": "node --env-file=.env.local scripts/import-articles.mjs",
     "import:articles:check": "node --env-file=.env.local scripts/import-articles.mjs --dry-run",
     "import:articles:publish": "node --env-file=.env.local scripts/import-articles.mjs --publish",
+    "import:draft-articles": "node --env-file=.env.local scripts/import-articles.mjs \"outputs/article-importers/temporary-draft-articles-safe.xlsx\" --draft-only",
+    "import:draft-articles:check": "node --env-file=.env.local scripts/import-articles.mjs \"outputs/article-importers/temporary-draft-articles-safe.xlsx\" --draft-only --dry-run",
     "materialize:thumbnails": "node --env-file=.env.local scripts/materialize-article-thumbnails.mjs",
     "materialize:thumbnails:write": "node --env-file=.env.local scripts/materialize-article-thumbnails.mjs --write"
   },

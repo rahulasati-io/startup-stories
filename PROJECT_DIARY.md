@@ -966,3 +966,62 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Added a prominent `Focus writing` control above the article body. It opens Sanity's full-screen Portable Text editor while preserving headings, links, lists and the existing mixed text-and-table paste support.
 - Increased the normal article-body workspace height so longer content remains easier to read even outside full-screen mode.
 - **Reason:** Editing could feel unresponsive because every keystroke-triggered autosave caused an unrelated full-list request, while the main writing area offered too little visible space for reviewing long articles.
+
+# 2026-10-14 — Bulk-linked companies inside people biographies
+
+- **Status:** Applied to the main `companies.xlsx` workbook; a recoverable pre-change backup is stored under `outputs/people-linking`.
+- Scanned every biography in `Person Profiles` against the canonical company names and slugs in the `Companies` sheet.
+- Added 248 internal MisterStory company links across 214 people profiles, linking only the first exact mention of each company and applying no more than five internal company links per biography.
+- Preserved existing Markdown links, skipped headings, processed longer company names before shorter names and avoided partial-word matches.
+- Added `internal_links_added` and `internal_link_notes` audit columns to `Person Profiles` so each automatic change can be reviewed in Excel.
+- Confirmed that all generated company slugs exist in the workbook and that the current people importer can convert these absolute Markdown links into Sanity Portable Text links.
+- **Reason:** Company references in people biographies should lead readers directly to the relevant company profile, while Excel remains the source of truth so future imports do not remove those links.
+
+# 2026-10-14 — Added a temporary draft-article staging workflow
+
+- **Status:** Implemented locally.
+- Created `outputs/article-importers/temporary-draft-articles.xlsx`, a focused 100-row staging workbook with the established article fields, category dropdowns, Rahul Asati as the default author, a locked draft status and simple readiness checks.
+- Added `npm run import:draft-articles:check` for a no-write preview and `npm run import:draft-articles` for creating or updating drafts.
+- Added a guarded `--draft-only` importer mode that cannot be combined with `--publish` and always treats workbook rows as drafts regardless of the status cell.
+- Documented the handoff rule inside the workbook: after confirming the Sanity draft, remove its Excel row before making manual Sanity edits. Removing a row never deletes the Sanity document; it only stops future spreadsheet updates.
+- Added Results and Economy aliases to the article importer so those category names resolve to their lowercase category slugs.
+- **Reason:** Rahul needs a disposable intake queue for draft articles without allowing later bulk spreadsheet runs to overwrite editorial changes made directly in Sanity.
+
+# 2026-10-14 — Made temporary draft imports slug-safe
+
+- **Status:** Implemented locally.
+- Made `import_id` optional only in the temporary `--draft-only` workflow; the regular long-term article importer still requires it.
+- Added a full preflight check against both published articles and Sanity drafts. If any staging row uses an existing article slug, the entire import stops before writing anything and identifies the row, slug and existing document state.
+- Simplified the temporary workbook at `outputs/article-importers/temporary-draft-articles-safe.xlsx` by removing `import_id` and updating its readiness formulas and instructions around the one-time Sanity handoff workflow. The npm draft commands now use this revised file because the original workbook was open and locked during the replacement.
+- Preserved the existing staged article and created a recoverable backup before rebuilding the workbook.
+- **Reason:** Temporary rows are deleted after their drafts reach Sanity, so a separate spreadsheet identity is unnecessary. A strict duplicate-slug error is safer than silently updating an existing article.
+
+# 2026-10-15 — Added a read-only company import check
+
+- **Status:** Implemented locally.
+- Added `npm run import:companies:check` to validate `companies.xlsx` and compare company, person and related records with Sanity without creating, patching or replacing any document.
+- The check reports how many companies and people would be created, updated or left unchanged, plus changes to company roles, funding rounds, timeline events and metrics.
+- Added `npm run import:companies` as the matching full-import command after the check succeeds.
+- The first full check correctly blocked the batch because one company row references the missing parent slug `infibeam-avenues`.
+- **Reason:** Large company batches need a safe preview that catches workbook and relationship problems before any partial Sanity update can occur.
+
+# 2026-10-15 — Prevented oversized company-role document IDs
+
+- **Status:** Implemented locally.
+- Updated the company importer to keep existing short related-record IDs unchanged while shortening any ID longer than Sanity's 128-character limit.
+- Oversized IDs now retain a readable prefix and receive a stable hash suffix, so rerunning the same Excel import addresses the same Sanity record instead of creating duplicates.
+- Verified the previously failing Fractal Analytics role in dry-run mode; its generated ID is now valid and exactly 128 characters.
+- **Reason:** Long combinations of company slug, person slug, relationship and job title could exceed Sanity's document-ID limit and stop the import after company and person records had already been processed.
+
+# 2026-10-15 — Separated homepage editorial placement from article imports
+
+- **Status:** Implemented locally.
+- Added a dedicated Homepage Settings singleton in Sanity for selecting one main Featured Story and up to three supporting featured stories.
+- Rebuilt the homepage article flow into Featured Story, How Companies Make Money, Funding & Deals and Latest Stories sections.
+- Business-model and funding sections are populated automatically by article category, while Latest Stories excludes anything already shown above it.
+- Added cross-section deduplication so one article does not occupy several homepage sections at the same time.
+- Added `Funding News`, `funding-news` and `Funding & Deals` importer aliases for the new funding category workflow.
+- Kept all homepage placement fields outside the article spreadsheet importer, so large article imports cannot displace the manually selected Featured Story.
+- **Reason:** Publishing many similar articles should expand the relevant category shelf without disrupting the homepage's main editorial choice.
+- Placed Funding & Deals before How Companies Make Money so timely capital news appears before the larger evergreen business-model library.
+- Excluded the complete Funding News category from Latest Stories so funding coverage remains contained in the dedicated Funding & Deals section.

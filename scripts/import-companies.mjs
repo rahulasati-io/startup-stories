@@ -1,4 +1,5 @@
 import path from "path";
+import { createHash } from "node:crypto";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
@@ -6,7 +7,8 @@ import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
 const filePath = process.argv[2];
 const companyFilter = process.argv.find((argument) => argument.startsWith("--company="))?.split("=")[1];
 const personFilter = process.argv.find((argument) => argument.startsWith("--person="))?.split("=")[1];
-if (!filePath) throw new Error('Usage: node scripts/import-companies.mjs "companies.xlsx"');
+const dryRun = process.argv.includes("--dry-run");
+if (!filePath) throw new Error('Usage: node scripts/import-companies.mjs "companies.xlsx" [--dry-run] [--company=slug] [--person=slug]');
 const { NEXT_PUBLIC_SANITY_PROJECT_ID: projectId, NEXT_PUBLIC_SANITY_DATASET: dataset, SANITY_WRITE_TOKEN: token } = process.env;
 if (!projectId || !dataset || !token) throw new Error("Missing NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET, or SANITY_WRITE_TOKEN.");
 const client = createClient({ projectId, dataset, token, apiVersion: "2026-08-23", useCdn: false });
@@ -15,6 +17,16 @@ const clean = (value) => value === undefined || value === null ? "" : String(val
 const rows = (sheet) => workbook.Sheets[sheet] ? XLSX.utils.sheet_to_json(workbook.Sheets[sheet], { defval: "" }) : [];
 const split = (value) => clean(value).split(";").map(clean).filter(Boolean);
 const slugify = (value) => clean(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const sanityDocumentId = (value) => {
+  const normalized = clean(value)
+    .replace(/[^A-Za-z0-9_.-]+/g, "-")
+    .replace(/^[.-]+|[.-]+$/g, "");
+  if (!normalized) throw new Error(`Could not create a valid Sanity document ID from "${value}".`);
+  if (normalized.length <= 128) return normalized;
+  const fingerprint = createHash("sha256").update(normalized).digest("hex").slice(0, 16);
+  const prefix = normalized.slice(0, 128 - fingerprint.length - 1).replace(/[.-]+$/g, "");
+  return `${prefix}-${fingerprint}`;
+};
 const normalizeRelationship = (value) => {
   const relationship = clean(value).toLowerCase();
   if (relationship.includes("acquirer")) return "acquirer";
@@ -92,6 +104,10 @@ async function batchReplace(documents, label) {
   const existingDocuments = await client.fetch(`*[_id in $ids]`, { ids });
   const existingById = new Map(existingDocuments.map((document) => [document._id, document]));
   const changed = documents.filter((document) => !existingById.has(document._id) || hasChanges(existingById.get(document._id), document));
+  if (dryRun) {
+    console.log(`${label}: ${changed.length} would change; ${documents.length - changed.length} unchanged`);
+    return { changed: changed.length, skipped: documents.length - changed.length };
+  }
   for (const [batchIndex, batch] of chunk(changed, 50).entries()) {
     let transaction = client.transaction();
     for (const document of batch) transaction = transaction.createOrReplace(document);
@@ -157,6 +173,10 @@ async function run() {
   await mapLimit(industryNames, 8, async (name) => {
     const slug = slugify(name);
     if (industryIdBySlug.has(slug)) return;
+    if (dryRun) {
+      industryIdBySlug.set(slug, `dryrun-industry-${slug}`);
+      return;
+    }
     const saved = await client.create({ _type: "industry", name, slug: { _type: "slug", current: slug } });
     industryIdBySlug.set(slug, saved._id);
   });
@@ -178,9 +198,22 @@ async function run() {
     : [];
   const existingCompanyBySlug = new Map(existingCompanies.map((company) => [company.slug.current, company]));
   let companyProgress = 0;
+  let companiesCreated = 0;
+  let companiesUpdated = 0;
+  let companiesUnchanged = 0;
   const savedCompanies = await mapLimit(companyInputs, 8, async ({ slug, data }) => {
     const existing = existingCompanyBySlug.get(slug);
-    const saved = !existing ? await client.create(data) : hasChanges(existing, data) ? await client.patch(existing._id).set(data).commit() : existing;
+    const changed = !existing || hasChanges(existing, data);
+    if (!existing) companiesCreated += 1;
+    else if (changed) companiesUpdated += 1;
+    else companiesUnchanged += 1;
+    const saved = dryRun
+      ? (existing || { ...data, _id: `dryrun-company-${slug}` })
+      : !existing
+        ? await client.create(data)
+        : changed
+          ? await client.patch(existing._id).set(data).commit()
+          : existing;
     companyProgress += 1;
     if (companyProgress % 20 === 0 || companyProgress === companyInputs.length) console.log(`Companies: ${companyProgress}/${companyInputs.length} checked`);
     return { slug, saved };
@@ -198,7 +231,7 @@ async function run() {
     }
     if (!parentId) throw new Error(`Companies row ${index + 2}: parent_company_slug "${parentSlug}" was not found in the workbook or Sanity.`);
     const currentParentId = existingCompanyBySlug.get(slug)?.parentCompany?._ref;
-    if (currentParentId !== parentId) await client.patch(companyIds.get(slug)).set({ parentCompany: reference(parentId) }).commit();
+    if (currentParentId !== parentId && !dryRun) await client.patch(companyIds.get(slug)).set({ parentCompany: reference(parentId) }).commit();
   });
 
   const personIds = new Map();
@@ -228,9 +261,22 @@ async function run() {
     : [];
   const existingPersonBySlug = new Map(existingPeople.map((person) => [person.slug.current, person]));
   let peopleProgress = 0;
+  let peopleCreated = 0;
+  let peopleUpdated = 0;
+  let peopleUnchanged = 0;
   const savedPeople = await mapLimit(personInputs, 8, async ({ slug, data }) => {
     const existing = existingPersonBySlug.get(slug);
-    const saved = !existing ? await client.create(data) : hasChanges(existing, data) ? await client.patch(existing._id).set(data).commit() : existing;
+    const changed = !existing || hasChanges(existing, data);
+    if (!existing) peopleCreated += 1;
+    else if (changed) peopleUpdated += 1;
+    else peopleUnchanged += 1;
+    const saved = dryRun
+      ? (existing || { ...data, _id: `dryrun-person-${slug}` })
+      : !existing
+        ? await client.create(data)
+        : changed
+          ? await client.patch(existing._id).set(data).commit()
+          : existing;
     peopleProgress += 1;
     if (peopleProgress % 20 === 0 || peopleProgress === personInputs.length) console.log(`People: ${peopleProgress}/${personInputs.length} checked`);
     return { slug, saved };
@@ -238,7 +284,11 @@ async function run() {
   for (const { slug, saved } of savedPeople) personIds.set(slug, saved._id);
 
   const companyRef = (row, sheet, rowNumber) => { const slug = clean(row.company_slug); if (!slugs.has(slug)) throw new Error(`${sheet} row ${rowNumber}: company_slug "${slug}" is not on the Companies sheet.`); return reference(companyIds.get(slug)); };
-  const prepareDocuments = (items, sheet, type, map) => items.map((row, index) => { required(row, ["company_slug"], sheet, index + 2); const key = clean(row.id) || `${clean(row.company_slug)}-${index + 2}`; return { _id: `${type}-${key}`, _type: type, company: companyRef(row, sheet, index + 2), ...map(row) }; });
+  const prepareDocuments = (items, sheet, type, map) => items.map((row, index) => {
+    required(row, ["company_slug"], sheet, index + 2);
+    const key = clean(row.id) || `${clean(row.company_slug)}-${index + 2}`;
+    return { _id: sanityDocumentId(`${type}-${key}`), _type: type, company: companyRef(row, sheet, index + 2), ...map(row) };
+  });
   const roleDocuments = prepareDocuments(peopleRoles, "People", "companyPersonRole", (row) => {
     const personSlug = clean(row.person_slug);
     if (!personIds.has(personSlug)) throw new Error(`People: person_slug "${personSlug}" could not be imported.`);
@@ -251,7 +301,14 @@ async function run() {
   const fundingResult = await batchReplace(fundingDocuments, "Funding rounds");
   const timelineResult = await batchReplace(timelineDocuments, "Timeline events");
   const metricResult = await batchReplace(metricDocuments, "Metrics");
-  console.log(`Imported ${companies.length} companies, ${people.length} people, ${peopleRoles.length} company roles, ${funding.length} funding rounds, ${timeline.length} timeline events, and ${metrics.length} metrics.`);
-  console.log(`Skipped unchanged related records: ${roleResult.skipped + fundingResult.skipped + timelineResult.skipped + metricResult.skipped}.`);
+  if (dryRun) {
+    console.log(`Check complete: ${companies.length} companies, ${people.length} people, ${peopleRoles.length} company roles, ${funding.length} funding rounds, ${timeline.length} timeline events, and ${metrics.length} metrics validated.`);
+    console.log(`Companies: ${companiesCreated} would be created, ${companiesUpdated} updated, ${companiesUnchanged} unchanged.`);
+    console.log(`People: ${peopleCreated} would be created, ${peopleUpdated} updated, ${peopleUnchanged} unchanged.`);
+    console.log("Dry-run protection was active: no Sanity records were written.");
+  } else {
+    console.log(`Imported ${companies.length} companies, ${people.length} people, ${peopleRoles.length} company roles, ${funding.length} funding rounds, ${timeline.length} timeline events, and ${metrics.length} metrics.`);
+    console.log(`Skipped unchanged related records: ${roleResult.skipped + fundingResult.skipped + timelineResult.skipped + metricResult.skipped}.`);
+  }
 }
 run().catch((error) => { console.error(`Import failed: ${error.message}`); process.exit(1); });

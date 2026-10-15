@@ -32,7 +32,9 @@ export default defineConfig({
   schema: {
     ...schema,
     templates: (previousTemplates) => [
-      ...previousTemplates.filter((template) => template.schemaType !== 'seoSettings'),
+      ...previousTemplates.filter(
+        (template) => !['seoSettings', 'homepageSettings'].includes(template.schemaType),
+      ),
       ...companyRecordTemplates.map(([schemaType, title]) => ({
         id: `${schemaType}-for-company`,
         title: `${title} for selected company`,

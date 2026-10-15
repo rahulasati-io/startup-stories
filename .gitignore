@@ -41,6 +41,7 @@ yarn-error.log*
 /outputs/
 /work/
 /company-logos/
+/.codex-tmp/
 
 # vercel
 .vercel

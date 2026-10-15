@@ -13,7 +13,9 @@ const articleFilter = option("article");
 const companyFilter = option("company");
 const dryRun = args.includes("--dry-run");
 const allowPublish = args.includes("--publish");
-if (!filePath) throw new Error('Usage: npm run import:articles -- "articles.xlsx" [--dry-run] [--article=slug] [--company=slug] [--publish]');
+const draftOnly = args.includes("--draft-only");
+if (!filePath) throw new Error('Usage: npm run import:articles -- "articles.xlsx" [--dry-run] [--article=slug] [--company=slug] [--publish] [--draft-only]');
+if (draftOnly && allowPublish) throw new Error("--draft-only cannot be combined with --publish.");
 
 const { NEXT_PUBLIC_SANITY_PROJECT_ID: projectId, NEXT_PUBLIC_SANITY_DATASET: dataset, SANITY_WRITE_TOKEN: token } = process.env;
 if (!projectId || !dataset || (!token && !dryRun)) {
@@ -37,6 +39,11 @@ const categoryAliases = new Map([
   ["people & leadership", "people-leadership"],
   ["people and leadership", "people-leadership"],
   ["people-leadership", "people-leadership"],
+  ["results", "results"],
+  ["economy", "economy"],
+  ["funding news", "funding-news"],
+  ["funding-news", "funding-news"],
+  ["funding & deals", "funding-news"],
 ]);
 const same = (left, right) => isDeepStrictEqual(left ?? null, right ?? null);
 const controlledFields = ["importId", "title", "thumbnailTitle", "slug", "body", "category", "company", "author", "seoTitle", "seoDescription", "seoKeywords"];
@@ -85,18 +92,20 @@ async function run() {
     const hasConceptSlugs = clean(row.concept_slugs) !== "";
     const conceptSlugs = split(row.concept_slugs);
     const bodyMarkdown = clean(row.article_body);
-    const status = (clean(row.status) || "draft").toLowerCase();
+    const status = draftOnly ? "draft" : (clean(row.status) || "draft").toLowerCase();
     const seoDescription = clean(row.seo_description) || undefined;
     const seoKeywords = clean(row.seo_keywords || row.keywords) || undefined;
-    const missing = [["import_id", importId], ["article_slug", slug], ["title", title], ["article_tag", categoryInput], ["article_body", bodyMarkdown]].filter(([, value]) => !value).map(([name]) => name);
+    const requiredFields = [["article_slug", slug], ["title", title], ["article_tag", categoryInput], ["article_body", bodyMarkdown]];
+    if (!draftOnly) requiredFields.unshift(["import_id", importId]);
+    const missing = requiredFields.filter(([, value]) => !value).map(([name]) => name);
     if (missing.length) throw new Error(`Articles row ${rowNumber}: ${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required.`);
-    if (!validSlug(importId)) throw new Error(`Articles row ${rowNumber}: import_id must use lowercase letters, numbers and hyphens only.`);
+    if (importId && !validSlug(importId)) throw new Error(`Articles row ${rowNumber}: import_id must use lowercase letters, numbers and hyphens only.`);
     assertArticleSlug(slug, `Articles row ${rowNumber}: article_slug`);
-    if (importIds.has(importId)) throw new Error(`Articles row ${rowNumber}: duplicate import_id "${importId}".`);
+    if (importId && importIds.has(importId)) throw new Error(`Articles row ${rowNumber}: duplicate import_id "${importId}".`);
     if (slugs.has(slug)) throw new Error(`Articles row ${rowNumber}: duplicate article_slug "${slug}".`);
     if (!["draft", "published"].includes(status)) throw new Error(`Articles row ${rowNumber}: status must be draft or published.`);
     if (status === "published" && allowPublish && !seoDescription) throw new Error(`Articles row ${rowNumber}: seo_description is required when publishing.`);
-    importIds.add(importId);
+    if (importId) importIds.add(importId);
     slugs.add(slug);
     return { rowNumber, importId, slug, title, thumbnailTitle, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription, seoKeywords };
   });
@@ -140,6 +149,15 @@ async function run() {
 
   const errors = [];
   for (const input of inputs) {
+    if (draftOnly && articlesBySlug.has(input.slug)) {
+      const existing = articlesBySlug.get(input.slug);
+      const state = existing.draft && existing.published
+        ? "a published article with unpublished draft changes"
+        : existing.draft
+          ? "an existing draft"
+          : "a published article";
+      errors.push(`row ${input.rowNumber}: article_slug "${input.slug}" already belongs to ${state}; choose a unique slug`);
+    }
     for (const slug of input.companySlugs) if (!companiesBySlug.has(slug)) errors.push(`row ${input.rowNumber}: company_slug "${slug}" was not found in Sanity`);
     if (!categoriesBySlug.has(input.categorySlug)) errors.push(`row ${input.rowNumber}: article_tag "${input.categorySlug}" was not found in Sanity`);
     if (!authorsBySlug.has(input.authorSlug)) errors.push(`row ${input.rowNumber}: author_slug "${input.authorSlug}" was not found in Sanity`);
@@ -152,7 +170,7 @@ async function run() {
   let skipped = 0;
   let heldAsDraft = 0;
   for (const [index, input] of inputs.entries()) {
-    const existingById = articlesByImportId.get(input.importId);
+    const existingById = input.importId ? articlesByImportId.get(input.importId) : undefined;
     const existingBySlug = articlesBySlug.get(input.slug);
     if (existingById && existingBySlug && existingById.baseId !== existingBySlug.baseId) {
       throw new Error(`Articles row ${input.rowNumber}: import_id "${input.importId}" and article_slug "${input.slug}" point to different Sanity articles. Resolve the duplicate before importing.`);
@@ -160,7 +178,6 @@ async function run() {
     const existing = existingById || existingBySlug || {};
     const values = {
       _type: "post",
-      importId: input.importId,
       title: input.title,
       thumbnailTitle: input.thumbnailTitle,
       slug: { _type: "slug", current: input.slug },
@@ -172,7 +189,8 @@ async function run() {
       seoDescription: input.seoDescription,
       seoKeywords: input.seoKeywords,
     };
-    const comparedFields = [...controlledFields];
+    if (input.importId) values.importId = input.importId;
+    const comparedFields = input.importId ? [...controlledFields] : controlledFields.filter((field) => field !== "importId");
     const comparedPublicFields = [...publicContentFields];
     if (input.hasPeopleSlugs) {
       values.people = input.peopleSlugs.map((slug) => ({ ...reference(peopleBySlug.get(slug)), _key: `person-${slug}` }));
@@ -221,6 +239,7 @@ async function run() {
   }
   if (dryRun) console.log(`Dry run complete: ${written} row(s) would change and ${skipped} are unchanged.`);
   else console.log(`Import complete: ${written} row(s) changed and ${skipped} were unchanged.`);
+  if (draftOnly) console.log("Draft-only protection was active: no article was published.");
   if (heldAsDraft) console.log(`${heldAsDraft} row(s) marked published were kept as drafts because --publish was not supplied.`);
   console.log("The source_urls column was ignored and no source URL was sent to Sanity.");
 }

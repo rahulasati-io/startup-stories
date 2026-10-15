@@ -10,6 +10,7 @@ import { conceptType } from "./conceptType";
 import { founderType } from "./founderType";
 import { fundingRoundType } from "./fundingRoundType";
 import { industryType } from "./industryType";
+import { homepageSettingsType } from "./homepageSettingsType";
 import { postType } from "./postType";
 import { seoSettingsType } from "./seoSettingsType";
 import { timelineEventType } from "./timelineEventType";
@@ -26,6 +27,7 @@ export const schemaTypes = [
   conceptType,
   founderType,
   fundingRoundType,
+  homepageSettingsType,
   industryType,
   postType,
   seoSettingsType,

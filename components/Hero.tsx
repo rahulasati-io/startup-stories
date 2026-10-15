@@ -1,9 +1,7 @@
-import ArticleCard from "@/components/ArticleCard";
 import HomepageCompanySearch from "@/components/HomepageCompanySearch";
 import type { Company } from "@/components/CompanyDirectory";
-import type { ArticleCardData } from "@/lib/article-card-data";
 
-export default function Hero({ companies, featuredArticles }: { companies: Company[]; featuredArticles: ArticleCardData[] }) {
+export default function Hero({ companies }: { companies: Company[] }) {
   return (
     <section className="mx-auto max-w-7xl px-5 py-8 md:px-8 md:py-12">
       {/* Hero headline */}
@@ -19,9 +17,6 @@ export default function Hero({ companies, featuredArticles }: { companies: Compa
       </div>
 
       <HomepageCompanySearch companies={companies} />
-
-      {/* Discovery stories */}
-      {featuredArticles.length > 0 && <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{featuredArticles.map((article) => <ArticleCard key={article._id} article={article} compact preloadImage />)}</div>}
     </section>
   );
 }
