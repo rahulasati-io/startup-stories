@@ -1034,3 +1034,11 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Replaced the single heuristic Read Next card with chronological Previous Article and Next Article navigation across published stories.
 - Both features use existing Sanity references and published article ordering, so no spreadsheet fields or manual relationships were added.
 - **Reason:** Internal links should guide readers through genuinely connected people and provide predictable movement between neighbouring articles.
+
+# 2026-10-17 — Expanded article-page discovery lists
+
+- **Status:** Implemented locally.
+- Increased the Recent Articles sidebar limit from five to ten published stories.
+- Increased the Popular Articles sidebar limit from three to ten stories marked popular in Sanity.
+- The current article remains excluded from both lists.
+- **Reason:** Longer discovery lists create more useful internal navigation from every article page.

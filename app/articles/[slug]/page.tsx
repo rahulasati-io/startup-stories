@@ -386,10 +386,10 @@ export default async function ArticlePage({
   const articleHeadings = getArticleHeadings(article.body);
   const recentArticles = allArticles
     .filter((item) => item._id !== article._id)
-    .slice(0, 5);
+    .slice(0, 10);
   const popularArticles = allArticles
     .filter((item) => item._id !== article._id && item.promotion === "popular")
-    .slice(0, 3);
+    .slice(0, 10);
   const companySlugs = new Set((article.companies || []).map((company) => company.slug));
   const moreAboutCompanies = allArticles
     .filter((item) => item._id !== article._id && item.companies.some((company) => companySlugs.has(company.slug)))
