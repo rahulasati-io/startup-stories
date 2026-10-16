@@ -268,7 +268,11 @@ export default async function PersonPage({ params }: Props) {
           </section>
         )}
 
-        <PeopleRow excludeSlug={slug} />
+        <PeopleRow
+          excludeSlug={slug}
+          companyIds={associatedCompanies.flatMap((item) => item.company?._id ? [item.company._id] : [])}
+          companyNames={associatedCompanies.flatMap((item) => item.company?.name ? [item.company.name] : [])}
+        />
         <div className="border-t border-zinc-200 bg-white">
           <CompanyRow title="Explore More Companies" description="Continue exploring company stories, strategies, business models, people and key numbers." />
         </div>

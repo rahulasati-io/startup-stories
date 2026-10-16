@@ -1025,3 +1025,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - **Reason:** Publishing many similar articles should expand the relevant category shelf without disrupting the homepage's main editorial choice.
 - Placed Funding & Deals before How Companies Make Money so timely capital news appears before the larger evergreen business-model library.
 - Excluded the complete Funding News category from Latest Stories so funding coverage remains contained in the dedicated Funding & Deals section.
+
+# 2026-10-17 — Strengthened navigation between people and articles
+
+- **Status:** Implemented locally.
+- Replaced the generic people recommendations on person profiles with up to six founders and leaders connected through the same company-role records.
+- Related-person cards now identify the company connection that caused each recommendation.
+- Replaced the single heuristic Read Next card with chronological Previous Article and Next Article navigation across published stories.
+- Both features use existing Sanity references and published article ordering, so no spreadsheet fields or manual relationships were added.
+- **Reason:** Internal links should guide readers through genuinely connected people and provide predictable movement between neighbouring articles.

@@ -410,7 +410,9 @@ export default async function ArticlePage({
         { perspective: "published", next: { revalidate: 60 } },
       )
     : [];
-  const nextArticle = moreAboutCompanies[0] || moreFromCategory[0] || recentArticles[0];
+  const currentArticleIndex = allArticles.findIndex((item) => item._id === article._id);
+  const previousArticle = currentArticleIndex >= 0 ? allArticles[currentArticleIndex + 1] : undefined;
+  const nextArticle = currentArticleIndex > 0 ? allArticles[currentArticleIndex - 1] : undefined;
 
   const heroImage = article.mainImage?.asset
     ? urlFor(article.mainImage).width(1600).url()
@@ -542,11 +544,21 @@ export default async function ArticlePage({
                 </section>
               )}
 
-              {nextArticle && (
-                <Link href={`/articles/${nextArticle.slug}`} className="group mt-6 block rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">Read next</span>
-                  <span className="mt-2 block text-xl font-bold tracking-tight text-zinc-950 group-hover:text-amber-800">{nextArticle.title}</span>
-                </Link>
+              {(previousArticle || nextArticle) && (
+                <nav aria-label="Article navigation" className="mt-8 grid gap-4 sm:grid-cols-2">
+                  {previousArticle && (
+                    <Link href={`/articles/${previousArticle.slug}`} className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">← Previous article</span>
+                      <span className="mt-2 block text-lg font-bold leading-snug tracking-tight text-zinc-950 group-hover:text-amber-800">{previousArticle.title}</span>
+                    </Link>
+                  )}
+                  {nextArticle && (
+                    <Link href={`/articles/${nextArticle.slug}`} className={`group rounded-2xl border border-zinc-200 bg-white p-6 text-right transition hover:border-zinc-300 hover:shadow-sm ${previousArticle ? "" : "sm:col-start-2"}`}>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-500">Next article →</span>
+                      <span className="mt-2 block text-lg font-bold leading-snug tracking-tight text-zinc-950 group-hover:text-amber-800">{nextArticle.title}</span>
+                    </Link>
+                  )}
+                </nav>
               )}
             </div>
           </div>
