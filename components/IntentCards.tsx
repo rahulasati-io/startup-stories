@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ArticleCardData } from "@/lib/article-card-data";
 
 const options = [
   {
@@ -24,10 +25,12 @@ const options = [
       "Learn how businesses use pricing, distribution, branding and more to win.",
     action: "Explore strategy",
     href: "/topics/strategy",
+    categorySlug: "strategy",
   },
 ];
 
-export default function IntentCards() {
+export default function IntentCards({ articles }: { articles: ArticleCardData[] }) {
+  const visibleOptions = options.filter((option) => !option.categorySlug || articles.some((article) => article.categorySlug === option.categorySlug));
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-14">
       <div className="mb-5">
@@ -40,8 +43,8 @@ export default function IntentCards() {
         </h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {options.map((option) => (
+      <div className={`grid gap-4 ${visibleOptions.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+        {visibleOptions.map((option) => (
           <Link
             key={option.number}
             href={option.href}

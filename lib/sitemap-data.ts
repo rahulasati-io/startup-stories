@@ -2,6 +2,7 @@ import {defineQuery} from "next-sanity";
 import {absoluteUrl} from "@/lib/site-url";
 import type {SitemapEntry} from "@/lib/sitemap-xml";
 import {client} from "@/sanity/lib/client";
+import {TOPIC_ARTICLE_FILTER} from "@/lib/topic-visibility";
 
 type SitemapDocumentType = "company" | "founder" | "post" | "category" | "author";
 
@@ -15,7 +16,8 @@ const CONTENT_SITEMAP_QUERY = defineQuery(/* groq */ `
   *[
     _type in $types &&
     defined(slug.current) &&
-    !(_id in path("drafts.**"))
+    !(_id in path("drafts.**")) &&
+    (_type != "category" || count(*[${TOPIC_ARTICLE_FILTER}]) > 0)
   ] | order(_updatedAt desc) {
     _type,
     "slug": slug.current,

@@ -2,22 +2,30 @@ import Link from "next/link";
 import { defineQuery } from "next-sanity";
 import SiteLogo from "@/components/SiteLogo";
 import { sanityFetch } from "@/sanity/lib/live";
+import { TOPIC_ARTICLE_FILTER } from "@/lib/topic-visibility";
 
-const FOOTER_COMPANIES_QUERY = defineQuery(/* groq */ `
-  *[_type == "company" && defined(slug.current)] | order(name asc) [0...8] {
+const FOOTER_CONTENT_QUERY = defineQuery(/* groq */ `{
+  "companies": *[_type == "company" && defined(slug.current)] | order(name asc) [0...8] {
     _id,
     name,
     "slug": slug.current
-  }
-`);
+  },
+  "topicSlugs": *[
+    _type == "category" && slug.current in ["business-model", "strategy"] &&
+    count(*[${TOPIC_ARTICLE_FILTER}]) > 0
+  ].slug.current
+}`);
 
 type FooterCompany = { _id: string; name?: string; slug?: string };
 
 export default async function Footer() {
   let companies: FooterCompany[] = [];
+  let topicSlugs: string[] = [];
   try {
-    const result = await sanityFetch({ query: FOOTER_COMPANIES_QUERY });
-    companies = (result.data ?? []) as FooterCompany[];
+    const result = await sanityFetch({ query: FOOTER_CONTENT_QUERY });
+    const content = result.data as { companies?: FooterCompany[]; topicSlugs?: string[] } | null;
+    companies = content?.companies ?? [];
+    topicSlugs = content?.topicSlugs ?? [];
   } catch {
     // Core navigation and legal information should remain available if Sanity is briefly unreachable.
   }
@@ -49,8 +57,8 @@ export default async function Footer() {
             <Link href="/people" className="block hover:text-white">Explore People</Link>
             <Link href="/authors" className="block hover:text-white">Meet the Authors</Link>
             <Link href="/articles" className="block hover:text-white">All Articles</Link>
-            <Link href="/topics/business-model" className="block hover:text-white">Business Models</Link>
-            <Link href="/topics/strategy" className="block hover:text-white">Strategies</Link>
+            {topicSlugs.includes("business-model") && <Link href="/topics/business-model" className="block hover:text-white">Business Models</Link>}
+            {topicSlugs.includes("strategy") && <Link href="/topics/strategy" className="block hover:text-white">Strategies</Link>}
           </nav>
         </div>
 

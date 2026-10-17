@@ -11,12 +11,14 @@ import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-da
 import { absoluteUrl } from "@/lib/site-url";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
+import { TOPIC_ARTICLE_FILTER } from "@/lib/topic-visibility";
 
 const TOPIC_QUERY = defineQuery(/* groq */ `
   *[_type == "category" && slug.current == $slug][0]{
     title,
     description,
-    "slug": slug.current
+    "slug": slug.current,
+    "articleCount": count(*[${TOPIC_ARTICLE_FILTER}])
   }
 `);
 
@@ -24,12 +26,13 @@ type Topic = {
   title: string;
   description?: string;
   slug: string;
+  articleCount: number;
 };
 
 type Props = { params: Promise<{ slug: string }> };
 
 async function getTopic(slug: string) {
-  return client.fetch<Topic | null>(TOPIC_QUERY, { slug }, { perspective: "published" });
+  return client.fetch<Topic | null>(TOPIC_QUERY, { slug }, { perspective: "published", next: { revalidate: 60 } });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -40,6 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${topic.title} Articles | MisterStory`,
     description: topic.description || `Explore MisterStory articles about ${topic.title.toLowerCase()}.`,
     alternates: { canonical: absoluteUrl(`/topics/${topic.slug}`) },
+    robots: { index: topic.articleCount > 0, follow: true },
   };
 }
 

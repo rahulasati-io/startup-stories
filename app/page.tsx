@@ -95,7 +95,7 @@ export default async function Home() {
         <LatestStories articles={latestArticles} />
 
         {/* Core ways to explore MisterStory */}
-        <IntentCards />
+        <IntentCards articles={articles} />
 
         {/* Explore businesses by idea */}
         <Topics articles={articles} />

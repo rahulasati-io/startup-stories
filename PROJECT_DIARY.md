@@ -1109,3 +1109,74 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Verified live read-only queries for the 132 articles, 228 companies and 486 people available during testing, including adjacent pages without overlap and full-library searches. In-memory Studio fixtures verified draft-only, unpublished-change and published states, release-version exclusion and deduplication.
 - Passed TypeScript, the production build, changed-file lint checks and production-server checks: all three directories return 24 cards, canonical URLs and crawlable pagination; filtered pages are noindex and invalid page numbers are 404. Articles-directory HTML decreased from approximately 334 KB to 143 KB.
 - **Reason:** The user approved pagination as the next performance step so growing libraries do not require downloading and rendering every record in the browser or Studio.
+
+# 2026-10-17 — Excluded empty article topics from search discovery
+
+- **Status:** Implemented locally and verified; deployment pending.
+- Following the Search Console audit, the user approved excluding empty article categories while preserving individual people profiles.
+- Added a shared published-article eligibility filter for category counts: drafts and posts without titles or slugs cannot make a category appear populated.
+- Category URLs are now included in the author/topic sitemap only when they contain at least one eligible published article. Authors, companies, people and article sitemap membership are otherwise unchanged.
+- Empty topic pages remain accessible but send `noindex, follow`; populated topics remain indexable with their existing canonical URLs. Counts use the existing publication webhook and a 60-second cache fallback.
+- Footer topic links and the homepage Strategy discovery card are conditional on available content. Existing homepage topic chips already hide empty results and retain that behaviour. No category documents, articles or people profiles were deleted.
+- Read-only content checks confirmed Industry, Startup and People & Leadership have zero eligible posts; the revised author/topic sitemap has eight entries instead of eleven. Categories return automatically after their first eligible article is published, without an Excel change or code update.
+- Verified draft-only/incomplete/published query fixtures, TypeScript, changed-file ESLint, production build and local production HTTP responses for three empty topics, three populated topics and an unchanged person profile.
+- **Reason:** Avoid promoting empty article collections to search engines or readers. People & Leadership is an article collection, not the individual People profile directory.
+- **Separate audit finding, not changed:** Eight pairs of people URLs share SEO titles/descriptions. Matching names are not proof of duplicate identities; title disambiguation or verified profile consolidation requires a separate review. No people records were merged or deleted.
+
+# 2026-10-17 — Distinguished six same-name people profiles in SEO metadata
+
+- **Status:** Implemented in the live Sanity dataset; no website deployment required for these content changes.
+- The user approved distinguishing the separate Shashank Kumar, Anirudh Sharma and Harsh Jain profiles. Updated only `seoTitle` and `seoDescription` on the six existing published records.
+- Titles now distinguish Shashank Kumar at DeHaat versus Razorpay, Anirudh Sharma at Digantara versus Third Wave Coffee, and Harsh Jain at Dream11 versus Groww. Each profile also has a distinct description based on its existing biography.
+- Preserved every slug, document ID, biography, role, company relationship and other content field. No profiles were merged, deleted, renamed or newly published from a draft. The raw preflight found no draft copies for these six records.
+- Saved previous metadata values and revision IDs outside the website repository at `C:\Users\rahul\Documents\Codex\outputs\seo-audits\2026-10-17-people-seo-backup.json`; used a revision-checked transaction and verified that every unrelated document field remained unchanged.
+- The company importer currently patches person identity/bio fields without setting or clearing person SEO overrides, so these overrides are preserved by the existing importer.
+- Verified all six live pages return HTTP 200 with their distinct titles/descriptions. Digantara initially retained cached metadata after the CMS update; a signed call to the existing revalidation endpoint returned HTTP 200 and the live page then showed the new metadata. No webhook settings or secrets were changed.
+- **Reason:** Different people with matching names need distinct search-result metadata without changing their permanent URLs. This does not resolve the separate five duplicate-person pairs, which remain untouched.
+
+# 2026-10-17 — Deferred backlog and handoff for the next session
+
+- **Status:** Deferred at the user's request. Do not carry out the remaining tasks for at least the next two to three days; resume only when the user asks. No automatic reminder, deployment or scheduled mutation was requested.
+- **Reason:** The user wants today's unfinished work recorded so it can be resumed after a short break without losing decisions or repeating completed tasks.
+
+## Ready locally, not yet deployed
+
+- Commit and deploy the empty-topic discovery changes, then verify production: omit Industry, Startup and People & Leadership from the sitemap while empty, hide empty topic discovery links, and serve `noindex, follow` on empty topic pages. Preserve all people profiles and automatically restore category eligibility when published content exists.
+- At handoff, the uncommitted files are `PROJECT_DIARY.md`, `app/page.tsx`, `app/topics/[slug]/page.tsx`, `components/Footer.tsx`, `components/IntentCards.tsx`, `lib/sitemap-data.ts` and new `lib/topic-visibility.ts`. TypeScript, changed-file ESLint, the production build, GROQ fixtures and local production HTTP checks passed. Recheck the working tree before any later commit; do not assume unrelated future changes belong to this task.
+
+## People identity cleanup — not performed
+
+- Consolidate five verified duplicate-person pairs: Mukesh Bansal (`mukesh-bansal`, `mukesh-bansal-cult`); Amitava Saha (`amitava-saha`, `amitava-saha-xpressbees`); Sumatichandra H. Mehta (`sumatichandra-h-mehta`, `sumatichandra-mehta`); Rahul Sharma (`rahul-sharma`, `rahul-sharma-zetwerk`); Vishal Chaudhary (`vishal-chaudhary`, `vishal-chaudhary-zetwerk`).
+- Before consolidating: back up records, inspect drafts and incoming references, choose the retained URL using content completeness and available indexing evidence, preserve the best biography and every valid company relationship, and redirect the obsolete URL. Update spreadsheet person slugs/relationships so later imports cannot recreate the duplicate. No merge or deletion is authorised merely by this backlog entry.
+- Rahul Sharma's and Vishal Chaudhary's suffix profiles have identical biographies to their generic-slug profiles but no incoming company-role references; the generic profiles have the Zetwerk role. Mukesh Bansal's and Amitava Saha's roles are split between their two company-oriented profiles. Both Mehta records refer to Safari's same founder/promoter.
+- Review overlapping role entries found for Shashank Kumar at Razorpay, Harsh Jain at Dream11 and Sumatichandra Mehta at Safari; distinguish genuinely separate historical roles from redundant entries before removing anything.
+- Preserve stable person IDs and URLs across employer changes. One person can have multiple company-role records. Do not merge different individuals solely because they have the same name.
+
+## Importer overwrite protection — design deferred, not implemented
+
+- Decide and implement clear field ownership rather than relying on silent overwrites: recommended Sanity ownership for article bodies, company overviews, people biographies and SEO; recommended spreadsheet ownership for financial records and company-person relationships.
+- Recommended normal mode: create new editorial records from Excel, but do not overwrite existing Sanity-managed editorial fields. Provide an explicit, narrowly scoped content-update mode for selected slugs when the user intentionally wants Excel to replace editorial content.
+- The alternative discussed was last-import baselines/field-level conflict detection with visible skip warnings and an explicit override. This was not selected for implementation; compare complexity with the simpler ownership approach before building. Existing records need careful handling because reliable historical import baselines are unavailable.
+- Add duplicate-identity safeguards to the people-import workflow: show useful matching-name/company warnings, reuse the existing person's slug/identity for another role, and never automatically merge same-name people. The current importer matches people by slug, so another slug can create another record.
+- Verify article, company and people paths separately before claiming all imports are protected. The current importer already preserves the six custom people SEO overrides because it does not set those fields; biography/overview overwrite protection is still pending.
+
+## Crawl, reliability and performance follow-up
+
+- Investigate temporary failures on Chargebee, Waaree Energies, Pixxel and KreditBee using Vercel runtime logs and Sanity query timings. All four succeeded on retry; the audit did not establish a persistent server error or that Google experienced these failures.
+- Review the remaining company-page query/performance optimisation phase without undoing the completed CDN, responsive image and pagination work.
+- Investigate why the Digantara metadata update remained cached despite the existing publication refresh setup; a signed manual call to the existing endpoint fixed it. Do not assume this one observation proves the webhook is broken or that editors must routinely clear caches.
+- Clean up secondary `Explore More Companies` headings on company/people pages and the secondary homepage heading to H2, keeping the main title H1. This is document-structure cleanup, not a demonstrated crawling block.
+- Remove unnecessary `utm_source=chatgpt.com` parameters from internal links, preserving destination URLs and legitimate external attribution as appropriate.
+- Review the full Search Console Page indexing and Crawl stats reports through authorised UI access or user-provided exports/screenshots. The API connection does not expose those aggregate reports. Do not infer site-wide exclusion counts or historical Googlebot failures from the sampled inspection results.
+- Track a small priority set of company/people profiles over time, improve substantive unique content and contextual incoming links where needed, and compare new URL inspections after changes. Do not mass-request indexing, repeatedly submit unchanged sitemaps, or equate cache refresh with guaranteed indexing.
+
+## Database direction — exploratory only
+
+- Revisit PostgreSQL/Supabase only when structured financial data, comparisons and calculations justify it. No database migration was approved or started.
+- Proposed long-term separation: Sanity for editorial content; a database for structured financial/funding data; Excel as an optional ingestion tool. Preserve permanent IDs across systems. A database by itself does not prevent conflicting edits or overwrite rules.
+
+## Already complete — do not redo
+
+- Local read-only Search Console MCP is installed, authenticated and verified for `sc-domain:misterstory.in`; it can read search performance, submitted sitemaps and individual stored URL inspections. Credentials are outside the website repository. An OAuth app left in Google's Testing mode may require reauthentication later; diagnose if needed without exposing credentials.
+- Read-only crawl audit completed: 867 sitemap URLs, 67 Google URL inspections, and all directory pagination pages. Reports are outside the website repository at `C:\Users\rahul\Documents\Codex\outputs\seo-audits\2026-10-17-misterstory-crawl-audit.md`. All sitemap URLs ultimately loaded; no site-wide crawl block was found. Inspection counts are a selected sample, not site-wide totals.
+- Six separate same-name people profiles have distinct live SEO titles/descriptions: Shashank Kumar at DeHaat/Razorpay, Anirudh Sharma at Digantara/Third Wave Coffee, and Harsh Jain at Dream11/Groww. Their IDs, slugs, biographies and relationships are unchanged. These CMS updates require no Git deployment and must not be confused with the five outstanding duplicate-person merges.
