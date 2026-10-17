@@ -1042,3 +1042,12 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Increased the Popular Articles sidebar limit from three to ten stories marked popular in Sanity.
 - The current article remains excluded from both lists.
 - **Reason:** Longer discovery lists create more useful internal navigation from every article page.
+
+# 2026-10-17 — Added industry discovery and smarter related stories
+
+- **Status:** Implemented locally.
+- Company pages now show up to six other companies from the same industry, excluding the current company and companies already displayed in its group section.
+- Article-card data now includes lightweight company, person and concept identifiers for relationship scoring.
+- Replaced separate company-only and category-only article recommendations with one ranked Related Stories section containing up to six articles.
+- Recommendation weights prioritise shared companies, followed by shared people, shared concepts and finally the same article category; publication order breaks equal scores.
+- **Reason:** Internal recommendations should favour meaningful entity relationships while still providing useful category-based discovery when richer references are unavailable.

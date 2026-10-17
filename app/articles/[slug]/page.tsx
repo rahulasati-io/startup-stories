@@ -390,14 +390,22 @@ export default async function ArticlePage({
   const popularArticles = allArticles
     .filter((item) => item._id !== article._id && item.promotion === "popular")
     .slice(0, 10);
-  const companySlugs = new Set((article.companies || []).map((company) => company.slug));
-  const moreAboutCompanies = allArticles
-    .filter((item) => item._id !== article._id && item.companies.some((company) => companySlugs.has(company.slug)))
-    .slice(0, 3);
-  const companyArticleIds = new Set(moreAboutCompanies.map((item) => item._id));
-  const moreFromCategory = allArticles
-    .filter((item) => item._id !== article._id && !companyArticleIds.has(item._id) && item.categorySlug === article.categorySlug)
-    .slice(0, 3);
+  const companyIds = new Set((article.companies || []).map((company) => company._id));
+  const peopleIds = new Set((article.people || []).map((person) => person._id));
+  const conceptIds = new Set((article.concepts || []).map((concept) => concept._id));
+  const relatedArticles = allArticles
+    .flatMap((item, index) => {
+      if (item._id === article._id) return [];
+      const companyMatches = item.companies.filter((company) => company._id && companyIds.has(company._id)).length;
+      const peopleMatches = (item.peopleIds || []).filter((id) => peopleIds.has(id)).length;
+      const conceptMatches = (item.conceptIds || []).filter((id) => conceptIds.has(id)).length;
+      const categoryMatch = article.categorySlug && item.categorySlug === article.categorySlug ? 1 : 0;
+      const score = companyMatches * 12 + peopleMatches * 6 + conceptMatches * 3 + categoryMatch;
+      return score > 0 ? [{ item, index, score }] : [];
+    })
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .slice(0, 6)
+    .map(({ item }) => item);
   const primaryCompany = article.companies?.[0];
   const relatedCompanies = primaryCompany?.industry
     ? await client.fetch<SidebarCompany[]>(
@@ -572,18 +580,11 @@ export default async function ArticlePage({
           />
         </div>
       </article>
-      {moreAboutCompanies.length > 0 && (
+      {relatedArticles.length > 0 && (
         <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8 md:pb-16">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Continue exploring</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">More about these companies</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{moreAboutCompanies.map((item) => <ArticleCard key={item._id} article={item} />)}</div>
-        </section>
-      )}
-      {moreFromCategory.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 pb-14 md:px-8 md:pb-16">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-zinc-500">Related reading</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">More {article.category || "articles"}</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{moreFromCategory.map((item) => <ArticleCard key={item._id} article={item} />)}</div>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-950">Related stories</h2>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{relatedArticles.map((item) => <ArticleCard key={item._id} article={item} />)}</div>
         </section>
       )}
     </main>
