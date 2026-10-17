@@ -15,7 +15,7 @@ import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { absoluteUrl } from "@/lib/site-url";
-import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
+import { type ArticleCardData, type ArticleLinkData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import {
   breadcrumbJsonLd,
@@ -29,11 +29,13 @@ const ARTICLE_QUERY = defineQuery(/* groq */ `
     slug.current == $slug
   ][0]{
     _id,
+    _createdAt,
     _updatedAt,
     title,
     "slug": slug.current,
     "category": category->title,
     "categorySlug": category->slug.current,
+    "categoryId": category._ref,
     "author": author->{
       name,
       "slug": slug.current
@@ -73,6 +75,78 @@ const ARTICLE_QUERY = defineQuery(/* groq */ `
   }
 `);
 
+const ARTICLE_PAGE_SUPPORT_QUERY = defineQuery(/* groq */ `{
+  "recentArticles": *[
+    _type == "post" &&
+    !(_id in path("drafts.**")) &&
+    _id != $articleId &&
+    defined(title) &&
+    defined(slug.current) &&
+    defined(category->slug.current)
+  ] | order(publishedAt desc, _updatedAt desc)[0...10] {
+    _id,
+    title,
+    "slug": slug.current,
+    "category": category->title
+  },
+  "popularArticles": *[
+    _type == "post" &&
+    !(_id in path("drafts.**")) &&
+    _id != $articleId &&
+    promotion == "popular" &&
+    defined(title) &&
+    defined(slug.current) &&
+    defined(category->slug.current)
+  ] | order(publishedAt desc, _updatedAt desc)[0...10] {
+    _id,
+    title,
+    "slug": slug.current,
+    "category": category->title
+  },
+  "relatedCandidates": *[
+    _type == "post" &&
+    !(_id in path("drafts.**")) &&
+    _id != $articleId &&
+    defined(title) &&
+    defined(slug.current) &&
+    defined(category->slug.current) &&
+    (category._ref == $categoryId || references($referenceIds))
+  ] | order(publishedAt desc, _updatedAt desc)[0...40] {
+    _id,
+    _updatedAt,
+    title,
+    "slug": slug.current,
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    "description": coalesce(seoDescription, array::join(body[0...2].children[].text, " ")),
+    publishedAt,
+    contentUpdatedAt,
+    promotion,
+    "companies": coalesce(company[]->{
+      _id,
+      name,
+      "slug": slug.current,
+      "industry": coalesce(industryCategory->name, industry)
+    }, []),
+    "peopleIds": coalesce(people[]._ref, []),
+    "conceptIds": coalesce(concepts[]._ref, []),
+    "socialImageUrl": socialImage.asset->url,
+    "mainImageUrl": mainImage.asset->url
+  },
+  "previousArticle": *[
+    _type == "post" &&
+    !(_id in path("drafts.**")) &&
+    defined(slug.current) &&
+    coalesce(publishedAt, _createdAt) < $currentDate
+  ] | order(publishedAt desc, _createdAt desc)[0]{title, "slug": slug.current},
+  "nextArticle": *[
+    _type == "post" &&
+    !(_id in path("drafts.**")) &&
+    defined(slug.current) &&
+    coalesce(publishedAt, _createdAt) > $currentDate
+  ] | order(publishedAt asc, _createdAt asc)[0]{title, "slug": slug.current}
+}`);
+
 const RELATED_COMPANIES_QUERY = defineQuery(/* groq */ `
   *[
     _type == "company" &&
@@ -95,11 +169,13 @@ const RELATED_COMPANIES_QUERY = defineQuery(/* groq */ `
 
 type Article = {
   _id: string;
+  _createdAt: string;
   _updatedAt: string;
   title: string;
   slug: string;
   category?: string;
   categorySlug?: string;
+  categoryId?: string;
   author?: {
     name: string;
     slug?: string;
@@ -136,6 +212,14 @@ type Article = {
   socialImage?: {
     asset?: Parameters<typeof urlFor>[0];
   };
+};
+
+type ArticlePageSupport = {
+  recentArticles: ArticleLinkData[];
+  popularArticles: ArticleLinkData[];
+  relatedCandidates: ArticleCardData[];
+  previousArticle?: Pick<ArticleCardData, "title" | "slug">;
+  nextArticle?: Pick<ArticleCardData, "title" | "slug">;
 };
 
 type ArticleTableRow = {
@@ -252,7 +336,7 @@ export async function generateMetadata({
     {
       slug,
     },
-    { next: { revalidate: 60 } }
+    { perspective: "published", stega: false, next: { revalidate: 60 } }
   );
 
   if (!article) {
@@ -373,10 +457,11 @@ export default async function ArticlePage({
 }) {
   const { slug } = await params;
 
-  const [article, allArticles] = await Promise.all([
-    client.fetch<Article | null>(ARTICLE_QUERY, { slug }, { next: { revalidate: 60 } }),
-    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } }),
-  ]);
+  const article = await client.fetch<Article | null>(
+    ARTICLE_QUERY,
+    { slug },
+    { perspective: "published", next: { revalidate: 60 } },
+  );
 
   if (!article) {
     notFound();
@@ -384,18 +469,38 @@ export default async function ArticlePage({
 
   const readingTime = calculateReadingTime(article.body);
   const articleHeadings = getArticleHeadings(article.body);
-  const recentArticles = allArticles
-    .filter((item) => item._id !== article._id)
-    .slice(0, 10);
-  const popularArticles = allArticles
-    .filter((item) => item._id !== article._id && item.promotion === "popular")
-    .slice(0, 10);
   const companyIds = new Set((article.companies || []).map((company) => company._id));
   const peopleIds = new Set((article.people || []).map((person) => person._id));
   const conceptIds = new Set((article.concepts || []).map((concept) => concept._id));
-  const relatedArticles = allArticles
+  const referenceIds = [...companyIds, ...peopleIds, ...conceptIds];
+  const primaryCompany = article.companies?.[0];
+  const [support, relatedCompanies] = await Promise.all([
+    client.fetch<ArticlePageSupport>(
+      ARTICLE_PAGE_SUPPORT_QUERY,
+      {
+        articleId: article._id,
+        categoryId: article.categoryId || null,
+        referenceIds,
+        currentDate: article.publishedAt || article._createdAt,
+      },
+      { perspective: "published", next: { revalidate: 60 } },
+    ),
+    primaryCompany?.industry
+      ? client.fetch<SidebarCompany[]>(
+          RELATED_COMPANIES_QUERY,
+          {
+            excludedIds: (article.companies || []).map((company) => company._id),
+            industryId: primaryCompany.industryId || null,
+            industry: primaryCompany.industry,
+          },
+          { perspective: "published", next: { revalidate: 60 } },
+        )
+      : Promise.resolve([]),
+  ]);
+  const recentArticles = support.recentArticles;
+  const popularArticles = support.popularArticles;
+  const relatedArticles = support.relatedCandidates
     .flatMap((item, index) => {
-      if (item._id === article._id) return [];
       const companyMatches = item.companies.filter((company) => company._id && companyIds.has(company._id)).length;
       const peopleMatches = (item.peopleIds || []).filter((id) => peopleIds.has(id)).length;
       const conceptMatches = (item.conceptIds || []).filter((id) => conceptIds.has(id)).length;
@@ -406,21 +511,8 @@ export default async function ArticlePage({
     .sort((left, right) => right.score - left.score || left.index - right.index)
     .slice(0, 6)
     .map(({ item }) => item);
-  const primaryCompany = article.companies?.[0];
-  const relatedCompanies = primaryCompany?.industry
-    ? await client.fetch<SidebarCompany[]>(
-        RELATED_COMPANIES_QUERY,
-        {
-          excludedIds: (article.companies || []).map((company) => company._id),
-          industryId: primaryCompany.industryId || null,
-          industry: primaryCompany.industry,
-        },
-        { perspective: "published", next: { revalidate: 60 } },
-      )
-    : [];
-  const currentArticleIndex = allArticles.findIndex((item) => item._id === article._id);
-  const previousArticle = currentArticleIndex >= 0 ? allArticles[currentArticleIndex + 1] : undefined;
-  const nextArticle = currentArticleIndex > 0 ? allArticles[currentArticleIndex - 1] : undefined;
+  const previousArticle = support.previousArticle;
+  const nextArticle = support.nextArticle;
 
   const heroImage = article.mainImage?.asset
     ? urlFor(article.mainImage).width(1600).url()

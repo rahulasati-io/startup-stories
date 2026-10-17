@@ -47,7 +47,7 @@ export default async function TopicPage({ params }: Props) {
   const { slug } = await params;
   const [topic, allArticles] = await Promise.all([
     getTopic(slug),
-    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", cache: "no-store" }),
+    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } }),
   ]);
   if (!topic) notFound();
 

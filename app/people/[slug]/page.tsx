@@ -117,14 +117,14 @@ const relationshipLabels: Record<string, string> = {
 const statusLabel = (status?: string) => status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
 
 async function getPerson(slug: string) {
-  return client.fetch<Person | null>(PERSON_QUERY, { slug });
+  return client.fetch<Person | null>(PERSON_QUERY, { slug }, { perspective: "published", next: { revalidate: 60 } });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const [person, settings] = await Promise.all([
     getPerson(slug),
-    client.fetch<SeoSettings | null>(SEO_SETTINGS_QUERY, {}, { stega: false }),
+    client.fetch<SeoSettings | null>(SEO_SETTINGS_QUERY, {}, { perspective: "published", stega: false, next: { revalidate: 60 } }),
   ]);
   if (!person) return {};
   const values = { person_name: person.name, primary_role: person.role };

@@ -1051,3 +1051,16 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Replaced separate company-only and category-only article recommendations with one ranked Related Stories section containing up to six articles.
 - Recommendation weights prioritise shared companies, followed by shared people, shared concepts and finally the same article category; publication order breaks equal scores.
 - **Reason:** Internal recommendations should favour meaningful entity relationships while still providing useful category-based discovery when richer references are unavailable.
+
+# 2026-10-17 — Completed the first website and Studio performance pass
+
+- **Status:** Implemented locally and verified with a production build.
+- Enabled Sanity's CDN for public published-content reads; importers, audits and sitemap generation continue using the uncached API where immediate consistency matters.
+- Replaced the full 131-article catalogue request on every article page with targeted requests for ten recent stories, ten popular stories, up to forty relevant candidates for ranking, and the neighbouring articles.
+- Preserved the existing Related Stories scoring, Previous/Next navigation, server-rendered article content, canonical URLs and crawlable internal links.
+- Replaced `no-store` on the main Articles, Companies, People, Authors and Topic directory queries with a 60-second cache fallback. The signed Sanity webhook still invalidates the site immediately after content changes.
+- Added published-content caching to company, person and author profile queries.
+- Removed the Company Manager's mutation subscription, which previously reloaded every company whenever Sanity autosaved an edit. Added an explicit Refresh List button and visible error handling instead.
+- Kept sitemap queries on Sanity's uncached API so newly published canonical URLs remain immediately available to crawlers.
+- Verified linting, the Next.js production build, article navigation sections, primary H1s, canonical tags, indexability and the 131-article XML sitemap.
+- **Reason:** Public pages should reuse fast cached content and fetch only the records they display, while publishing, sitemap discovery and Studio editing remain reliable.

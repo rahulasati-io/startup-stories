@@ -14,6 +14,6 @@ export const metadata: Metadata = {
 };
 
 export default async function PeoplePage() {
-  const people = await client.fetch<DirectoryPerson[]>(PEOPLE_DIRECTORY_QUERY, {}, { cache: "no-store" });
+  const people = await client.fetch<DirectoryPerson[]>(PEOPLE_DIRECTORY_QUERY, {}, { perspective: "published", next: { revalidate: 60 } });
   return <><Header /><main className="bg-[#f7f6f2]"><PersonDirectory people={people} /><Newsletter /></main><Footer /></>;
 }

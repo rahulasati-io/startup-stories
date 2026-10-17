@@ -20,6 +20,6 @@ export default async function CompaniesPage({
 }) {
   const query = (await searchParams).q;
   const initialSearch = Array.isArray(query) ? query[0] : query || "";
-  const companies = await client.fetch<Company[]>(COMPANIES_QUERY, {}, { cache: "no-store" });
+  const companies = await client.fetch<Company[]>(COMPANIES_QUERY, {}, { perspective: "published", next: { revalidate: 60 } });
   return <><Header /><main className="bg-[#f7f6f2]"><CompanyDirectory companies={companies} title="All Companies" description="Search the complete MisterStory company directory by name or industry." initialSearch={initialSearch} /><Newsletter /></main><Footer /></>;
 }

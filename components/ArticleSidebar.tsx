@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Newsletter from "@/components/Newsletter";
-import { articleHref, type ArticleCardData } from "@/lib/article-card-data";
+import { articleHref, type ArticleLinkData } from "@/lib/article-card-data";
 
 export type SidebarCompany = {
   _id: string;
@@ -17,7 +17,7 @@ export type SidebarPerson = {
   slug?: string;
 };
 
-function ArticleLinks({ articles }: { articles: ArticleCardData[] }) {
+function ArticleLinks({ articles }: { articles: ArticleLinkData[] }) {
   return (
     <ol className="divide-y divide-zinc-200">
       {articles.map((item) => (
@@ -44,10 +44,10 @@ export default function ArticleSidebar({
   popularArticles,
 }: {
   companies: SidebarCompany[];
-  recentArticles: ArticleCardData[];
+  recentArticles: ArticleLinkData[];
   relatedCompanies: SidebarCompany[];
   people: SidebarPerson[];
-  popularArticles: ArticleCardData[];
+  popularArticles: ArticleLinkData[];
 }) {
   return (
     <aside className="space-y-5" aria-label="Explore more from MisterStory">

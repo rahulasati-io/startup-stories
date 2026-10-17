@@ -31,6 +31,6 @@ const AUTHORS_QUERY = defineQuery(/* groq */ `
 `);
 
 export default async function AuthorsPage() {
-  const authors = await client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, { perspective: "published", cache: "no-store" });
+  const authors = await client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } });
   return <><Header /><main className="bg-[#f7f6f2]"><AuthorDirectory authors={authors} /><Newsletter /></main><Footer /></>;
 }

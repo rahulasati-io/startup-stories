@@ -70,7 +70,7 @@ type Author = {
 type Props = { params: Promise<{ slug: string }> };
 
 async function getAuthor(slug: string) {
-  return client.fetch<Author | null>(AUTHOR_QUERY, { slug }, { perspective: "published" });
+  return client.fetch<Author | null>(AUTHOR_QUERY, { slug }, { perspective: "published", next: { revalidate: 60 } });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

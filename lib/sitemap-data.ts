@@ -36,7 +36,9 @@ function documentPath(document: SitemapDocument) {
 }
 
 export async function getContentSitemap(types: SitemapDocumentType[]): Promise<SitemapEntry[]> {
-  const documents = await client.fetch<SitemapDocument[]>(
+  // Sitemaps favour immediate publication accuracy over interactive latency.
+  // Bypass Sanity's CDN here so newly published URLs cannot be briefly omitted.
+  const documents = await client.withConfig({useCdn: false}).fetch<SitemapDocument[]>(
     CONTENT_SITEMAP_QUERY,
     {types},
     {perspective: "published", cache: "no-store"},

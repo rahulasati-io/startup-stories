@@ -1,9 +1,10 @@
 "use client";
 
 import { AddIcon } from "@sanity/icons/Add";
+import { RefreshIcon } from "@sanity/icons/Refresh";
 import { SearchIcon } from "@sanity/icons/Search";
 import { Badge, Box, Button, Card, Flex, Spinner, Stack, Text, TextInput } from "@sanity/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useClient } from "sanity";
 import { IntentLink } from "sanity/router";
 
@@ -42,11 +43,17 @@ export function CompaniesManager() {
   const [companies, setCompanies] = useState<DisplayCompany[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    let active = true;
+  const load = useCallback(async (mode: "initial" | "refresh" = "refresh") => {
+    const requestId = ++requestIdRef.current;
+    if (mode === "initial") setLoading(true);
+    else setRefreshing(true);
+    setLoadError("");
 
-    const load = async () => {
+    try {
       const rows = await client.fetch<CompanyRow[]>(
         `*[_type == "company" && !(_id in path("versions.**"))]{
           _id,
@@ -80,22 +87,31 @@ export function CompaniesManager() {
         };
       });
 
-      if (active) {
+      if (requestId === requestIdRef.current) {
         setCompanies(merged);
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      if (requestId === requestIdRef.current) {
+        setLoadError(error instanceof Error ? error.message : "The company list could not be loaded.");
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
+  }, [client]);
 
-    void load();
-    const subscription = client
-      .listen('*[_type == "company"]', {}, { includeResult: false, visibility: "query" })
-      .subscribe(() => void load());
+  useEffect(() => {
+    const initialLoad = window.setTimeout(() => {
+      void load("initial");
+    }, 0);
 
     return () => {
-      active = false;
-      subscription.unsubscribe();
+      window.clearTimeout(initialLoad);
+      requestIdRef.current += 1;
     };
-  }, [client]);
+  }, [load]);
 
   const visibleCompanies = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -118,9 +134,19 @@ export function CompaniesManager() {
               <Text muted size={1}>{companies.length} company records</Text>
             </Box>
           </Box>
-          <IntentLink intent="create" params={{ type: "company" }} style={{ textDecoration: "none" }}>
-            <Button icon={AddIcon} text="Create company" tone="primary" />
-          </IntentLink>
+          <Flex gap={2} wrap="wrap">
+            <Button
+              disabled={loading || refreshing}
+              icon={RefreshIcon}
+              loading={refreshing}
+              mode="ghost"
+              onClick={() => void load("refresh")}
+              text="Refresh list"
+            />
+            <IntentLink intent="create" params={{ type: "company" }} style={{ textDecoration: "none" }}>
+              <Button icon={AddIcon} text="Create company" tone="primary" />
+            </IntentLink>
+          </Flex>
         </Flex>
 
         <TextInput
@@ -130,6 +156,16 @@ export function CompaniesManager() {
           placeholder="Search by company, slug, industry or SEO text"
           value={search}
         />
+
+        {loadError && (
+          <Card border padding={4} radius={2} tone="critical">
+            <Stack space={3}>
+              <Text size={1} weight="semibold">The company list could not be refreshed.</Text>
+              <Text size={1}>{loadError}</Text>
+              <Box><Button onClick={() => void load("refresh")} text="Try again" /></Box>
+            </Stack>
+          </Card>
+        )}
 
         {loading ? (
           <Flex align="center" gap={3} justify="center" padding={6}>

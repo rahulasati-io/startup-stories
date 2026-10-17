@@ -81,8 +81,8 @@ const companyOverviewComponents:PortableTextComponents={block:{normal:({children
 export async function generateMetadata({params}:Props):Promise<Metadata>{
  const {slug}=await params;
  const [company,settings]=await Promise.all([
-  client.fetch<Company|null>(companyQuery,{slug},{stega:false}),
-  client.fetch<SeoSettings|null>(SEO_SETTINGS_QUERY,{}, {stega:false}),
+  client.fetch<Company|null>(companyQuery,{slug},{perspective:"published",stega:false,next:{revalidate:60}}),
+  client.fetch<SeoSettings|null>(SEO_SETTINGS_QUERY,{}, {perspective:"published",stega:false,next:{revalidate:60}}),
  ]);
  if(!company)return {};
  const values={company_name:company.name,industry:company.industry};
@@ -95,11 +95,12 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
 
 export default async function CompanyPage({params}:Props){
  const {slug}=await params;
- const [company,funding,timeline,metrics,people]=await Promise.all([client.fetch<Company|null>(companyQuery,{slug}),client.fetch<FundingRound[]>(fundingQuery,{slug}),client.fetch<TimelineEvent[]>(timelineQuery,{slug}),client.fetch<CompanyMetric[]>(metricQuery,{slug}),client.fetch<CompanyPerson[]>(peopleQuery,{slug})]);
+ const cachedPublished={perspective:"published" as const,next:{revalidate:60}};
+ const [company,funding,timeline,metrics,people]=await Promise.all([client.fetch<Company|null>(companyQuery,{slug},cachedPublished),client.fetch<FundingRound[]>(fundingQuery,{slug},cachedPublished),client.fetch<TimelineEvent[]>(timelineQuery,{slug},cachedPublished),client.fetch<CompanyMetric[]>(metricQuery,{slug},cachedPublished),client.fetch<CompanyPerson[]>(peopleQuery,{slug},cachedPublished)]);
  if(!company)notFound();
  const [relatedArticles,groupCompanies,sameIndustryCandidates]=await Promise.all([
-  client.fetch<RelatedArticle[]>(relatedArticlesQuery,{companyId:company._id}),
-  client.fetch<GroupCompany[]>(groupCompaniesQuery,{companyId:company._id,parentId:company.parentCompany?._id||null}),
+  client.fetch<RelatedArticle[]>(relatedArticlesQuery,{companyId:company._id},cachedPublished),
+  client.fetch<GroupCompany[]>(groupCompaniesQuery,{companyId:company._id,parentId:company.parentCompany?._id||null},cachedPublished),
   company.industry?client.fetch<GroupCompany[]>(sameIndustryCompaniesQuery,{companyId:company._id,industryId:company.industryId||null,industry:company.industry},{perspective:"published",next:{revalidate:60}}):Promise.resolve([]),
  ]);
  const groupCompanyIds=new Set(groupCompanies.map((item)=>item._id));

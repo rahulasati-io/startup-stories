@@ -19,7 +19,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Pro
   const initialCategory = Array.isArray(params.category) ? params.category[0] : params.category || "All";
   let articles: ArticleCardData[] = [];
   try {
-    articles = await client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", cache: "no-store", signal: AbortSignal.timeout(6000) });
+    articles = await client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) });
   } catch {
     // Keep the directory and its navigation usable during a temporary CMS/network failure.
   }

@@ -5,6 +5,8 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  // Company imports should appear immediately instead of waiting for the CDN cache.
-  useCdn: false,
+  // Public, published content should use Sanity's global CDN. Import and audit
+  // scripts create their own uncached clients, so administrative writes and
+  // verification remain immediately consistent.
+  useCdn: true,
 });

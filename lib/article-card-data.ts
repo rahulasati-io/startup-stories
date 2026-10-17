@@ -55,7 +55,9 @@ export const ARTICLE_CARDS_QUERY = defineQuery(/* groq */ `
   }
 `);
 
-export function articleHref(article: ArticleCardData) {
+export type ArticleLinkData = Pick<ArticleCardData, "_id" | "title" | "slug" | "category">;
+
+export function articleHref(article: Pick<ArticleCardData, "slug">) {
   return `/articles/${article.slug}`;
 }
 
