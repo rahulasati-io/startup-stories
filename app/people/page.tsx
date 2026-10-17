@@ -1,19 +1,19 @@
-import type { Metadata } from "next";
-import Footer from "@/components/Footer";
+import type {Metadata} from "next";
+import PersonDirectory from "@/components/PersonDirectory";
+import type {DirectoryPerson} from "@/components/PersonDirectory";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import Newsletter from "@/components/Newsletter";
-import PersonDirectory, { type DirectoryPerson } from "@/components/PersonDirectory";
-import { PEOPLE_DIRECTORY_QUERY } from "@/components/PeopleRow";
-import { absoluteUrl } from "@/lib/site-url";
-import { client } from "@/sanity/lib/client";
+import {directoryMetadata, getPublicDirectory} from "@/lib/public-directories";
+import type {DirectoryParams} from "@/lib/directory-pagination";
 
-export const metadata: Metadata = {
-  title: "People | MisterStory",
-  description: "Explore founders, executives and the people behind companies covered by MisterStory.",
-  alternates: { canonical: absoluteUrl("/people") },
-};
+type Props = {searchParams: Promise<DirectoryParams>};
 
-export default async function PeoplePage() {
-  const people = await client.fetch<DirectoryPerson[]>(PEOPLE_DIRECTORY_QUERY, {}, { perspective: "published", next: { revalidate: 60 } });
-  return <><Header /><main className="bg-[#f7f6f2]"><PersonDirectory people={people} /><Newsletter /></main><Footer /></>;
+export async function generateMetadata({searchParams}: Props): Promise<Metadata> {
+  return directoryMetadata("people", await searchParams, "People | MisterStory", "Explore founders, executives and the people behind companies covered by MisterStory.");
+}
+
+export default async function DirectoryPage({searchParams}: Props) {
+  const {items, pagination} = await getPublicDirectory<DirectoryPerson>("people", await searchParams);
+  return <><Header /><main className="bg-[#f7f6f2]"><PersonDirectory people={items} pagination={pagination} /><Newsletter /></main><Footer /></>;
 }

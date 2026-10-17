@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import {DirectoryControls, DirectoryPageLinks} from "@/components/DirectoryControls";
+import type {DirectoryPagination} from "@/lib/directory-pagination";
 
 export type Company = {
   _id: string;
@@ -20,6 +22,7 @@ type CompanyDirectoryProps = {
   previewLimit?: number;
   showViewAll?: boolean;
   initialSearch?: string;
+  pagination?: DirectoryPagination;
 };
 
 export default function CompanyDirectory({
@@ -30,6 +33,7 @@ export default function CompanyDirectory({
   previewLimit,
   showViewAll = false,
   initialSearch = "",
+  pagination,
 }: CompanyDirectoryProps) {
   const [search, setSearch] = useState(initialSearch);
   const [industry, setIndustry] = useState("All");
@@ -59,6 +63,7 @@ export default function CompanyDirectory({
   );
 
   const visibleCompanies = useMemo(() => {
+    if (pagination) return uniqueCompanies;
     const term = search.trim().toLowerCase();
 
     return uniqueCompanies.filter((company) => {
@@ -70,7 +75,7 @@ export default function CompanyDirectory({
 
       return matchesIndustry && (!term || searchableText.includes(term));
     });
-  }, [uniqueCompanies, industry, search]);
+  }, [uniqueCompanies, industry, search, pagination]);
 
   const displayedCompanies = previewLimit ? visibleCompanies.slice(0, previewLimit) : visibleCompanies;
 
@@ -83,6 +88,7 @@ export default function CompanyDirectory({
       </div>
 
       <div className="mt-7 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 md:p-6">
+        {pagination ? <DirectoryControls pagination={pagination} placeholder="Search by company or industry" /> : <>
         <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0 text-zinc-500">
             <circle cx="11" cy="11" r="7" />
@@ -99,11 +105,11 @@ export default function CompanyDirectory({
             </button>
           ))}
         </div>
-
+        </>}
         {visibleCompanies.length > 0 ? (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayedCompanies.map((company) => (
-              <Link key={company._id} href={`/companies/${company.slug}`} className="group flex min-h-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
+              <Link key={company._id} href={`/companies/${company.slug}`} prefetch={pagination ? false : undefined} className="group flex min-h-48 flex-col rounded-2xl border border-zinc-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
                 <div className="flex items-start justify-between gap-4">
                   <div aria-hidden="true" className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-lg font-extrabold text-zinc-700">
                     {company.name?.charAt(0).toUpperCase() || "?"}
@@ -127,6 +133,8 @@ export default function CompanyDirectory({
             <p className="mt-1 text-sm text-zinc-500">Try a different name or industry.</p>
           </div>
         )}
+
+        {pagination && <DirectoryPageLinks pagination={pagination} />}
 
         {showViewAll && (
           <div className="mt-6 text-center">

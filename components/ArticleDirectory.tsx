@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 import ArticleCard from "@/components/ArticleCard";
 import type { ArticleCardData } from "@/lib/article-card-data";
+import {DirectoryControls, DirectoryPageLinks} from "@/components/DirectoryControls";
+import type {DirectoryPagination} from "@/lib/directory-pagination";
 
-export default function ArticleDirectory({ articles, initialSearch = "", initialCategory = "All", eyebrow = "MisterStory library", title = "Articles", description = "Explore business models, strategies, founder stories and the decisions that shaped interesting companies.", showCategoryFilters = true }: { articles: ArticleCardData[]; initialSearch?: string; initialCategory?: string; eyebrow?: string; title?: string; description?: string; showCategoryFilters?: boolean }) {
+export default function ArticleDirectory({ articles, initialSearch = "", initialCategory = "All", eyebrow = "MisterStory library", title = "Articles", description = "Explore business models, strategies, founder stories and the decisions that shaped interesting companies.", showCategoryFilters = true, pagination }: { articles: ArticleCardData[]; initialSearch?: string; initialCategory?: string; eyebrow?: string; title?: string; description?: string; showCategoryFilters?: boolean; pagination?: DirectoryPagination }) {
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [company, setCompany] = useState("All");
@@ -13,6 +15,7 @@ export default function ArticleDirectory({ articles, initialSearch = "", initial
   const companies = useMemo(() => ["All", ...Array.from(new Set(articles.flatMap((article) => article.companies.map((item) => item.name)))).sort()], [articles]);
   const industries = useMemo(() => ["All", ...Array.from(new Set(articles.flatMap((article) => article.companies.map((item) => item.industry).filter((item): item is string => Boolean(item))))).sort()], [articles]);
   const visible = useMemo(() => {
+    if (pagination) return articles;
     const term = search.trim().toLowerCase();
     return articles.filter((article) =>
       (category === "All" || article.category === category) &&
@@ -20,7 +23,7 @@ export default function ArticleDirectory({ articles, initialSearch = "", initial
       (industry === "All" || article.companies.some((item) => item.industry === industry)) &&
       (!term || [article.title, article.description, article.category, ...article.companies.flatMap((item) => [item.name, item.industry])].filter(Boolean).join(" ").toLowerCase().includes(term))
     );
-  }, [articles, category, company, industry, search]);
+  }, [articles, category, company, industry, search, pagination]);
 
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-16">
@@ -30,6 +33,7 @@ export default function ArticleDirectory({ articles, initialSearch = "", initial
         <p className="mt-4 text-base leading-7 text-zinc-600">{description}</p>
       </div>
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 md:p-6">
+        {pagination ? <DirectoryControls pagination={pagination} placeholder="Search by article, company or topic" /> : <>
         <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
           <span aria-hidden="true" className="text-zinc-500">⌕</span><span className="sr-only">Search articles</span>
           <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by article, company or topic" className="w-full bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400" />
@@ -52,7 +56,9 @@ export default function ArticleDirectory({ articles, initialSearch = "", initial
           </label>
         </div>
         <p className="mt-5 text-xs font-semibold text-zinc-500" aria-live="polite">{visible.length} {visible.length === 1 ? "article" : "articles"}</p>
-        {visible.length ? <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{visible.map((article) => <ArticleCard key={article._id} article={article} />)}</div> : <div className="mt-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-5 py-12 text-center"><p className="font-semibold text-zinc-900">No articles found</p><p className="mt-1 text-sm text-zinc-500">Try another company, topic or category.</p></div>}
+        </>}
+        {visible.length ? <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{visible.map((article) => <ArticleCard key={article._id} article={article} prefetch={pagination ? false : undefined} />)}</div> : <div className="mt-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-5 py-12 text-center"><p className="font-semibold text-zinc-900">No articles found</p><p className="mt-1 text-sm text-zinc-500">Try another company, topic or category.</p></div>}
+        {pagination && <DirectoryPageLinks pagination={pagination} />}
       </div>
     </section>
   );

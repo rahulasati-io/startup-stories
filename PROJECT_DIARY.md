@@ -1096,3 +1096,16 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Retained responsive Sanity CDN image variants, with image-size hints matched to the two-card and four-card rows.
 - Verified the production build, linting of the changed files and component rendering with six stories, confirming the two/four split, editorial order, six-story cap and empty-state handling.
 - **Reason:** The user felt one large highlighted story dominated the homepage and requested two highlighted stories above four smaller stories, while preserving editorial control independent of imports.
+
+# 2026-10-17 — Paginated public directories and Studio management lists
+
+- **Status:** Implemented locally; deployment pending.
+- Articles, Companies and People directories now fetch and render 24 records per page, with result totals, numbered links and Previous/Next navigation. Searches and category/company/industry filters query the full published library, reset to page one, and retain the selected filters while paging.
+- Public search uses Enter or the Search button; changing a dropdown submits the selected filters automatically. Existing homepage company previews and topic-page displays retain their previous behaviour.
+- Each unfiltered directory page has its own canonical URL, such as `/articles?page=2`; page-one links omit `page=1`. Pagination is rendered as normal crawlable anchors and invalid/out-of-range pages return 404. Search/filter combinations use `noindex, follow` to avoid indexing large numbers of low-value combinations. Individual content URLs and sitemap membership are unchanged.
+- Directory cards disable speculative detail-page prefetching to reduce background CMS requests while browsing large lists. Image delivery remains responsive through Sanity's CDN.
+- Replaced the two full-list Studio managers with a shared manager that fetches 50 canonical document rows per page, performs debounced full-library search, cancels superseded requests and preserves Edit/Create/Refresh actions.
+- Draft and published copies are grouped in GROQ before counting and pagination; each document appears exactly once, with All, Draft Only, Live + Changes and Published/Current counts and filters. This avoids splitting a document's versions across pages or showing counts based only on the loaded page.
+- Verified live read-only queries for the 132 articles, 228 companies and 486 people available during testing, including adjacent pages without overlap and full-library searches. In-memory Studio fixtures verified draft-only, unpublished-change and published states, release-version exclusion and deduplication.
+- Passed TypeScript, the production build, changed-file lint checks and production-server checks: all three directories return 24 cards, canonical URLs and crawlable pagination; filtered pages are noindex and invalid page numbers are 404. Articles-directory HTML decreased from approximately 334 KB to 143 KB.
+- **Reason:** The user approved pagination as the next performance step so growing libraries do not require downloading and rendering every record in the browser or Studio.

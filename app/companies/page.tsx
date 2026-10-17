@@ -1,25 +1,19 @@
-import type { Metadata } from "next";
-import CompanyDirectory, { type Company } from "@/components/CompanyDirectory";
-import { COMPANIES_QUERY } from "@/components/CompanyRow";
-import Footer from "@/components/Footer";
+import type {Metadata} from "next";
+import CompanyDirectory from "@/components/CompanyDirectory";
+import type {Company} from "@/components/CompanyDirectory";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import Newsletter from "@/components/Newsletter";
-import { absoluteUrl } from "@/lib/site-url";
-import { client } from "@/sanity/lib/client";
+import {directoryMetadata, getPublicDirectory} from "@/lib/public-directories";
+import type {DirectoryParams} from "@/lib/directory-pagination";
 
-export const metadata: Metadata = {
-  title: "Companies | MisterStory",
-  description: "Explore company profiles, articles, people and key numbers.",
-  alternates: { canonical: absoluteUrl("/companies") },
-};
+type Props = {searchParams: Promise<DirectoryParams>};
 
-export default async function CompaniesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string | string[] }>;
-}) {
-  const query = (await searchParams).q;
-  const initialSearch = Array.isArray(query) ? query[0] : query || "";
-  const companies = await client.fetch<Company[]>(COMPANIES_QUERY, {}, { perspective: "published", next: { revalidate: 60 } });
-  return <><Header /><main className="bg-[#f7f6f2]"><CompanyDirectory companies={companies} title="All Companies" description="Search the complete MisterStory company directory by name or industry." initialSearch={initialSearch} /><Newsletter /></main><Footer /></>;
+export async function generateMetadata({searchParams}: Props): Promise<Metadata> {
+  return directoryMetadata("companies", await searchParams, "Companies | MisterStory", "Explore company profiles, articles, people and key numbers.");
+}
+
+export default async function DirectoryPage({searchParams}: Props) {
+  const {items, pagination} = await getPublicDirectory<Company>("companies", await searchParams);
+  return <><Header /><main className="bg-[#f7f6f2]"><CompanyDirectory companies={items} title="All Companies" description="Search the complete MisterStory company directory by name or industry." pagination={pagination} /><Newsletter /></main><Footer /></>;
 }
