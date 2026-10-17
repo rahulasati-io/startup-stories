@@ -32,13 +32,14 @@ export default async function Home() {
   const articlesById = new Map(articles.map((article) => [article._id, article]));
   const configuredFeaturedIds = [...new Set([
     homepageSettings?.featuredArticleId,
+    homepageSettings?.secondFeaturedArticleId,
     ...(homepageSettings?.supportingFeaturedArticleIds || []),
   ].filter((id): id is string => Boolean(id)))];
   const configuredFeatured = configuredFeaturedIds.flatMap((id) => {
     const article = articlesById.get(id);
     return article ? [article] : [];
   });
-  const featuredArticles = (configuredFeatured.length ? configuredFeatured : articles).slice(0, 4);
+  const featuredArticles = (configuredFeatured.length ? configuredFeatured : articles).slice(0, 6);
   const usedArticleIds = new Set(featuredArticles.map((article) => article._id));
 
   const takeUnique = (candidates: ArticleCardData[], limit: number) => {

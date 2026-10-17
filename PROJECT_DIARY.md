@@ -1085,3 +1085,14 @@ MisterStory is a research-led website explaining companies, the people behind th
 - In three live image samples, original PNG assets were approximately 1.76–1.96 MB; 480-pixel card variants were 13–22 KB and 1080-pixel hero variants were 35–53 KB. URLs, canonical tags, full-size metadata images and editorial dates were not changed.
 - Passed ESLint, loader checks, the production build and production-server checks of the homepage, article directory, an article, a company and a person page. Rendered Sanity images have direct CDN `srcset` URLs; H1s, canonical tags and indexability remain present.
 - **Reason:** The user approved the image-performance phase to make thumbnails and article images load faster while reusing existing assets and protecting custom uploads. Future image-less publications can still be saved permanently using the existing `materialize:thumbnails:write` command; this change does not add a publication automation service.
+
+# 2026-10-17 — Changed Featured Stories to two highlights and four supporting stories
+
+- **Status:** Implemented locally; deployment pending.
+- Replaced the single oversized homepage feature with two equal highlight cards side by side on desktop, followed by up to four smaller supporting cards. Cards stack on mobile; supporting cards use two columns on tablets and four on desktop.
+- Kept the existing first-feature reference and supporting selections, added a Second Highlighted Story selector, and increased the supporting-story limit from three to four in Homepage Settings.
+- Added validation against selecting the same article in both highlight slots or repeating a highlight in the supporting row. The frontend also deduplicates selections and excludes all six featured stories from the other homepage shelves.
+- Editors can choose two highlights and four supporting stories in Sanity. Existing configured stories remain in their existing order until the new second highlight is selected; the page does not fill manually configured slots with newly published articles. The unconfigured fallback now displays up to six stories.
+- Retained responsive Sanity CDN image variants, with image-size hints matched to the two-card and four-card rows.
+- Verified the production build, linting of the changed files and component rendering with six stories, confirming the two/four split, editorial order, six-story cap and empty-state handling.
+- **Reason:** The user felt one large highlighted story dominated the homepage and requested two highlighted stories above four smaller stories, while preserving editorial control independent of imports.
