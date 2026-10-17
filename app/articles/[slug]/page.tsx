@@ -608,6 +608,8 @@ export default async function ArticlePage({
                   src={heroImage}
                   alt={article.mainImage?.alt || article.title}
                   fill
+                  preload
+                  unoptimized={heroImage.startsWith("/api/article-thumbnail/")}
                   sizes="(min-width: 1280px) 880px, (min-width: 768px) calc(100vw - 4rem), calc(100vw - 2.5rem)"
                   className="h-full w-full object-cover object-center"
                 />

@@ -1064,3 +1064,24 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Kept sitemap queries on Sanity's uncached API so newly published canonical URLs remain immediately available to crawlers.
 - Verified linting, the Next.js production build, article navigation sections, primary H1s, canonical tags, indexability and the 131-article XML sitemap.
 - **Reason:** Public pages should reuse fast cached content and fetch only the records they display, while publishing, sitemap discovery and Studio editing remain reliable.
+
+# 2026-10-17 — Verified production cache refresh and completed webhook coverage
+
+- **Status:** Implemented in the live Sanity project; no deployment required for the webhook setting.
+- Verified that the enabled production webhook targets `https://misterstory.in/api/revalidate` and excludes drafts and release versions.
+- Sent a signed, content-free test using the webhook's existing secret; production returned HTTP 200 and confirmed cache revalidation. An unsigned request returned HTTP 401. Secrets were not printed, rotated or saved in the repository.
+- Inspected Sanity's actual delivery history and confirmed recent article, company and person changes successfully returned HTTP 200 from production.
+- Extended the existing webhook filter to also cover industries, concepts, company-person roles, funding, timelines, metrics, Homepage Settings and SEO Settings. These referenced records also affect cached public pages.
+- **Reason:** The user requested verification of the complete CDN/publication refresh connection, including the deployed secret and enabled Sanity webhook, so published changes refresh automatically without manually clearing cache.
+
+# 2026-10-17 — Added responsive image delivery through Sanity's CDN
+
+- **Status:** Implemented locally; deployment pending.
+- Verified that all 131 published articles already have permanent Sanity main-image assets. The thumbnail materialisation dry run found no missing images, so no assets or article documents needed rewriting.
+- Replaced globally disabled Next.js image optimisation with a custom Sanity CDN loader. Browsers now receive width-specific image variants, automatic supported formats and quality 75 directly from Sanity, avoiding the server image proxy that previously encountered DNS/NAT64 errors.
+- Preserved existing crop rectangles and aspect ratios when resizing; local branding and dynamic-thumbnail fallbacks continue using their original URLs.
+- Added responsive size hints to article cards, featured images, people-page article images and profile portraits, and prioritised the article hero image.
+- Hardened the existing thumbnail-saving script with revision checks and draft-image protection so it cannot overwrite a concurrently uploaded custom image or an existing custom draft image.
+- In three live image samples, original PNG assets were approximately 1.76–1.96 MB; 480-pixel card variants were 13–22 KB and 1080-pixel hero variants were 35–53 KB. URLs, canonical tags, full-size metadata images and editorial dates were not changed.
+- Passed ESLint, loader checks, the production build and production-server checks of the homepage, article directory, an article, a company and a person page. Rendered Sanity images have direct CDN `srcset` URLs; H1s, canonical tags and indexability remain present.
+- **Reason:** The user approved the image-performance phase to make thumbnails and article images load faster while reusing existing assets and protecting custom uploads. Future image-less publications can still be saved permanently using the existing `materialize:thumbnails:write` command; this change does not add a publication automation service.

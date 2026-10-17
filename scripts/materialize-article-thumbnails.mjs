@@ -51,11 +51,12 @@ const articles = await client.fetch(/* groq */ `
     (!defined($article) || slug.current == $article)
   ] | order(publishedAt desc, _updatedAt desc) {
     _id,
+    _rev,
     title,
     "slug": slug.current,
     "categorySlug": category->slug.current,
     "draftId": "drafts." + _id,
-    "hasDraft": defined(*[_id == "drafts." + ^._id][0])
+    "draft": *[_id == "drafts." + ^._id][0]{_id, _rev, mainImage}
   }
 `, {article: articleFilter || null});
 
@@ -96,8 +97,12 @@ async function materialize(article) {
     alt: `${article.title} thumbnail`,
   };
 
-  let transaction = client.transaction().patch(article._id, (patch) => patch.set({mainImage}));
-  if (article.hasDraft) transaction = transaction.patch(article.draftId, (patch) => patch.set({mainImage}));
+  // Revision checks prevent replacing an image uploaded while this job renders.
+  // A draft may have its own custom image even when the published copy has none.
+  let transaction = client.transaction().patch(article._id, (patch) => patch.ifRevisionId(article._rev).set({mainImage}));
+  if (article.draft && !article.draft.mainImage?.asset) {
+    transaction = transaction.patch(article.draft._id, (patch) => patch.ifRevisionId(article.draft._rev).set({mainImage}));
+  }
   await withRetry(`${article.slug}: attach`, () => transaction.commit());
 
   completed += 1;

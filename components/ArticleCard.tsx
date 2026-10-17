@@ -19,7 +19,7 @@ export default function ArticleCard({ article, compact = false, preloadImage = f
     <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-md">
       <Link href={articleHref(article)} className="block h-full">
         <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-zinc-800 via-zinc-600 to-amber-200">
-          {imageUrl && <Image src={imageUrl} alt={article.title} fill preload={preloadImage} unoptimized={isGeneratedThumbnail} sizes={compact ? "(max-width: 640px) 100vw, 25vw" : "(max-width: 768px) 100vw, 33vw"} className="object-cover transition duration-300 group-hover:scale-[1.02]" />}
+          {imageUrl && <Image src={imageUrl} alt={article.title} fill preload={preloadImage} unoptimized={isGeneratedThumbnail} sizes={compact ? "(min-width: 1280px) 390px, (min-width: 768px) 33vw, calc(100vw - 2.5rem)" : "(min-width: 1280px) 390px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, calc(100vw - 2.5rem)"} className="object-cover transition duration-300 group-hover:scale-[1.02]" />}
         </div>
         <div className={compact ? "p-4" : "p-5"}>
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">{article.category}</p>

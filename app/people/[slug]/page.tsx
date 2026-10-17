@@ -251,7 +251,7 @@ export default async function PersonPage({ params }: Props) {
                 return (
                 <Link key={article._id} href={`/articles/${article.slug}`} className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg">
                   {imageUrl ? (
-                    <Image src={imageUrl} alt={article.imageAlt || `${article.title} thumbnail`} width={720} height={405} className="aspect-video w-full object-cover" />
+                    <Image src={imageUrl} alt={article.imageAlt || `${article.title} thumbnail`} width={720} height={405} unoptimized={imageUrl.startsWith("/api/article-thumbnail/")} sizes="(min-width: 1280px) 390px, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, calc(100vw - 2.5rem)" className="aspect-video w-full object-cover" />
                   ) : (
                     <div className="aspect-[12/7] bg-zinc-100" />
                   )}

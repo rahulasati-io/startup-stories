@@ -40,7 +40,7 @@ export default function FeaturedStories({ articles }: { articles: ArticleCardDat
                 fill
                 preload
                 unoptimized={generatedImage}
-                sizes="(max-width: 768px) 100vw, 60vw"
+                sizes="(min-width: 1280px) 700px, (min-width: 768px) 57vw, calc(100vw - 2.5rem)"
                 className="object-cover transition duration-300 group-hover:scale-[1.015]"
               />
             )}
