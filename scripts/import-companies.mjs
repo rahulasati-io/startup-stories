@@ -3,12 +3,15 @@ import { createHash } from "node:crypto";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
+import { parseCompanyFinancials, checkLegacyFinancialOverlap } from "./lib/company-financials.mjs";
+import { prepareAnnualFinancials, saveAnnualFinancials } from "./lib/import-annual-financials.mjs";
 
 const filePath = process.argv[2];
 const companyFilter = process.argv.find((argument) => argument.startsWith("--company="))?.split("=")[1];
 const personFilter = process.argv.find((argument) => argument.startsWith("--person="))?.split("=")[1];
 const dryRun = process.argv.includes("--dry-run");
-if (!filePath) throw new Error('Usage: node scripts/import-companies.mjs "companies.xlsx" [--dry-run] [--company=slug] [--person=slug]');
+const financialsOnly = process.argv.includes("--financials-only");
+if (!filePath) throw new Error('Usage: node scripts/import-companies.mjs "companies.xlsx" [--dry-run] [--company=slug] [--person=slug] [--financials-only]');
 const { NEXT_PUBLIC_SANITY_PROJECT_ID: projectId, NEXT_PUBLIC_SANITY_DATASET: dataset, SANITY_WRITE_TOKEN: token } = process.env;
 if (!projectId || !dataset || !token) throw new Error("Missing NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET, or SANITY_WRITE_TOKEN.");
 const client = createClient({ projectId, dataset, token, apiVersion: "2026-08-23", useCdn: false });
@@ -118,6 +121,35 @@ async function batchReplace(documents, label) {
 }
 
 async function run() {
+  if (financialsOnly && personFilter) throw new Error("--financials-only cannot be combined with --person.");
+  const companyRows = rows("Companies").map((row, index) => ({...row, __rowNumber: index + 2}));
+  const selectedCompanyRows = companyRows.filter(row => !companyFilter || clean(row.company_slug) === companyFilter);
+  if (!financialsOnly && !selectedCompanyRows.length) throw new Error('The workbook needs a "Companies" sheet with at least one matching row.');
+  const metricHeaders = workbook.Sheets.Metrics ? XLSX.utils.sheet_to_json(workbook.Sheets.Metrics, {header: 1, range: 0})[0] || [] : [];
+  const wideMetrics = metricHeaders.some(header => /^fy\d{2}(?:\d{2})?_/.test(clean(header)));
+  const financialSheet = wideMetrics ? "Metrics" : "Companies";
+  const legacyMetricsSheet = wideMetrics ? "Other Metrics" : "Metrics";
+  const financialRows = rows(financialSheet).map((row, index) => ({...row, __rowNumber: index + 2})).filter(row => !companyFilter || clean(row.company_slug) === companyFilter);
+  if (financialsOnly && !financialRows.length) throw new Error(`The "${financialSheet}" sheet needs at least one matching company row.`);
+  const headers = workbook.Sheets[financialSheet] ? XLSX.utils.sheet_to_json(workbook.Sheets[financialSheet], {header: 1, range: 0})[0] || [] : [];
+  for (const row of financialRows) {
+    for (const [column, header] of headers.entries()) {
+      if (!/^fy\d{2}(?:\d{2})?_/.test(clean(header))) continue;
+      const address = XLSX.utils.encode_cell({r: row.__rowNumber - 1, c: column});
+      if (workbook.Sheets[financialSheet][address]?.t === "e") throw new Error(`${financialSheet}!${address}: fix the Excel error in ${header} before importing. No records were written.`);
+    }
+  }
+  const annualFinancials = personFilter ? [] : parseCompanyFinancials(financialRows, headers, {sheetName: financialSheet});
+  if (wideMetrics && parseCompanyFinancials(selectedCompanyRows, XLSX.utils.sheet_to_json(workbook.Sheets.Companies, {header: 1, range: 0})[0] || [], {sheetName: "Companies"}).length) throw new Error('Annual financial data exists in both Companies and Metrics. Move it to Metrics before importing. No records were written.');
+  checkLegacyFinancialOverlap(annualFinancials, rows(legacyMetricsSheet));
+  // Validate every entered financial observation before any company/person/metric write.
+  const annualOperations = await prepareAnnualFinancials(client, annualFinancials, {allowMissingCompanies: !financialsOnly});
+  if (financialsOnly) {
+    const savedCompanies = annualFinancials.length ? await client.fetch(`*[_type == "company" && slug.current in $slugs && !(_id in path("drafts.**"))]{_id,"slug":slug.current}`, {slugs: [...new Set(annualFinancials.map(row => row.companySlug))]}) : [];
+    await saveAnnualFinancials(client, annualOperations, {dryRun, companyIds: new Map(savedCompanies.map(company => [company.slug, company._id]))});
+    console.log(`${dryRun ? "Financials check" : "Financials import"} complete: ${annualFinancials.length} observations. Company profiles, people, biographies, SEO and other related records were not written.`);
+    return;
+  }
   const allPeopleRows = rows("People");
   const peopleRows = allPeopleRows.filter((row) =>
     (!companyFilter || clean(row.company_slug) === companyFilter) &&
@@ -163,7 +195,7 @@ async function run() {
     }));
   const funding = relatedRows("Funding Rounds");
   const timeline = relatedRows("Timeline Events");
-  const metrics = relatedRows("Metrics");
+  const metrics = relatedRows(legacyMetricsSheet);
   const industryNames = [...new Set(companies.map((row) => clean(row.industry)).filter(Boolean))];
   const industrySlugs = industryNames.map(slugify);
   const existingIndustries = industrySlugs.length
@@ -296,11 +328,12 @@ async function run() {
   });
   const fundingDocuments = prepareDocuments(funding, "Funding Rounds", "fundingRound", (row) => ({ round: clean(row.round), date: clean(row.date) || undefined, amount: clean(row.amount) ? Number(row.amount) : undefined, currency: clean(row.currency) || undefined, investors: split(row.investors), notes: clean(row.notes) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
   const timelineDocuments = prepareDocuments(timeline, "Timeline Events", "timelineEvent", (row) => ({ date: clean(row.date), title: clean(row.title), description: clean(row.description) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
-  const metricDocuments = prepareDocuments(metrics, "Metrics", "companyMetric", (row) => ({ label: clean(row.label), value: clean(row.value), period: clean(row.period) || undefined, notes: clean(row.notes) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
+  const metricDocuments = prepareDocuments(metrics, legacyMetricsSheet, "companyMetric", (row) => ({ label: clean(row.label), value: clean(row.value), period: clean(row.period) || undefined, notes: clean(row.notes) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
   const roleResult = await batchReplace(roleDocuments, "People roles");
   const fundingResult = await batchReplace(fundingDocuments, "Funding rounds");
   const timelineResult = await batchReplace(timelineDocuments, "Timeline events");
   const metricResult = await batchReplace(metricDocuments, "Metrics");
+  await saveAnnualFinancials(client, annualOperations, {dryRun, companyIds});
   if (dryRun) {
     console.log(`Check complete: ${companies.length} companies, ${people.length} people, ${peopleRoles.length} company roles, ${funding.length} funding rounds, ${timeline.length} timeline events, and ${metrics.length} metrics validated.`);
     console.log(`Companies: ${companiesCreated} would be created, ${companiesUpdated} updated, ${companiesUnchanged} unchanged.`);

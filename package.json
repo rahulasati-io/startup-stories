@@ -11,6 +11,8 @@
     "import:logos": "node --env-file=.env.local scripts/import-company-logos.mjs",
     "import:companies": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx",
     "import:companies:check": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --dry-run",
+    "import:financials": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --financials-only",
+    "import:financials:check": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --financials-only --dry-run",
     "import:articles": "node --env-file=.env.local scripts/import-articles.mjs",
     "import:articles:check": "node --env-file=.env.local scripts/import-articles.mjs --dry-run",
     "import:articles:publish": "node --env-file=.env.local scripts/import-articles.mjs --publish",
