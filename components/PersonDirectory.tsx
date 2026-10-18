@@ -15,7 +15,7 @@ export type DirectoryPerson = {
   companyNames?: string[];
 };
 
-export default function PersonDirectory({ people, pagination }: { people: DirectoryPerson[]; pagination?: DirectoryPagination }) {
+export default function PersonDirectory({ people, pagination, title = "People behind the companies", eyebrow = "People directory", description = "Explore founders, executives and business leaders covered by MisterStory.", searchPlaceholder = "Search by person, role or company" }: { people: DirectoryPerson[]; pagination?: DirectoryPagination; title?: string; eyebrow?: string; description?: string; searchPlaceholder?: string }) {
   const [search, setSearch] = useState("");
   const visiblePeople = useMemo(() => {
     if (pagination) return people;
@@ -33,16 +33,16 @@ export default function PersonDirectory({ people, pagination }: { people: Direct
   return (
     <section className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-16">
       <div className="max-w-2xl">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">People directory</p>
-        <h1 className="mt-2 text-4xl font-bold tracking-tight text-zinc-950 md:text-5xl">People behind the companies</h1>
-        <p className="mt-4 leading-7 text-zinc-600">Explore founders, executives and business leaders covered by MisterStory.</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{eyebrow}</p>
+        <h1 className="mt-2 text-4xl font-bold tracking-tight text-zinc-950 md:text-5xl">{title}</h1>
+        <p className="mt-4 leading-7 text-zinc-600">{description}</p>
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 md:p-6">
-        {pagination ? <DirectoryControls pagination={pagination} placeholder="Search by person, role or company" /> : <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
+        {pagination ? <DirectoryControls pagination={pagination} placeholder={searchPlaceholder} /> : <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
           <span aria-hidden="true">⌕</span>
           <span className="sr-only">Search people</span>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by person, role or company" className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={searchPlaceholder} className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-400" />
         </label>}
 
         {visiblePeople.length ? (

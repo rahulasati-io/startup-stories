@@ -6,7 +6,7 @@ import type { ArticleCardData } from "@/lib/article-card-data";
 import {DirectoryControls, DirectoryPageLinks} from "@/components/DirectoryControls";
 import type {DirectoryPagination} from "@/lib/directory-pagination";
 
-export default function ArticleDirectory({ articles, initialSearch = "", initialCategory = "All", eyebrow = "MisterStory library", title = "Articles", description = "Explore business models, strategies, founder stories and the decisions that shaped interesting companies.", showCategoryFilters = true, pagination }: { articles: ArticleCardData[]; initialSearch?: string; initialCategory?: string; eyebrow?: string; title?: string; description?: string; showCategoryFilters?: boolean; pagination?: DirectoryPagination }) {
+export default function ArticleDirectory({ articles, initialSearch = "", initialCategory = "All", eyebrow = "MisterStory library", title = "Articles", description = "Explore business models, strategies, founder stories and the decisions that shaped interesting companies.", showCategoryFilters = true, pagination, searchPlaceholder = "Search by article, company or topic" }: { articles: ArticleCardData[]; initialSearch?: string; initialCategory?: string; eyebrow?: string; title?: string; description?: string; showCategoryFilters?: boolean; pagination?: DirectoryPagination; searchPlaceholder?: string }) {
   const [search, setSearch] = useState(initialSearch);
   const [category, setCategory] = useState(initialCategory);
   const [company, setCompany] = useState("All");
@@ -33,10 +33,10 @@ export default function ArticleDirectory({ articles, initialSearch = "", initial
         <p className="mt-4 text-base leading-7 text-zinc-600">{description}</p>
       </div>
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 md:p-6">
-        {pagination ? <DirectoryControls pagination={pagination} placeholder="Search by article, company or topic" /> : <>
+        {pagination ? <DirectoryControls pagination={pagination} placeholder={searchPlaceholder} /> : <>
         <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
           <span aria-hidden="true" className="text-zinc-500">⌕</span><span className="sr-only">Search articles</span>
-          <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by article, company or topic" className="w-full bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400" />
+          <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={searchPlaceholder} className="w-full bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400" />
         </label>
         {showCategoryFilters && <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="Filter articles by category">
           {categories.map((item) => <button key={item} type="button" onClick={() => setCategory(item)} aria-pressed={category === item} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition ${category === item ? "bg-zinc-950 text-white" : "border border-zinc-200 bg-white text-zinc-700 hover:border-zinc-400"}`}>{item}</button>)}

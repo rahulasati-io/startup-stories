@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ArticleCardData } from "@/lib/article-card-data";
+import {homepageHref, type HomepageLink} from "@/lib/homepage-config";
 
 const options = [
   {
@@ -29,25 +30,28 @@ const options = [
   },
 ];
 
-export default function IntentCards({ articles }: { articles: ArticleCardData[] }) {
-  const visibleOptions = options.filter((option) => !option.categorySlug || articles.some((article) => article.categorySlug === option.categorySlug));
+export default function IntentCards({ articles, title = "What do you want to explore?", eyebrow = "Explore MisterStory", description, links }: { articles: ArticleCardData[]; title?: string; eyebrow?: string; description?: string; links?: HomepageLink[] }) {
+  const choices = links?.map((link, index) => ({...link, number: String(index + 1).padStart(2, "0")})) ?? options;
+  const visibleOptions = choices.filter((option) => !option.categorySlug || articles.some((article) => article.categorySlug === option.categorySlug));
+  if (!visibleOptions.length) return null;
   return (
     <section className="mx-auto max-w-7xl px-5 py-12 md:px-8 md:py-14">
       <div className="mb-5">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
-          Explore MisterStory
+          {eyebrow}
         </p>
 
         <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-950 md:text-3xl">
-          What do you want to explore?
+          {title}
         </h2>
+        {description && <p className="mt-2 text-sm leading-6 text-zinc-600">{description}</p>}
       </div>
 
       <div className={`grid gap-4 ${visibleOptions.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
         {visibleOptions.map((option) => (
           <Link
             key={option.number}
-            href={option.href}
+            href={homepageHref(option.href, "/companies")}
             className="group rounded-2xl border border-zinc-200 bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-zinc-300 hover:shadow-lg"
           >
             <div className="flex items-start justify-between">

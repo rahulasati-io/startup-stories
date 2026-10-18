@@ -7,7 +7,7 @@ import {
   type ArticleCardData,
 } from "@/lib/article-card-data";
 
-export default function FeaturedStories({ articles }: { articles: ArticleCardData[] }) {
+export default function FeaturedStories({ articles, title = "Featured Stories", eyebrow = "Editor's selection", description, href = "/articles", linkLabel = "View all" }: { articles: ArticleCardData[]; title?: string; eyebrow?: string; description?: string; href?: string; linkLabel?: string }) {
   const highlightedArticles = articles.slice(0, 2);
   const supportingArticles = articles.slice(2, 6);
   if (!highlightedArticles.length) return null;
@@ -17,14 +17,15 @@ export default function FeaturedStories({ articles }: { articles: ArticleCardDat
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-700">
-            Editor&apos;s selection
+            {eyebrow}
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-zinc-950 md:text-3xl">
-            Featured Stories
+            {title}
           </h2>
+          {description && <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">{description}</p>}
         </div>
-        <Link href="/articles" className="text-sm font-semibold text-zinc-700 hover:text-black">
-          View all →
+        <Link href={href} className="text-sm font-semibold text-zinc-700 hover:text-black">
+          {linkLabel || "View all"} →
         </Link>
       </div>
 

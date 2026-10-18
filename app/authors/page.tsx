@@ -3,15 +3,15 @@ import { defineQuery } from "next-sanity";
 import AuthorDirectory, { type DirectoryAuthor } from "@/components/AuthorDirectory";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
-import Newsletter from "@/components/Newsletter";
+import DirectoryPageLayout from "@/components/DirectoryPageLayout";
+import {getDirectoryPageSettings, directorySharing} from "@/lib/directory-page-settings";
 import { absoluteUrl } from "@/lib/site-url";
 import { client } from "@/sanity/lib/client";
 
-export const metadata: Metadata = {
-  title: "Authors | MisterStory",
-  description: "Meet the authors researching and writing MisterStory's company analysis.",
-  alternates: { canonical: absoluteUrl("/authors") },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getDirectoryPageSettings("authors");
+  return {title: settings.seoTitle, description: settings.seoDescription, alternates: {canonical: absoluteUrl("/authors")}, ...directorySharing("authors", settings)};
+}
 
 const AUTHORS_QUERY = defineQuery(/* groq */ `
   *[_type == "author" && defined(name) && defined(slug.current)] {
@@ -31,6 +31,6 @@ const AUTHORS_QUERY = defineQuery(/* groq */ `
 `);
 
 export default async function AuthorsPage() {
-  const authors = await client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } });
-  return <><Header /><main className="bg-[#f7f6f2]"><AuthorDirectory authors={authors} /><Newsletter /></main><Footer /></>;
+  const [authors, settings] = await Promise.all([client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } }), getDirectoryPageSettings("authors")]);
+  return <><Header /><DirectoryPageLayout settings={settings}><AuthorDirectory authors={authors} title={settings.title} eyebrow={settings.eyebrow} description={settings.description} searchPlaceholder={settings.searchPlaceholder} /></DirectoryPageLayout><Footer /></>;
 }

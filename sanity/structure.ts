@@ -24,6 +24,14 @@ export const structure: StructureResolver = (S) =>
         ),
 
       S.listItem()
+        .title("Directory Page Settings")
+        .child(S.list().title("Directory Page Settings").items(
+          ["companies", "people", "articles", "authors"].map(kind => S.listItem()
+            .title(`${kind.charAt(0).toUpperCase()}${kind.slice(1)} page`)
+            .child(S.document().schemaType("directoryPageSettings").documentId(`directoryPageSettings-${kind}`).title(`${kind.charAt(0).toUpperCase()}${kind.slice(1)} page settings`))),
+        )),
+
+      S.listItem()
         .title("SEO Settings")
         .child(S.document().schemaType("seoSettings").documentId("seoSettings").title("SEO Settings")),
 

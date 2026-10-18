@@ -20,9 +20,13 @@ type CompanyRowProps = {
   title?: string;
   description?: string;
   companies?: Company[];
+  eyebrow?: string;
+  limit?: number;
+  href?: string;
+  linkLabel?: string;
 };
 
-export default async function CompanyRow({ excludeSlug, title, description, companies: suppliedCompanies }: CompanyRowProps = {}) {
+export default async function CompanyRow({ excludeSlug, title, description, companies: suppliedCompanies, eyebrow, limit = 6, href, linkLabel }: CompanyRowProps = {}) {
   let companies = suppliedCompanies;
   if (!companies) {
     try {
@@ -32,5 +36,5 @@ export default async function CompanyRow({ excludeSlug, title, description, comp
     }
   }
 
-  return <CompanyDirectory companies={companies} excludeSlug={excludeSlug} title={title} description={description} previewLimit={6} showViewAll />;
+  return <CompanyDirectory companies={companies} excludeSlug={excludeSlug} title={title} description={description} previewLimit={limit} showViewAll headingLevel="h2" eyebrow={eyebrow} viewAllHref={href} viewAllLabel={linkLabel} />;
 }

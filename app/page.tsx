@@ -1,113 +1,94 @@
-import type { Metadata } from "next";
+import type {Metadata} from "next";
+import {cache} from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import FeaturedStories from "@/components/FeaturedStories";
 import HomepageArticleSection from "@/components/HomepageArticleSection";
 import IntentCards from "@/components/IntentCards";
 import Topics from "@/components/Topics";
-import LatestStories from "@/components/LatestStories";
-import CompanyRow from "@/components/CompanyRow";
+import CompanyRow, {COMPANIES_QUERY} from "@/components/CompanyRow";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
-import { COMPANIES_QUERY } from "@/components/CompanyRow";
-import type { Company } from "@/components/CompanyDirectory";
-import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-data";
-import { HOMEPAGE_SETTINGS_QUERY, type HomepageSettings } from "@/lib/homepage-content";
-import { client } from "@/sanity/lib/client";
-import { absoluteUrl } from "@/lib/site-url";
+import type {Company} from "@/components/CompanyDirectory";
+import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data";
+import {HOMEPAGE_SETTINGS_QUERY, type HomepageSettings} from "@/lib/homepage-content";
+import {DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, homepageHref, homepageSections} from "@/lib/homepage-config";
+import {client} from "@/sanity/lib/client";
+import {absoluteUrl} from "@/lib/site-url";
 
-export const metadata: Metadata = {
-  alternates: { canonical: absoluteUrl("/") },
-};
+// Share one settings read between metadata and the visible page; outages retain safe defaults.
+const getHomepageSettings = cache(async () => {
+  try {
+    return await client.fetch<HomepageSettings | null>(HOMEPAGE_SETTINGS_QUERY, {}, {perspective: "published", stega: false, next: {revalidate: 60}, signal: AbortSignal.timeout(6000)});
+  } catch {
+    return null;
+  }
+});
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getHomepageSettings();
+  const title = settings?.seoTitle?.trim() || DEFAULT_HOME_TITLE;
+  const description = settings?.seoDescription?.trim() || DEFAULT_HOME_DESCRIPTION;
+  const images = settings?.socialImageUrl ? [{url: settings.socialImageUrl}] : undefined;
+  return {
+    title, description, alternates: {canonical: absoluteUrl("/")},
+    openGraph: {title, description, url: absoluteUrl("/"), type: "website", siteName: "MisterStory", ...(images ? {images} : {})},
+    twitter: {card: "summary_large_image", title, description, ...(images ? {images: images.map((image) => image.url)} : {})},
+  };
+}
 
 export default async function Home() {
-  const [companiesResult, articlesResult, homepageSettingsResult] = await Promise.allSettled([
-    client.fetch<Company[]>(COMPANIES_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) }),
-    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) }),
-    client.fetch<HomepageSettings | null>(HOMEPAGE_SETTINGS_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) }),
+  const [companies, articles, settings] = await Promise.all([
+    client.fetch<Company[]>(COMPANIES_QUERY, {}, {perspective: "published", next: {revalidate: 60}, signal: AbortSignal.timeout(6000)}).catch(() => [] as Company[]),
+    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, {perspective: "published", next: {revalidate: 60}, signal: AbortSignal.timeout(6000)}).catch(() => [] as ArticleCardData[]),
+    getHomepageSettings(),
   ]);
-  const companies = companiesResult.status === "fulfilled" ? companiesResult.value : [];
-  const articles = articlesResult.status === "fulfilled" ? articlesResult.value : [];
-  const homepageSettings = homepageSettingsResult.status === "fulfilled" ? homepageSettingsResult.value : null;
-  const articlesById = new Map(articles.map((article) => [article._id, article]));
-  const configuredFeaturedIds = [...new Set([
-    homepageSettings?.featuredArticleId,
-    homepageSettings?.secondFeaturedArticleId,
-    ...(homepageSettings?.supportingFeaturedArticleIds || []),
-  ].filter((id): id is string => Boolean(id)))];
-  const configuredFeatured = configuredFeaturedIds.flatMap((id) => {
-    const article = articlesById.get(id);
-    return article ? [article] : [];
-  });
-  const featuredArticles = (configuredFeatured.length ? configuredFeatured : articles).slice(0, 6);
-  const usedArticleIds = new Set(featuredArticles.map((article) => article._id));
-
-  const takeUnique = (candidates: ArticleCardData[], limit: number) => {
-    const selected: ArticleCardData[] = [];
-    for (const article of candidates) {
-      if (usedArticleIds.has(article._id)) continue;
-      selected.push(article);
-      usedArticleIds.add(article._id);
-      if (selected.length === limit) break;
+  const byId = new Map(articles.map((article) => [article._id, article]));
+  const featuredIds = [...new Set([settings?.featuredArticleId, settings?.secondFeaturedArticleId, ...(settings?.supportingFeaturedArticleIds || [])].filter((id): id is string => Boolean(id)))];
+  const configuredFeatured = featuredIds.flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
+  const featured = (featuredIds.length ? configuredFeatured : articles).slice(0, 6);
+  const sections = homepageSections(settings?.sections);
+  // Reserve editorial highlights even when their section is moved below another shelf.
+  const used = new Set(sections.some((section) => section.kind === "featured") ? featured.map((article) => article._id) : []);
+  const renderedSections = sections.map((section) => {
+    const limit = Math.min(12, Math.max(1, Math.trunc(section.limit || 4)));
+    const href = homepageHref(section.href, "/articles");
+    const links = section.links?.map((link) => ({...link, href: homepageHref(link.href, "/articles")}));
+    const textProps = {title: section.title, description: section.description, eyebrow: section.eyebrow};
+    switch (section.kind) {
+      case "featured":
+        return <FeaturedStories key={section._key} articles={featured} {...textProps} href={href} linkLabel={section.linkLabel} />;
+      case "articles": {
+        const candidates = section.articleIds?.length
+          ? section.articleIds.flatMap((id) => byId.get(id) ? [byId.get(id)!] : [])
+          : articles.filter((article) => (!section.categorySlug || article.categorySlug === section.categorySlug) && (!section.excludeFunding || article.categorySlug !== "funding-news"));
+        const selected: ArticleCardData[] = [];
+        for (const article of candidates) {
+          if (used.has(article._id)) continue;
+          selected.push(article);
+          used.add(article._id);
+          if (selected.length === limit) break;
+        }
+        return <HomepageArticleSection key={section._key} articles={selected} title={section.title || "Articles"} description={section.description || ""} eyebrow={section.eyebrow || ""} href={href} linkLabel={section.linkLabel} />;
+      }
+      case "explore": return <IntentCards key={section._key} articles={articles} {...textProps} links={links} />;
+      case "topics": return <Topics key={section._key} articles={articles} {...textProps} links={links} />;
+      case "companies": return <CompanyRow key={section._key} companies={companies} {...textProps} limit={limit} href={homepageHref(section.href, "/companies")} linkLabel={section.linkLabel} />;
+      case "newsletter": return <Newsletter key={section._key} title={section.title} description={section.description} buttonLabel={section.linkLabel} />;
+      case "text": return <section key={section._key} className="mx-auto max-w-7xl px-5 py-10 md:px-8">
+        {section.eyebrow && <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">{section.eyebrow}</p>}
+        <h2 className="mt-2 text-2xl font-bold text-zinc-950 md:text-3xl">{section.title}</h2>
+        {section.description && <p className="mt-3 max-w-4xl whitespace-pre-line text-base leading-7 text-zinc-600">{section.description}</p>}
+      </section>;
+      default: return null;
     }
-    return selected;
-  };
-
-  const fundingArticles = takeUnique(
-    articles.filter((article) => article.categorySlug === "funding-news"),
-    4,
-  );
-  const businessModelArticles = takeUnique(
-    articles.filter((article) => article.categorySlug === "business-model"),
-    4,
-  );
-  const latestArticles = takeUnique(
-    articles.filter((article) => article.categorySlug !== "funding-news"),
-    4,
-  );
-
-  return (
-    <>
-      <Header />
-
-      <main>
-        {/* Search + discovery */}
-        <Hero companies={companies} />
-
-        <FeaturedStories articles={featuredArticles} />
-
-        <HomepageArticleSection
-          eyebrow="Capital and ownership"
-          title="Funding & Deals"
-          description="Funding rounds, acquisitions, rights issues and the ownership moves shaping companies."
-          href="/topics/funding-news"
-          articles={fundingArticles}
-        />
-
-        <HomepageArticleSection
-          eyebrow="Business models"
-          title="How Companies Make Money"
-          description="Clear breakdowns of the revenue engines, costs and economics behind interesting companies."
-          href="/topics/business-model"
-          articles={businessModelArticles}
-        />
-
-        <LatestStories articles={latestArticles} />
-
-        {/* Core ways to explore MisterStory */}
-        <IntentCards articles={articles} />
-
-        {/* Explore businesses by idea */}
-        <Topics articles={articles} />
-
-        {/* Company directory preview */}
-        <CompanyRow companies={companies} />
-
-        {/* Capture email after demonstrating value */}
-        <Newsletter />
-      </main>
-
-      <Footer />
-    </>
-  );
+  });
+  return <>
+    <Header />
+    <main>
+      <Hero companies={companies} title={settings?.heroTitle?.trim() || undefined} description={settings?.heroDescription ?? undefined} showSearch={settings?.showSearch !== false} searchPlaceholder={settings?.searchPlaceholder ?? undefined} popularCompanies={settings?.popularCompanies ?? undefined} />
+      {renderedSections}
+    </main>
+    <Footer />
+  </>;
 }

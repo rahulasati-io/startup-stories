@@ -1,19 +1,25 @@
 import type {Metadata} from "next";
-import CompanyDirectory from "@/components/CompanyDirectory";
-import type {Company} from "@/components/CompanyDirectory";
+import CompanyDirectory, {type Company} from "@/components/CompanyDirectory";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Newsletter from "@/components/Newsletter";
+import DirectoryPageLayout from "@/components/DirectoryPageLayout";
 import {directoryMetadata, getPublicDirectory} from "@/lib/public-directories";
+import {getDirectoryPageSettings, directorySharing} from "@/lib/directory-page-settings";
 import type {DirectoryParams} from "@/lib/directory-pagination";
 
 type Props = {searchParams: Promise<DirectoryParams>};
 
 export async function generateMetadata({searchParams}: Props): Promise<Metadata> {
-  return directoryMetadata("companies", await searchParams, "Companies | MisterStory", "Explore company profiles, articles, people and key numbers.");
+  const settings = await getDirectoryPageSettings("companies");
+  return {...directoryMetadata("companies", await searchParams, settings.seoTitle, settings.seoDescription), ...directorySharing("companies", settings)};
 }
 
 export default async function DirectoryPage({searchParams}: Props) {
-  const {items, pagination} = await getPublicDirectory<Company>("companies", await searchParams);
-  return <><Header /><main className="bg-[#f7f6f2]"><CompanyDirectory companies={items} title="All Companies" description="Search the complete MisterStory company directory by name or industry." pagination={pagination} /><Newsletter /></main><Footer /></>;
+  const [{items, pagination}, settings] = await Promise.all([
+    getPublicDirectory<Company>("companies", await searchParams),
+    getDirectoryPageSettings("companies"),
+  ]);
+  return <><Header /><DirectoryPageLayout settings={settings}>
+    <CompanyDirectory companies={items} pagination={pagination} title={settings.title} eyebrow={settings.eyebrow} description={settings.description} searchPlaceholder={settings.searchPlaceholder} />
+  </DirectoryPageLayout><Footer /></>;
 }

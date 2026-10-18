@@ -12,7 +12,7 @@ const popularCompanies = [
   { label: "Safari", slug: "safari" },
 ];
 
-export default function HomepageCompanySearch({ companies }: { companies: Company[] }) {
+export default function HomepageCompanySearch({ companies, placeholder = "Search Zomato, Zerodha, fintech, distribution...", popular = popularCompanies }: { companies: Company[]; placeholder?: string; popular?: {label: string; slug: string}[] }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -53,7 +53,7 @@ export default function HomepageCompanySearch({ companies }: { companies: Compan
           aria-expanded={open && Boolean(search.trim())}
           aria-controls="homepage-company-results"
           aria-activedescendant={activeIndex >= 0 ? `homepage-company-result-${activeIndex}` : undefined}
-          placeholder="Search Zomato, Zerodha, fintech, distribution..."
+          placeholder={placeholder}
           onFocus={() => search.trim() && setOpen(true)}
           onChange={(event) => { setSearch(event.target.value); setOpen(true); setActiveIndex(0); }}
           onKeyDown={(event) => {
@@ -77,8 +77,8 @@ export default function HomepageCompanySearch({ companies }: { companies: Compan
       )}
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs text-zinc-500">
-        <span>Popular:</span>
-        {popularCompanies.map((company) => <Link key={company.slug} href={`/companies/${company.slug}`} className="font-semibold underline underline-offset-2 transition hover:text-zinc-950">{company.label}</Link>)}
+        {popular.length > 0 && <span>Popular:</span>}
+        {popular.filter((item) => item?.slug).map((company) => <Link key={company.slug} href={`/companies/${company.slug}`} className="font-semibold underline underline-offset-2 transition hover:text-zinc-950">{company.label}</Link>)}
       </div>
     </div>
   );

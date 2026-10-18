@@ -8,6 +8,7 @@ type HomepageArticleSectionProps = {
   description: string;
   href: string;
   articles: ArticleCardData[];
+  linkLabel?: string;
 };
 
 export default function HomepageArticleSection({
@@ -16,6 +17,7 @@ export default function HomepageArticleSection({
   description,
   href,
   articles,
+  linkLabel = "View all",
 }: HomepageArticleSectionProps) {
   if (!articles.length) return null;
 
@@ -28,7 +30,7 @@ export default function HomepageArticleSection({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">{description}</p>
         </div>
         <Link href={href} className="shrink-0 text-sm font-semibold text-zinc-700 hover:text-black">
-          View all →
+          {linkLabel || "View all"} →
         </Link>
       </div>
 

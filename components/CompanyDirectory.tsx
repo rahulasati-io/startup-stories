@@ -23,6 +23,11 @@ type CompanyDirectoryProps = {
   showViewAll?: boolean;
   initialSearch?: string;
   pagination?: DirectoryPagination;
+  headingLevel?: "h1" | "h2";
+  eyebrow?: string;
+  viewAllHref?: string;
+  viewAllLabel?: string;
+  searchPlaceholder?: string;
 };
 
 export default function CompanyDirectory({
@@ -34,7 +39,13 @@ export default function CompanyDirectory({
   showViewAll = false,
   initialSearch = "",
   pagination,
+  headingLevel = "h1",
+  eyebrow = "Company directory",
+  viewAllHref = "/companies",
+  viewAllLabel = "View all companies",
+  searchPlaceholder = "Search by company or industry",
 }: CompanyDirectoryProps) {
+  const Heading = headingLevel;
   const [search, setSearch] = useState(initialSearch);
   const [industry, setIndustry] = useState("All");
 
@@ -82,20 +93,20 @@ export default function CompanyDirectory({
   return (
     <section id="company-deep-dives" className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-16">
       <div className="max-w-2xl">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">Company directory</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-950 md:text-3xl">{title}</h1>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{eyebrow}</p>
+        <Heading className="mt-2 text-2xl font-bold tracking-tight text-zinc-950 md:text-3xl">{title}</Heading>
         <p className="mt-2 text-sm leading-6 text-zinc-600">{description}</p>
       </div>
 
       <div className="mt-7 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 md:p-6">
-        {pagination ? <DirectoryControls pagination={pagination} placeholder="Search by company or industry" /> : <>
+        {pagination ? <DirectoryControls pagination={pagination} placeholder={searchPlaceholder} /> : <>
         <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0 text-zinc-500">
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>
           <span className="sr-only">Search companies</span>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by company or industry" className="w-full bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={searchPlaceholder} className="w-full bg-transparent text-sm text-zinc-950 outline-none placeholder:text-zinc-400" />
         </label>
 
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="Filter companies by industry">
@@ -138,8 +149,8 @@ export default function CompanyDirectory({
 
         {showViewAll && (
           <div className="mt-6 text-center">
-            <Link href="/companies" className="inline-flex rounded-full bg-zinc-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-zinc-800">
-              View all companies →
+            <Link href={viewAllHref} className="inline-flex rounded-full bg-zinc-950 px-6 py-3 text-sm font-bold text-white transition hover:bg-zinc-800">
+              {viewAllLabel} →
             </Link>
           </div>
         )}

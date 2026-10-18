@@ -13,7 +13,7 @@ export type DirectoryAuthor = {
   articleCount: number;
 };
 
-export default function AuthorDirectory({ authors }: { authors: DirectoryAuthor[] }) {
+export default function AuthorDirectory({ authors, title = "MisterStory authors", eyebrow = "Editorial team", description = "Meet the people researching and writing MisterStory's company analysis.", searchPlaceholder = "Search by author, role, education or experience" }: { authors: DirectoryAuthor[]; title?: string; eyebrow?: string; description?: string; searchPlaceholder?: string }) {
   const [search, setSearch] = useState("");
   const visibleAuthors = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -30,16 +30,16 @@ export default function AuthorDirectory({ authors }: { authors: DirectoryAuthor[
   return (
     <section className="mx-auto max-w-7xl px-5 py-14 md:px-8 md:py-16">
       <div className="max-w-2xl">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">Editorial team</p>
-        <h1 className="mt-2 text-4xl font-bold tracking-tight text-zinc-950 md:text-5xl">MisterStory authors</h1>
-        <p className="mt-4 leading-7 text-zinc-600">Meet the people researching and writing MisterStory&apos;s company analysis.</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">{eyebrow}</p>
+        <h1 className="mt-2 text-4xl font-bold tracking-tight text-zinc-950 md:text-5xl">{title}</h1>
+        <p className="mt-4 leading-7 text-zinc-600">{description}</p>
       </div>
 
       <div className="mt-8 rounded-3xl border border-zinc-200 bg-zinc-50/70 p-4 md:p-6">
         <label className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm focus-within:border-zinc-400">
           <span aria-hidden="true">⌕</span>
           <span className="sr-only">Search authors</span>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by author, role, education or experience" className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-400" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={searchPlaceholder} className="w-full bg-transparent text-sm outline-none placeholder:text-zinc-400" />
         </label>
 
         {visibleAuthors.length ? (

@@ -5,7 +5,7 @@ import Link from "next/link";
 
 type SubmissionState = "idle" | "submitting" | "success" | "error";
 
-export default function Newsletter({ compact = false }: { compact?: boolean }) {
+export default function Newsletter({ compact = false, title, description, buttonLabel = "Subscribe" }: { compact?: boolean; title?: string; description?: string; buttonLabel?: string }) {
   const [email, setEmail] = useState("");
   const [submissionState, setSubmissionState] =
     useState<SubmissionState>("idle");
@@ -60,14 +60,14 @@ export default function Newsletter({ compact = false }: { compact?: boolean }) {
       }>
         <div>
           <h2 className={compact ? "text-xl font-bold tracking-tight text-zinc-950" : "text-2xl font-bold tracking-tight text-zinc-950"}>
-            {compact ? "Understand companies better." : "One business story every week."}
+            {title ?? (compact ? "Understand companies better." : "One business story every week.")}
           </h2>
 
           <p className={compact ? "mt-2 text-sm leading-6 text-zinc-600" : "mt-2 max-w-xl text-sm leading-6 text-zinc-600"}>
-            {compact
+            {description ?? (compact
               ? "One clear company story in your inbox every week."
               : "Interesting companies, smart strategies and the numbers behind them."
-            }
+            )}
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function Newsletter({ compact = false }: { compact?: boolean }) {
               disabled={submissionState === "submitting"}
               className="rounded-full bg-zinc-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-zinc-800 disabled:cursor-wait disabled:opacity-60"
             >
-              {submissionState === "submitting" ? "Subscribing…" : "Subscribe"}
+              {submissionState === "submitting" ? "Subscribing…" : buttonLabel || "Subscribe"}
             </button>
           </div>
 
