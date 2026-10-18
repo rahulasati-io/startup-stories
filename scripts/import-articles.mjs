@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from "node:util";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
+import {buildLinkTargets, interlinkArticle, LINK_TARGETS_QUERY} from "./lib/article-interlinks.mjs";
 import { assertArticleSlug, isValidArticleSlug } from "../lib/article-slug.mjs";
 
 const args = process.argv.slice(2);
@@ -115,14 +116,22 @@ async function run() {
   const authorSlugs = [...new Set(inputs.map((input) => input.authorSlug))];
   const peopleSlugs = [...new Set(inputs.flatMap((input) => input.peopleSlugs))];
   const conceptSlugs = [...new Set(inputs.flatMap((input) => input.conceptSlugs))];
-  const [companies, categories, authors, people, concepts, articles] = await Promise.all([
+  const [companies, categories, authors, people, concepts, articles, linkDocuments] = await Promise.all([
     client.fetch(`*[_type == "company" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: companySlugs }),
     client.fetch(`*[_type == "category" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: categorySlugs }),
     client.fetch(`*[_type == "author" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: authorSlugs }),
     peopleSlugs.length ? client.fetch(`*[_type == "founder" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: peopleSlugs }) : [],
     conceptSlugs.length ? client.fetch(`*[_type == "concept" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: conceptSlugs }) : [],
     client.fetch(`*[_type == "post" && (importId in $importIds || slug.current in $slugs)]|order(_updatedAt asc){...,"slugValue":slug.current}`, { importIds: [...importIds], slugs: [...slugs] }),
+    client.fetch(LINK_TARGETS_QUERY),
   ]);
+  const linkCatalog = buildLinkTargets(linkDocuments);
+  let automaticLinks = 0;
+  for (const input of inputs) {
+    const linked = interlinkArticle(input.body, linkCatalog, {companySlugs: input.companySlugs});
+    input.body = linked.body;
+    automaticLinks += linked.added.length;
+  }
   const companiesBySlug = new Map(companies.map((item) => [item.slug, item._id]));
   const categoriesBySlug = new Map(categories.map((item) => [item.slug, item._id]));
   const authorsBySlug = new Map(authors.map((item) => [item.slug, item._id]));
@@ -242,6 +251,7 @@ async function run() {
   if (draftOnly) console.log("Draft-only protection was active: no article was published.");
   if (heldAsDraft) console.log(`${heldAsDraft} row(s) marked published were kept as drafts because --publish was not supplied.`);
   console.log("The source_urls column was ignored and no source URL was sent to Sanity.");
+  console.log(`Automatic internal links: ${automaticLinks}. Maximum 3 per article including existing internal links; ambiguous names skipped. No article wording added.`);
 }
 
 run().catch((error) => { console.error(`Article import failed: ${error.message}`); process.exit(1); });

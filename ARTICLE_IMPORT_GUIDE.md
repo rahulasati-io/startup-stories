@@ -52,6 +52,22 @@ An existing article with pipe text is not changed automatically. Re-import it de
 
 ## Import commands
 
+### Automatic company and people links
+
+Regular and temporary draft article imports automatically add up to **three internal body links total**, counting internal links already present in the cell. There is no minimum: a single safe mention results in one link. Only names already written in the article are linked to existing published company/person profiles. No wording is added and each destination is linked at most once by the automatic rule.
+
+Existing links and text formatting are preserved. Shared person names are skipped rather than guessed. Matching uses exact display names and a small reviewed list of company-name variants. Ordinary-word/product names such as Jupiter require that company in the article's company selections, preventing a scooter mention from linking to the fintech company. Headings, tables and code are not automatically linked. Existing hand-written links above the limit are not silently deleted, but no further automatic links are added.
+
+The workbook cells remain readable text/Markdown. Links are generated during import, so plain text in Excel does not remove the automatic linking feature. This does not change the general overwrite rules: importing an older body can still replace newer Sanity wording. Articles entered directly in Sanity are not automatically scanned by this importer.
+
+A link-only backfill of articles listed in a workbook is available without importing their spreadsheet text or publishing drafts:
+
+```powershell
+node --env-file=.env.local scripts/interlink-workbook-articles.mjs "outputs/article-importers/articles-template.xlsx"
+```
+
+The default is a dry run. Add `--write` only after reviewing its plan. The write mode saves the original bodies under ignored `outputs/article-interlinks-<timestamp>/before.json`, applies revision-guarded body-only patches, and verifies the saved result. Published and draft versions are handled independently; draft changes are never published. Publication dates, editorial update dates and metadata fields are not patched (Sanity's system modification timestamps necessarily change).
+
 Check everything without writing:
 
 ```powershell
