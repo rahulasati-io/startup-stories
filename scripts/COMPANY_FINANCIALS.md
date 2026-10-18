@@ -26,7 +26,7 @@ npm run import:financials:check
 npm run import:financials
 ```
 
-This mode writes only financial companyMetric records. It does not write company profiles, people, roles, biographies, SEO, funding or timelines. The company must already be published in Sanity.
+This mode writes financial companyMetric records plus hidden concurrency/audit fields on the company and its financial protection record. It does not change company profile text, people, roles, biographies, SEO, funding or timelines. The company must already be published in Sanity.
 
 For one company:
 
@@ -51,3 +51,23 @@ Copy the seven-column FY26 group to the right and rename every `fy26_` prefix to
 - Sources and all entered context are validated before normal-import writes begin. Revision checks protect updates to existing financial metrics.
 
 The workbook contains dropdowns through row 1001. If extending well beyond that, copy the existing validation cells into the new company rows. Server-side importer validation still applies to every entered row.
+
+## Sanity Financial Editor and Excel protection
+
+After deploying the new Studio code, open **Financial Editor** in Sanity. Search for a published company, select financial year and Standalone/Consolidated, then edit currency, unit, revenue, EBITDA, net profit/loss and the internal source URL. Numbers are not converted between units/currencies. Legacy values without numeric metadata show their saved readable amount; re-enter numeric amounts to adopt them safely. Existing metric drafts, duplicates and ambiguous reporting basis must be resolved first.
+
+**Save & publish figures** asks for confirmation, publishes the entered figures and protects the entire company/year/basis from Excel. Blank amount cells preserve old values; zero and negative losses are supported. The source URL applies to entered amounts. This does not retroactively lock financials you have not saved through the editor.
+
+Normal company imports, financials-only imports and legacy/Other Metrics imports all honour protection. Protected figures are logged and skipped, including an attempted new metric in a locked year. Other years and nonfinancial metrics remain independent. Protected values are not silently synchronized back into Excel.
+
+To explicitly permit Excel again, select that company/year/basis and click **Allow Excel updates for this year**, then confirm. Current figures do not change at permission time. Excel stays permitted for that year/basis until another editor save protects it again. There is no bulk force-overwrite flag. Use the current importer code: older copied scripts that predate this protection cannot enforce it. This is a safeguard in the provided workflows, not a restriction against arbitrary external API clients with write permission.
+
+Protection is stored in a separate generated-ID companyFinancialControl record, not in company-profile drafts, so publishing an older profile cannot erase it. Company/control/metric revision checks prevent concurrent saves/imports from overwriting each other. Failed or stale saves leave typed inputs visible; reload saved records before retrying. The website refreshes through the existing metric/company publication webhook and cache fallback.
+
+The editor does not autosave or delete financial records. Its save publishes data directly after confirmation; it is not an unpublished financial-draft workflow. No existing values are changed merely by deploying/opening the editor.
+
+Tests:
+
+```powershell
+node --test scripts/company-financials.test.mjs scripts/financial-editor.test.mjs
+```

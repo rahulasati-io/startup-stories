@@ -74,24 +74,28 @@ test('financials-only saving uses generated IDs and patches only metrics with re
   const input=parse(base)[0];
   const calls=[];
   const tx={create(doc){calls.push({type:'create',doc});return this;},patch(id,callback){const patch={ifRevisionId(rev){calls.push({type:'revision',rev});return this;},set(data){calls.push({type:'patch',id,data});return this;}};callback(patch);return this;},async commit(){calls.push({type:'commit'});}};
-  const client={transaction(){return tx;}};
+  let metrics=[];
+  const client={transaction(){return tx;},async fetch(){return {company:{_id:'company-id',_rev:'c1',slug:'example'},controls:[],metrics};}};
   await saveAnnualFinancials(client,planAnnualFinancials([input],[]),{dryRun:true,companyIds:new Map([['example','company-id']])});
   assert.equal(calls.length,0);
   await saveAnnualFinancials(client,planAnnualFinancials([input],[]),{companyIds:new Map([['example','company-id']])});
-  assert.equal(calls[0].doc._type,'companyMetric');
-  assert.equal(calls[0].doc.company._ref,'company-id');
-  assert(!Object.hasOwn(calls[0].doc,'_id'));
+  const created=calls.find(call=>call.type==='create').doc;
+  assert.equal(created._type,'companyMetric');
+  assert.equal(created.company._ref,'company-id');
+  assert(!Object.hasOwn(created,'_id'));
   calls.length=0;
   const existing={_id:'metric-id',_rev:'r1',companySlug:'example',label:'Revenue',period:'FY25',reportingBasis:'consolidated'};
-  await saveAnnualFinancials(client,planAnnualFinancials([input],[existing]),{companyIds:new Map()});
-  assert.deepEqual(calls[0],{type:'revision',rev:'r1'});
-  assert.equal(calls[1].id,'metric-id');
-  assert(!Object.hasOwn(calls[1].data,'bio'));
+  metrics=[existing];
+  await saveAnnualFinancials(client,planAnnualFinancials([input],[existing]),{companyIds:new Map([['example','company-id']])});
+  assert(calls.some(call=>call.type==='revision'&&call.rev==='r1'));
+  const updated=calls.find(call=>call.type==='patch'&&call.id==='metric-id');
+  assert(updated);
+  assert(!Object.hasOwn(updated.data,'bio'));
 });
 
 test('financials preflight checks published company identity before any mutation', async () => {
   const calls=[];
-  const client={async fetch(query,params,options){calls.push({query,params,options});return query.includes('_type == "company"')?[{_id:'company-id',slug:'example'}]:[];}};
+  const client={async fetch(query,params,options){calls.push({query,params,options});return query.includes('_type == "company"')?[{_id:'company-id',_rev:'c1',slug:'example',controls:[]}]:[];}};
   const operations=await prepareAnnualFinancials(client,parse(base));
   assert.equal(operations.length,1);
   assert.deepEqual(calls[1].params.ids,['company-id']);

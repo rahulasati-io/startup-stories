@@ -12,6 +12,7 @@ import { fundingRoundType } from "./fundingRoundType";
 import { industryType } from "./industryType";
 import { homepageSettingsType } from "./homepageSettingsType";
 import {directoryPageSettingsType} from "./directoryPageSettingsType";
+import {companyFinancialControlType} from "./companyFinancialControlType";
 import { postType } from "./postType";
 import { seoSettingsType } from "./seoSettingsType";
 import { timelineEventType } from "./timelineEventType";
@@ -30,6 +31,7 @@ export const schemaTypes = [
   fundingRoundType,
   homepageSettingsType,
   directoryPageSettingsType,
+  companyFinancialControlType,
   industryType,
   postType,
   seoSettingsType,

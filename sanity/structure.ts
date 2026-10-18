@@ -1,11 +1,13 @@
 import type { StructureResolver } from "sanity/structure";
 import { ArticlesManager } from "./components/ArticlesManager";
 import { CompaniesManager } from "./components/CompaniesManager";
+import {FinancialEditor} from "./components/FinancialEditor";
 
 export const structure: StructureResolver = (S) =>
   S.list()
     .title("MisterStory content")
     .items([
+      S.listItem().title("Financial Editor").child(S.component(FinancialEditor).id("financial-editor").title("Financial Editor")),
       S.listItem()
         .title("Companies")
         .child(S.component(CompaniesManager).id("companies-manager").title("Companies")),

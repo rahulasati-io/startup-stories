@@ -5,6 +5,7 @@ import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
 import { parseCompanyFinancials, checkLegacyFinancialOverlap } from "./lib/company-financials.mjs";
 import { prepareAnnualFinancials, saveAnnualFinancials } from "./lib/import-annual-financials.mjs";
+import {saveLegacyFinancialMetrics} from "./lib/import-legacy-financials.mjs";
 
 const filePath = process.argv[2];
 const companyFilter = process.argv.find((argument) => argument.startsWith("--company="))?.split("=")[1];
@@ -103,6 +104,7 @@ async function mapLimit(items, limit, worker) {
 
 async function batchReplace(documents, label) {
   if (!documents.length) return { changed: 0, skipped: 0 };
+  if (documents[0]._type === "companyMetric") return saveLegacyFinancialMetrics(client, documents, {dryRun});
   const ids = documents.map(({ _id }) => _id);
   const existingDocuments = await client.fetch(`*[_id in $ids]`, { ids });
   const existingById = new Map(existingDocuments.map((document) => [document._id, document]));

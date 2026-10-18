@@ -33,7 +33,7 @@ export default defineConfig({
     ...schema,
     templates: (previousTemplates) => [
       ...previousTemplates.filter(
-        (template) => !['seoSettings', 'homepageSettings', 'directoryPageSettings'].includes(template.schemaType),
+        (template) => !['seoSettings', 'homepageSettings', 'directoryPageSettings', 'companyFinancialControl'].includes(template.schemaType),
       ),
       ...companyRecordTemplates.map(([schemaType, title]) => ({
         id: `${schemaType}-for-company`,
