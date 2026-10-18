@@ -3,6 +3,7 @@ import path from "node:path";
 import XLSX from "xlsx";
 import { createClient } from "@sanity/client";
 import { isValidArticleSlug } from "../lib/article-slug.mjs";
+import {portableTextWordCount} from "./lib/markdown-to-portable-text.mjs";
 
 const args = process.argv.slice(2);
 const option = (name) => args.find((argument) => argument.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -36,13 +37,7 @@ const normalizedCategory = (value) => {
   return category;
 };
 const validSlug = isValidArticleSlug;
-const countWords = (body) => (body || [])
-  .flatMap((block) => block.children || [])
-  .map((child) => clean(child.text))
-  .join(" ")
-  .split(/\s+/)
-  .filter(Boolean)
-  .length;
+const countWords = portableTextWordCount;
 const countH2s = (body) => (body || []).filter((block) => block._type === "block" && block.style === "h2").length;
 const issue = (severity, code, message) => ({ severity, code, message });
 const addToMap = (map, key, value) => {
@@ -74,7 +69,7 @@ const articles = await client.fetch(/* groq */ `
     publishedAt,
     seoTitle,
     seoDescription,
-    body[]{ _type, style, children[]{ text } },
+    body[]{ _type, style, children[]{ text }, rows[]{ cells } },
     "category": category->{ _id, title, "slug": slug.current },
     "author": author->{ _id, name, "slug": slug.current },
     "companies": company[]->{ _id, name, "slug": slug.current }

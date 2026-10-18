@@ -23,7 +23,34 @@ Do not type over those formula columns. They are prefilled for 200 rows and are 
 - Leave `status` as `draft` while reviewing.
 - Publication dates are automatic. The first live import records `Published`; later imports that change article content record `Updated`. Unchanged imports do not move either date.
 
-## Commands
+## Tables inside article_body
+
+Both the regular and temporary draft importer support Markdown pipe tables. Paste the entire article, including the table, into the same `article_body` cell:
+
+```markdown
+## Financial performance
+
+The following figures compare the two years.
+
+| Metric | FY25 | FY26 |
+| --- | --- | --- |
+| Revenue | ₹100 crore | ₹150 crore |
+| Net profit / loss | -10 | 15 |
+
+Continue the article here.
+```
+
+- Use at least two columns: a heading row, a separator row with at least three hyphens per column, and at least one data row.
+- Keep the same number of columns in every row. Malformed recognised tables stop the import before writes and report the article slug and Markdown line number.
+- Leave a blank line before and after each table. Multiple tables can appear between normal paragraphs/headings/lists.
+- Use `\|` for a literal pipe inside a cell. Empty cells are supported; never omit their separating pipes.
+- Outer pipes are optional. Alignment separators such as `:---` or `---:` are accepted, but the existing website table style controls alignment.
+- Cells currently contain plain text, not rich Markdown formatting, HTML or merged cells. Do not wrap a real table in triple-backtick code fences; fenced examples are not imported as tables.
+- Tables become the existing editable Sanity Table blocks. Audits include their cell text in word counts. Duplicate-slug checks, draft-only protection and publish commands are unchanged.
+
+An existing article with pipe text is not changed automatically. Re-import it deliberately through the regular update workflow to convert its table. The temporary draft importer still refuses an already-used slug.
+
+## Import commands
 
 Check everything without writing:
 

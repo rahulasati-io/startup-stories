@@ -107,7 +107,7 @@ async function run() {
     if (status === "published" && allowPublish && !seoDescription) throw new Error(`Articles row ${rowNumber}: seo_description is required when publishing.`);
     if (importId) importIds.add(importId);
     slugs.add(slug);
-    return { rowNumber, importId, slug, title, thumbnailTitle, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, body: markdownToPortableText(bodyMarkdown, slug), seoTitle: clean(row.seo_title) || undefined, seoDescription, seoKeywords };
+    return { rowNumber, importId, slug, title, thumbnailTitle, companySlugs, categorySlug, authorSlug, hasPeopleSlugs, peopleSlugs, hasConceptSlugs, conceptSlugs, status, body: markdownToPortableText(bodyMarkdown, slug, {tables: true}), seoTitle: clean(row.seo_title) || undefined, seoDescription, seoKeywords };
   });
 
   const companySlugs = [...new Set(inputs.flatMap((input) => input.companySlugs))];
