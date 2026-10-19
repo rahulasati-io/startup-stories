@@ -27,7 +27,7 @@ export const homepageSettingsType = defineType({
     defineField({name: "popularCompanies", title: "Popular company shortcuts", type: "array", group: "intro", description: "Select companies in display order. An empty list hides shortcuts; unset uses the current defaults.", of: [defineArrayMember({type: "reference", to: [{type: "company"}]})], validation: (rule) => rule.unique().max(10)}),
     defineField({
       name: "sections", title: "Homepage sections — drag to reorder", type: "array", group: "sections",
-      description: "Add, hide or reorder sections. Existing pages use the current layout until this list is configured. Empty story sections and topics without content stay hidden. Stories are not repeated across shelves; the first visible shelf takes priority.",
+      description: "Add, hide or reorder sections. Empty sections/topics stay hidden. Category shelves avoid repeating stories. The built-in Latest Stories can repeat stories shown elsewhere, includes funding, and excludes Business Model articles.",
       initialValue: DEFAULT_HOME_SECTIONS.map((section) => ({...section, _type: "homepageSection"})),
       of: [defineArrayMember({name: "homepageSection", title: "Homepage section", type: "object", icon: CogIcon,
         initialValue: {enabled: true, kind: "articles", limit: 4},
@@ -39,10 +39,10 @@ export const homepageSettingsType = defineType({
           defineField({name: "description", title: "Description / text", type: "text", rows: 4}),
           internalLink("href", "View-all link"),
           defineField({name: "linkLabel", title: "Link / subscribe button label", type: "string"}),
-          defineField({name: "category", title: "Article category", type: "reference", to: [{type: "category"}], hidden: ({parent}) => parent?.kind !== "articles", description: "Choose a category to override the fallback category slug below."}),
-          defineField({name: "categorySlug", title: "Fallback category slug", type: "string", hidden: ({parent}) => parent?.kind !== "articles", description: "For example funding-news or business-model. Leave both category fields empty for all articles."}),
-          defineField({name: "excludeFunding", title: "Exclude funding news", type: "boolean", hidden: ({parent}) => parent?.kind !== "articles"}),
-          defineField({name: "articles", title: "Manually selected articles (optional)", type: "array", of: [defineArrayMember({type: "reference", to: [{type: "post"}]})], hidden: ({parent}) => parent?.kind !== "articles", description: "When selected, these replace the automatic category/latest selection. Only published articles appear.", validation: (rule) => rule.unique().max(12)}),
+          defineField({name: "category", title: "Article category", type: "reference", to: [{type: "category"}], hidden: ({parent}) => parent?.kind !== "articles" || parent?._key === "latest", description: "Choose a category to override the fallback category slug below."}),
+          defineField({name: "categorySlug", title: "Fallback category slug", type: "string", hidden: ({parent}) => parent?.kind !== "articles" || parent?._key === "latest", description: "For example funding-news or business-model. Leave both category fields empty for all articles."}),
+          defineField({name: "excludeFunding", title: "Exclude funding news", type: "boolean", hidden: ({parent}) => parent?.kind !== "articles" || parent?._key === "latest"}),
+          defineField({name: "articles", title: "Manually selected articles (optional)", type: "array", of: [defineArrayMember({type: "reference", to: [{type: "post"}]})], hidden: ({parent}) => parent?.kind !== "articles", description: "When selected, these replace automatic selection in your chosen order. Only published articles appear. Latest Stories still excludes Business Model and may repeat stories shown elsewhere.", validation: (rule) => rule.unique().max(12)}),
           defineField({name: "limit", title: "Number of articles / companies", type: "number", hidden: ({parent}) => !["articles", "companies"].includes(parent?.kind), validation: (rule) => rule.integer().min(1).max(12)}),
           defineField({name: "links", title: "Explore cards / topic links", type: "array", hidden: ({parent}) => !["explore", "topics"].includes(parent?.kind), description: "Unset uses existing choices. Topic links require a matching category slug or search phrase to avoid linking to empty collections.", of: [defineArrayMember({type: "object", name: "homepageLink", fields: [
             defineField({name: "title", title: "Title", type: "string", validation: (rule) => rule.required()}),

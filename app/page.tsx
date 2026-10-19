@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 import type {Company} from "@/components/CompanyDirectory";
 import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data";
 import {HOMEPAGE_SETTINGS_QUERY, type HomepageSettings} from "@/lib/homepage-content";
-import {DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, homepageHref, homepageSections} from "@/lib/homepage-config";
+import {DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, homepageHref, homepageSections, selectHomepageArticles} from "@/lib/homepage-config";
 import {client} from "@/sanity/lib/client";
 import {absoluteUrl} from "@/lib/site-url";
 
@@ -59,16 +59,7 @@ export default async function Home() {
       case "featured":
         return <FeaturedStories key={section._key} articles={featured} {...textProps} href={href} linkLabel={section.linkLabel} />;
       case "articles": {
-        const candidates = section.articleIds?.length
-          ? section.articleIds.flatMap((id) => byId.get(id) ? [byId.get(id)!] : [])
-          : articles.filter((article) => (!section.categorySlug || article.categorySlug === section.categorySlug) && (!section.excludeFunding || article.categorySlug !== "funding-news"));
-        const selected: ArticleCardData[] = [];
-        for (const article of candidates) {
-          if (used.has(article._id)) continue;
-          selected.push(article);
-          used.add(article._id);
-          if (selected.length === limit) break;
-        }
+        const selected = selectHomepageArticles(section, articles, used);
         return <HomepageArticleSection key={section._key} articles={selected} title={section.title || "Articles"} description={section.description || ""} eyebrow={section.eyebrow || ""} href={href} linkLabel={section.linkLabel} />;
       }
       case "explore": return <IntentCards key={section._key} articles={articles} {...textProps} links={links} />;

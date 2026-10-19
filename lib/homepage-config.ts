@@ -19,7 +19,7 @@ export const DEFAULT_HOME_SECTIONS: HomepageSection[] = [
   {_key: "featured", kind: "featured", enabled: true, eyebrow: "Editor's selection", title: "Featured Stories", href: "/articles", linkLabel: "View all"},
   {_key: "funding", kind: "articles", enabled: true, eyebrow: "Capital and ownership", title: "Funding & Deals", description: "Funding rounds, acquisitions, rights issues and the ownership moves shaping companies.", categorySlug: "funding-news", href: "/topics/funding-news", limit: 4},
   {_key: "business", kind: "articles", enabled: true, eyebrow: "Business models", title: "How Companies Make Money", description: "Clear breakdowns of the revenue engines, costs and economics behind interesting companies.", categorySlug: "business-model", href: "/topics/business-model", limit: 4},
-  {_key: "latest", kind: "articles", enabled: true, eyebrow: "Fresh from MisterStory", title: "Latest Stories", href: "/articles", excludeFunding: true, limit: 4},
+  {_key: "latest", kind: "articles", enabled: true, eyebrow: "Fresh from MisterStory", title: "Latest Stories", href: "/articles", limit: 4},
   {_key: "explore", kind: "explore", enabled: true, eyebrow: "Explore MisterStory", title: "What do you want to explore?"},
   {_key: "topics", kind: "topics", enabled: true, eyebrow: "Explore by idea", title: "Topics worth following"},
   {_key: "companies", kind: "companies", enabled: true, eyebrow: "Company directory", title: "Explore Companies", description: "Find company profiles, articles, people and key numbers.", href: "/companies", linkLabel: "View all companies", limit: 6},
@@ -36,4 +36,35 @@ export function homepageHref(value: string | undefined, fallback: string) {
 
 export function homepageSections(value: HomepageSection[] | null | undefined) {
   return (value ?? DEFAULT_HOME_SECTIONS).filter((section) => section.enabled !== false);
+}
+
+// The built-in Latest Stories shelf is a second discovery route, not an
+// exclusive category shelf. Its stable key survives Studio title/order edits.
+export function selectHomepageArticles<T extends {_id: string; categorySlug: string}>(section: HomepageSection, articles: T[], used: Set<string>): T[] {
+  const latest = section._key === "latest";
+  const manual = Boolean(section.articleIds?.length);
+  const byId = new Map(articles.map(article => [article._id, article]));
+  const candidates = manual
+    ? section.articleIds!.flatMap(id => byId.get(id) ? [byId.get(id)!] : [])
+    : articles;
+  const limit = Math.min(12, Math.max(1, Math.trunc(section.limit || 4)));
+  const selected: T[] = [];
+  const localIds = new Set<string>();
+  for (const article of candidates) {
+    if (localIds.has(article._id)) continue;
+    if (latest) {
+      // Intentionally supersedes the historical excludeFunding setting stored
+      // on this shelf. Business Model is the only category excluded here.
+      if (article.categorySlug === "business-model") continue;
+    } else {
+      if (!manual && ((section.categorySlug && article.categorySlug !== section.categorySlug) || (section.excludeFunding && article.categorySlug === "funding-news"))) continue;
+      if (used.has(article._id)) continue;
+    }
+    selected.push(article);
+    localIds.add(article._id);
+    // Latest must not claim stories from category shelves moved below it.
+    if (!latest) used.add(article._id);
+    if (selected.length === limit) break;
+  }
+  return selected;
 }
