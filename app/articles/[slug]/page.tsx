@@ -15,6 +15,7 @@ import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { absoluteUrl } from "@/lib/site-url";
+import { formatIstDateTime } from "@/lib/display-dates.mjs";
 import { type ArticleCardData, type ArticleLinkData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import {
@@ -586,15 +587,7 @@ export default async function ArticlePage({
             <>
               <span>·</span>
               <time dateTime={article.contentUpdatedAt || article.publishedAt}>
-                {article.contentUpdatedAt ? "Updated" : "Published"} {new Date(article.contentUpdatedAt || article.publishedAt!).toLocaleString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                  timeZone: "Asia/Kolkata",
-                })} IST
+                {article.contentUpdatedAt ? "Updated" : "Published"} {formatIstDateTime(article.contentUpdatedAt || article.publishedAt)}
               </time>
             </>
           )}

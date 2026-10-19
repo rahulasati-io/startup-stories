@@ -7,6 +7,7 @@ import {defineQuery} from "groq";
 import {FINANCIAL_CURRENCIES, FINANCIAL_UNITS, FINANCIAL_METRICS} from "../../scripts/lib/company-financials.mjs";
 import {FINANCIAL_SNAPSHOT_QUERY, financialSnapshot, financialGroupRecords, editorFinancialPlan, saveEditorFinancials, allowExcelFinancials} from "../../lib/financial-editor.mjs";
 import {financialGroupLocked} from "../../lib/financial-protection.mjs";
+import {istCalendarYear} from "../../lib/display-dates.mjs";
 
 const COMPANY_SEARCH = defineQuery(`*[_type == "company" && !(_id in path("drafts.**")) && !(_id in path("versions.**")) && defined(slug.current) && ($q == "" || name match $search || slug.current match $search)] | order(name asc)[0...50]{_id,name,"slug":slug.current}`);
 type Company = {_id: string; _rev: string; name: string; slug: string; financialExcelLocks: string[]};
@@ -23,7 +24,7 @@ export function FinancialEditor() {
   const [companies, setCompanies] = useState<{_id: string; name: string; slug: string}[]>([]);
   const [searching, setSearching] = useState(false);
   const [companyId, setCompanyId] = useState("");
-  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [year, setYear] = useState(() => istCalendarYear());
   const [basis, setBasis] = useState("consolidated");
   const [currency, setCurrency] = useState("INR");
   const [unit, setUnit] = useState("crore");

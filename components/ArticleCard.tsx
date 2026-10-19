@@ -1,14 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { articleHref, articleImageUrl, type ArticleCardData } from "@/lib/article-card-data";
+import { formatIstDate } from "@/lib/display-dates.mjs";
 
 export default function ArticleCard({ article, compact = false, preloadImage = false, imageSizes, prefetch }: { article: ArticleCardData; compact?: boolean; preloadImage?: boolean; imageSizes?: string; prefetch?: boolean }) {
   const imageUrl = articleImageUrl(article);
   const isGeneratedThumbnail = imageUrl?.startsWith("/api/article-thumbnail/") ?? false;
   const displayDate = article.contentUpdatedAt || article.publishedAt;
-  const date = displayDate
-    ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(new Date(displayDate))
-    : null;
+  const date = formatIstDate(displayDate);
   const dateLabel = article.contentUpdatedAt ? "Updated" : "Published";
   const companyNames = article.companies.map((company) => company.name);
   const companyLabel = companyNames.length > 2

@@ -15,6 +15,7 @@ import PortableTextLink from "@/components/PortableTextLink";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import PeopleRow from "@/components/PeopleRow";
 import { absoluteUrl } from "@/lib/site-url";
+import { formatIstDate } from "@/lib/display-dates.mjs";
 import { breadcrumbJsonLd, portableTextToPlainText } from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
 import { DEFAULT_SEO_TEMPLATES, fillSeoTemplate, SEO_SETTINGS_QUERY, type SeoSettings } from "@/sanity/lib/seo";
@@ -259,7 +260,7 @@ export default async function PersonPage({ params }: Props) {
                     <p className="text-xs font-bold uppercase tracking-[.12em] text-amber-700">{article.category?.title || "Article"}</p>
                     <h3 className="mt-2 text-xl font-semibold leading-tight group-hover:text-amber-800">{article.title}</h3>
                     {article.seoDescription && <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-600">{article.seoDescription}</p>}
-                    {(article.contentUpdatedAt || article.publishedAt) && <p className="mt-4 text-xs text-zinc-500">{article.contentUpdatedAt ? "Updated" : "Published"} {new Date(article.contentUpdatedAt || article.publishedAt!).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>}
+                    {(article.contentUpdatedAt || article.publishedAt) && <p className="mt-4 text-xs text-zinc-500">{article.contentUpdatedAt ? "Updated" : "Published"} {formatIstDate(article.contentUpdatedAt || article.publishedAt)}</p>}
                   </div>
                 </Link>
                 );

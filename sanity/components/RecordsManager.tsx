@@ -8,6 +8,7 @@ import {useEffect, useState} from "react";
 import {useClient} from "sanity";
 import {IntentLink} from "sanity/router";
 import {toSearchMatch} from "../../lib/global-search";
+import {formatIstDate} from "../../lib/display-dates.mjs";
 import {managerQuery, MANAGER_PAGE_SIZE, type ManagerResult, type ManagerRow, type ManagerStatus, type ManagerType} from "../lib/manager-queries";
 
 const filters: {value: ManagerStatus; label: string}[] = [
@@ -83,7 +84,7 @@ export function RecordsManager({type}: {type: ManagerType}) {
             <td style={{...cellStyle, maxWidth: 360}}><IntentLink intent="edit" params={{id: row.documentId, type}} style={{color: "inherit", textDecoration: "none"}}><Text size={1} weight="semibold">{row.title || `Untitled ${singular}`}</Text></IntentLink></td>
             {columns.map((column) => <td key={column.key} style={{...cellStyle, maxWidth: 320}}><Text size={1} textOverflow="ellipsis">{row[column.key] || "—"}</Text></td>)}
             <td style={cellStyle}><Badge tone={statusDetails[row.status].tone}>{statusDetails[row.status].label}</Badge></td>
-            <td style={cellStyle}><Text muted size={1}>{new Date(row._updatedAt).toLocaleDateString("en-IN", {day: "numeric", month: "short", year: "numeric"})}</Text></td>
+            <td style={cellStyle}><Text muted size={1}>{formatIstDate(row._updatedAt)}</Text></td>
             <td style={cellStyle}><IntentLink intent="edit" params={{id: row.documentId, type}} style={{textDecoration: "none"}}><Button mode="ghost" text="Edit" /></IntentLink></td>
           </tr>)}</tbody>
         </table>
