@@ -1,3 +1,6 @@
+import { cache, Suspense } from "react";
+import ProfileSectionsLoading from "@/components/ProfileSectionsLoading";
+import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
 import { PortableText, type PortableTextBlock, type PortableTextComponents } from "@portabletext/react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -36,10 +39,15 @@ const PERSON_QUERY = defineQuery(/* groq */ `
         relationship,
         status,
         company->{_id, name, "slug": slug.current, "industry": coalesce(industryCategory->name, industry)}
-      },
-    "relatedArticles": *[
+      }
+
+  }
+`);
+
+const PERSON_ARTICLES_QUERY = defineQuery(`
+*[
       _type == "post" &&
-      ^._id in people[]._ref &&
+      $personId in people[]._ref &&
       defined(slug.current) &&
       defined(category->slug.current)
     ] | order(publishedAt desc)[0...3] {
@@ -54,8 +62,9 @@ const PERSON_QUERY = defineQuery(/* groq */ `
       "imageAlt": coalesce(mainImage.alt, title),
       "category": category->{title, "slug": slug.current}
     }
-  }
 `);
+
+const getPersonArticles = cache((personId: string) => client.fetch<RelatedArticle[]>(PERSON_ARTICLES_QUERY, {personId}, PROFILE_FETCH_OPTIONS));
 
 type CompanyRole = {
   _id: string;
@@ -87,7 +96,6 @@ type Person = {
   seoTitle?: string;
   seoDescription?: string;
   companyRoles?: CompanyRole[];
-  relatedArticles?: RelatedArticle[];
 };
 
 type Props = { params: Promise<{ slug: string }> };
@@ -117,9 +125,7 @@ const relationshipLabels: Record<string, string> = {
 
 const statusLabel = (status?: string) => status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
 
-async function getPerson(slug: string) {
-  return client.fetch<Person | null>(PERSON_QUERY, { slug }, { perspective: "published", next: { revalidate: 60 } });
-}
+const getPerson = cache((slug: string) => client.fetch<Person | null>(PERSON_QUERY, {slug}, PROFILE_FETCH_OPTIONS));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -147,7 +153,7 @@ export default async function PersonPage({ params }: Props) {
       return companies;
     }, new Map<string, CompanyRole>()).values(),
   );
-  const relatedArticles = person.relatedArticles ?? [];
+  const articles = getPersonArticles(person._id);
   const canonicalUrl = absoluteUrl(`/people/${slug}`);
   const sameAs = [person.linkedinUrl, person.website].filter((url): url is string => Boolean(url));
   const personJsonLd: WithContext<PersonSchema> = {
@@ -203,7 +209,7 @@ export default async function PersonPage({ params }: Props) {
           <nav aria-label={`${person.name} page sections`} className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-5 md:px-8">
             <Link href="#about" prefetch={false} className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">Biography</Link>
             {associatedCompanies.length > 0 && <Link href="#associated-companies" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</Link>}
-            {relatedArticles.length > 0 && <Link href="#related-articles" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</Link>}
+            <Suspense fallback={null}><PersonArticlesNav articles={articles}/></Suspense>
           </nav>
         </div>
 
@@ -242,6 +248,31 @@ export default async function PersonPage({ params }: Props) {
           )}
         </div>
 
+        <Suspense fallback={<ProfileSectionsLoading/>}><PersonArticles person={person} articles={articles}/></Suspense>
+
+        <Suspense fallback={<ProfileSectionsLoading/>}><PeopleRow
+          excludeSlug={slug}
+          companyIds={associatedCompanies.flatMap((item) => item.company?._id ? [item.company._id] : [])}
+          companyNames={associatedCompanies.flatMap((item) => item.company?.name ? [item.company.name] : [])}
+        />
+        </Suspense>
+        <Suspense fallback={<ProfileSectionsLoading/>}><div className="border-t border-zinc-200 bg-white">
+          <CompanyRow title="Explore More Companies" description="Continue exploring company stories, strategies, business models, people and key numbers." />
+        </div></Suspense>
+        <Newsletter />
+      </main>
+      <Suspense fallback={null}><Footer /></Suspense>
+    </>
+  );
+}
+
+async function PersonArticlesNav({articles}:{articles:ReturnType<typeof getPersonArticles>}) {
+ const relatedArticles=await articles;
+ return <>{relatedArticles.length > 0 && <Link href="#related-articles" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</Link>}</>;
+}
+async function PersonArticles({person,articles}:{person:Person;articles:ReturnType<typeof getPersonArticles>}) {
+ const relatedArticles=await articles;
+ return <>
         {relatedArticles.length > 0 && (
           <section id="related-articles" className="mx-auto max-w-6xl scroll-mt-36 px-5 pb-16 md:px-8 md:pb-20">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Continue reading</p>
@@ -268,18 +299,5 @@ export default async function PersonPage({ params }: Props) {
             </div>
           </section>
         )}
-
-        <PeopleRow
-          excludeSlug={slug}
-          companyIds={associatedCompanies.flatMap((item) => item.company?._id ? [item.company._id] : [])}
-          companyNames={associatedCompanies.flatMap((item) => item.company?.name ? [item.company.name] : [])}
-        />
-        <div className="border-t border-zinc-200 bg-white">
-          <CompanyRow title="Explore More Companies" description="Continue exploring company stories, strategies, business models, people and key numbers." />
-        </div>
-        <Newsletter />
-      </main>
-      <Footer />
-    </>
-  );
+</>;
 }

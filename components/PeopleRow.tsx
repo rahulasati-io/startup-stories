@@ -1,3 +1,4 @@
+import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
 import Link from "next/link";
 import { defineQuery } from "next-sanity";
 import PersonCard from "@/components/PersonCard";
@@ -62,7 +63,7 @@ export default async function PeopleRow({
   const relatedPeople = await client.fetch<DirectoryPerson[]>(
     RELATED_PEOPLE_QUERY,
     { excludeSlug: excludeSlug || "", companyIds },
-    { perspective: "published", next: { revalidate: 60 } },
+    PROFILE_FETCH_OPTIONS,
   );
   const visiblePeople = relatedPeople.map((person) => ({
     ...person,

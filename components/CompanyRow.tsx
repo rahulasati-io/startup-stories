@@ -1,3 +1,4 @@
+import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
 import { defineQuery } from "next-sanity";
 import { client } from "@/sanity/lib/client";
 import CompanyDirectory from "@/components/CompanyDirectory";
@@ -31,7 +32,7 @@ export default async function CompanyRow({ excludeSlug, title, description, comp
   let companies = suppliedCompanies;
   if (!companies) {
     try {
-      companies = await client.fetch<Company[]>(COMPANIES_QUERY, {}, { perspective: "published", next: { revalidate: 60 }, signal: AbortSignal.timeout(6000) });
+      companies = await client.fetch<Company[]>(COMPANIES_QUERY, {}, { ...PROFILE_FETCH_OPTIONS, signal: AbortSignal.timeout(6000) });
     } catch {
       companies = [];
     }

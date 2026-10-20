@@ -1,4 +1,5 @@
-import {revalidatePath} from "next/cache";
+import {revalidatePath, revalidateTag} from "next/cache";
+import {PROFILE_CACHE_TAG} from "@/lib/profile-cache";
 import {type NextRequest, NextResponse} from "next/server";
 import {parseBody} from "next-sanity/webhook";
 
@@ -14,6 +15,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {ok: false, error: "Revalidation is not configured"},
       {status: 503},
+    );
+  }
+
+  if (!request.headers.get("sanity-webhook-signature")) {
+    return NextResponse.json(
+      {ok: false, error: "Missing webhook signature"},
+      {status: 401},
     );
   }
 
@@ -35,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     // A company, person, article, author or category can affect several directories,
     // cards and relationship sections. Refreshing the root layout keeps them in sync.
+    revalidateTag(PROFILE_CACHE_TAG, {expire: 0});
     revalidatePath("/", "layout");
 
     return NextResponse.json({

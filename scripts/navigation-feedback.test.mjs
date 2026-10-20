@@ -9,6 +9,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 const require=createRequire(import.meta.url);
 let pending=false;
 let forwarded;
+let intentHref=null;
 function MockLink(props){
   forwarded=props;
   return React.createElement('a',{href:typeof props.href==='string'?props.href:props.href.pathname,className:props.className,'data-navigation-link':props['data-navigation-link']},props.children);
@@ -17,7 +18,8 @@ const mock={__esModule:true,default:MockLink,useLinkStatus:()=>({pending})};
 const source=fs.readFileSync(new URL('../components/NavigationLink.tsx',import.meta.url),'utf8');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
 const testModule={exports:{}};
-new Function('require','module','exports',compiled)(name=>name==='next/link'?mock:require(name),testModule,testModule.exports);
+const reactMock={...React,useState:()=>[intentHref,value=>{intentHref=value;}]};
+new Function('require','module','exports',compiled)(name=>name==='next/link'?mock:name==='react'?reactMock:require(name),testModule,testModule.exports);
 const NavigationLink=testModule.exports.default;
 const render=(props,children)=>renderToStaticMarkup(React.createElement(NavigationLink,props,children));
 
@@ -62,4 +64,57 @@ test('route scrolling uses the Next 16 opt-in and motion preferences are respect
   assert.match(layout,/data-scroll-behavior="smooth"/);
   assert.match(css,/@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css,/\.navigation-spinner, \.page-arrival main:not\(\[aria-busy="true"\]\) \{ animation: none; \}/);
+});
+
+test('profile/article prefetch is off until hover, keyboard focus or touch intent',()=>{
+  for(const href of ['/companies/safari','/people/example','/articles/example']){
+    for(const handler of ['onMouseEnter','onFocus','onTouchStart']){
+      intentHref=null;
+      render({href,prefetch:false},'Profile');
+      assert.equal(forwarded.prefetch,false);
+      forwarded[handler]({defaultPrevented:false});
+      render({href,prefetch:false},'Profile');
+      assert.equal(forwarded.prefetch,true);
+    }
+  }
+});
+test('intent prefetch preserves explicit opt-outs, new tabs, downloads, hashes and other routes',()=>{
+  for(const props of [{href:'/companies/safari',intentPrefetch:false,prefetch:false},{href:'/companies/safari',target:'_blank',prefetch:false},{href:'/companies/safari',download:'',prefetch:false},{href:'#overview',prefetch:false},{href:'/search?q=example',prefetch:false},{href:'https://example.com/companies/safari',prefetch:false},{href:'//example.com/companies/safari',prefetch:false}]){
+    intentHref=null;
+    render(props,'Link');
+    forwarded.onMouseEnter({defaultPrevented:false});
+    render(props,'Link');
+    assert.equal(forwarded.prefetch,false);
+  }
+});
+test('canceled handlers and data-saving/slow connections do not trigger extra prefetch',()=>{
+  const original=Object.getOwnPropertyDescriptor(globalThis,'navigator');
+  try{
+    for(const connection of [{saveData:true},{effectiveType:'slow-2g'},{effectiveType:'2g'}]){
+      Object.defineProperty(globalThis,'navigator',{configurable:true,value:{connection}});
+      intentHref=null;
+      render({href:'/companies/safari'},'Profile');
+      forwarded.onMouseEnter({defaultPrevented:false});
+      render({href:'/companies/safari'},'Profile');
+      assert.equal(forwarded.prefetch,false);
+    }
+  }finally{if(original)Object.defineProperty(globalThis,'navigator',original);else delete globalThis.navigator;}
+  intentHref=null;
+  let called=false;
+  render({href:'/companies/safari',onFocus:event=>{called=true;event.defaultPrevented=true;}},'Profile');
+  forwarded.onFocus({defaultPrevented:false});
+  assert.ok(called);
+  render({href:'/companies/safari'},'Profile');
+  assert.equal(forwarded.prefetch,false);
+});
+test('leaving a card and changing destination cannot activate another card accidentally',()=>{
+  intentHref=null;
+  render({href:'/companies/safari'},'Safari');
+  forwarded.onMouseEnter({defaultPrevented:false});
+  render({href:'/companies/boldfit'},'Boldfit');
+  assert.equal(forwarded.prefetch,false);
+  forwarded.onMouseLeave({});
+  assert.equal(intentHref,null);
+  render({href:'/companies/safari',prefetch:true},'Safari');
+  assert.equal(forwarded.prefetch,true);
 });

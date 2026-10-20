@@ -1,3 +1,6 @@
+import { cache, Suspense } from "react";
+import ProfileSectionsLoading from "@/components/ProfileSectionsLoading";
+import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import type { Metadata } from "next";
@@ -42,10 +45,10 @@ const sameIndustryCompaniesQuery = defineQuery(/* groq */ `
     description
   }
 `);
-const fundingQuery = `*[_type == "fundingRound" && company->slug.current == $slug]|order(date asc){_id,round,date,amount,currency,investors,notes}`;
-const timelineQuery = `*[_type == "timelineEvent" && company->slug.current == $slug]|order(date asc){_id,date,title,description}`;
-const metricQuery = `*[_type == "companyMetric" && company->slug.current == $slug]|order(period desc){_id,label,value,numericValue,currency,unit,period,notes}`;
-const peopleQuery = `*[_type == "companyPersonRole" && company->slug.current == $slug]|order(status asc,startDate asc){_id,relationship,roleTitle,startDate,endDate,status,notes,person->{_id,name,"slug":slug.current,role}}`;
+const fundingQuery = `*[_type == "fundingRound" && company._ref == $companyId]|order(date asc){_id,round,date,amount,currency,investors,notes}`;
+const timelineQuery = `*[_type == "timelineEvent" && company._ref == $companyId]|order(date asc){_id,date,title,description}`;
+const metricQuery = `*[_type == "companyMetric" && company._ref == $companyId]|order(period desc){_id,label,value,numericValue,currency,unit,period,notes}`;
+const peopleQuery = `*[_type == "companyPersonRole" && company._ref in *[_type == "company" && slug.current == $slug]._id]|order(status asc,startDate asc){_id,relationship,roleTitle,startDate,endDate,status,notes,person->{_id,name,"slug":slug.current,role}}`;
 const relatedArticlesQuery = defineQuery(/* groq */ `
   *[
     _type == "post" &&
@@ -57,8 +60,6 @@ const relatedArticlesQuery = defineQuery(/* groq */ `
     _updatedAt,
     title,
     "slug": slug.current,
-    publishedAt,
-    contentUpdatedAt,
     seoDescription,
     socialImage { asset },
     mainImage { asset, alt },
@@ -79,10 +80,12 @@ const articleLinks=(articles:RelatedArticle[])=><div className="grid gap-4 sm:gr
 const companyLinks=(companies:GroupCompany[])=><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{companies.map((item)=><Link key={item._id} href={item.slug?`/companies/${item.slug}`:"#"} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"><div className="flex items-center gap-4"><div aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-semibold text-zinc-500">{item.name[0]}</div><div><h3 className="font-semibold">{item.name}</h3>{item.industry&&<p className="mt-1 text-sm text-zinc-500">{item.industry}</p>}</div></div>{item.description&&<p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-600">{item.description}</p>}</Link>)}</div>;
 const companyOverviewComponents:PortableTextComponents={block:{normal:({children})=><p className="mb-5 text-[17px] leading-8 text-zinc-700 last:mb-0">{children}</p>,h2:({children})=><h3 className="mb-3 mt-9 text-2xl font-semibold tracking-tight text-zinc-950 first:mt-0">{children}</h3>,h3:({children})=><h4 className="mb-3 mt-7 text-xl font-semibold tracking-tight text-zinc-950">{children}</h4>,h4:({children})=><h5 className="mb-2 mt-6 text-lg font-semibold text-zinc-950">{children}</h5>,blockquote:({children})=><blockquote className="my-6 border-l-2 border-amber-700 pl-4 italic text-zinc-600">{children}</blockquote>},list:{bullet:({children})=><ul className="mb-5 list-disc space-y-2 pl-6 text-[17px] leading-8 text-zinc-700">{children}</ul>,number:({children})=><ol className="mb-5 list-decimal space-y-2 pl-6 text-[17px] leading-8 text-zinc-700">{children}</ol>},marks:{strong:({children})=><strong className="font-semibold text-zinc-950">{children}</strong>,em:({children})=><em>{children}</em>,link:PortableTextLink}};
 
+const getCompany = cache((slug: string) => client.fetch<Company|null>(companyQuery, {slug}, PROFILE_FETCH_OPTIONS));
+
 export async function generateMetadata({params}:Props):Promise<Metadata>{
  const {slug}=await params;
  const [company,settings]=await Promise.all([
-  client.fetch<Company|null>(companyQuery,{slug},{perspective:"published",stega:false,next:{revalidate:60}}),
+  getCompany(slug),
   client.fetch<SeoSettings|null>(SEO_SETTINGS_QUERY,{}, {perspective:"published",stega:false,next:{revalidate:60}}),
  ]);
  if(!company)return {};
@@ -96,16 +99,9 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
 
 export default async function CompanyPage({params}:Props){
  const {slug}=await params;
- const cachedPublished={perspective:"published" as const,next:{revalidate:60}};
- const [company,funding,timeline,metrics,people]=await Promise.all([client.fetch<Company|null>(companyQuery,{slug},cachedPublished),client.fetch<FundingRound[]>(fundingQuery,{slug},cachedPublished),client.fetch<TimelineEvent[]>(timelineQuery,{slug},cachedPublished),client.fetch<CompanyMetric[]>(metricQuery,{slug},cachedPublished),client.fetch<CompanyPerson[]>(peopleQuery,{slug},cachedPublished)]);
+ const [company,people]=await Promise.all([getCompany(slug),client.fetch<CompanyPerson[]>(peopleQuery,{slug},PROFILE_FETCH_OPTIONS)]);
  if(!company)notFound();
- const [relatedArticles,groupCompanies,sameIndustryCandidates]=await Promise.all([
-  client.fetch<RelatedArticle[]>(relatedArticlesQuery,{companyId:company._id},cachedPublished),
-  client.fetch<GroupCompany[]>(groupCompaniesQuery,{companyId:company._id,parentId:company.parentCompany?._id||null},cachedPublished),
-  company.industry?client.fetch<GroupCompany[]>(sameIndustryCompaniesQuery,{companyId:company._id,industryId:company.industryId||null,industry:company.industry,subIndustry:company.subIndustry||null},{perspective:"published",next:{revalidate:60}}):Promise.resolve([]),
- ]);
- const groupCompanyIds=new Set(groupCompanies.map((item)=>item._id));
- const sameIndustryCompanies=sameIndustryCandidates.filter((item)=>!groupCompanyIds.has(item._id)).slice(0,6);
+ const sections = getCompanySections(company);
  const canonicalUrl=absoluteUrl(`/companies/${slug}`);
  const companyJsonLd:WithContext<Organization>={"@context":"https://schema.org","@type":"Organization","@id":`${canonicalUrl}#organization`,name:company.name,url:canonicalUrl,description:company.description||portableTextToPlainText(company.body),foundingDate:company.foundedYear?String(company.foundedYear):undefined,founder:company.founders?.map((name)=>({"@type":"Person",name})),parentOrganization:company.parentCompany?{"@type":"Organization","@id":company.parentCompany.slug?`${absoluteUrl(`/companies/${company.parentCompany.slug}`)}#organization`:undefined,name:company.parentCompany.name,url:company.parentCompany.slug?absoluteUrl(`/companies/${company.parentCompany.slug}`):undefined}:undefined};
  const breadcrumb=breadcrumbJsonLd([{name:"Home",path:"/"},{name:"Companies",path:"/companies"},{name:company.name,path:`/companies/${slug}`}]);
@@ -113,10 +109,37 @@ export default async function CompanyPage({params}:Props){
  const peopleCards:CompanyPersonCard[]=peopleBehind.map((roles)=>{const person=roles[0].person;return {id:person?._id||roles[0]._id,name:person?.name||"Unnamed person",slug:person?.slug,roleTitles:[...new Set(roles.map((item)=>item.roleTitle||item.person?.role||item.relationship).filter((value):value is string=>Boolean(value)))],notes:[...new Set(roles.map((item)=>item.notes).filter((value):value is string=>Boolean(value)))]};});
  const fallbackPeopleCards:CompanyPersonCard[]=(company.founderProfiles||[]).map((person)=>({id:person._id,name:person.name,slug:person.slug,roleTitles:person.role?[person.role]:[]}));
  const executiveLeaders=people.filter((item)=>item.status==="current"&&(item.relationship==="chiefExecutive"||item.relationship==="managingDirector"||/chief executive|\bceo\b|managing director|\bmd\b/i.test(item.roleTitle||"")));
- const sectionLinks=[{id:"overview",label:"Overview"},...(relatedArticles.length?[{id:"articles",label:"Articles"}]:[]),...(peopleBehind.length||company.founderProfiles?.length?[{id:"people",label:"People"}]:[]),...(funding.length?[{id:"funding",label:"Funding"}]:[]),...(metrics.length?[{id:"metrics",label:"Key Metrics"}]:[]),...(groupCompanies.length?[{id:"group-companies",label:"Group Companies"}]:[]),...(sameIndustryCompanies.length?[{id:"same-industry",label:"Similar Companies"}]:[]),...(timeline.length?[{id:"timeline",label:"Timeline"}]:[])];
+
  return <><JsonLd data={[companyJsonLd,breadcrumb]}/><Header/><main className="bg-[#f7f6f2] text-zinc-950"><section className="border-b border-zinc-200"><div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-10 lg:py-12"><Breadcrumbs items={[{label:"Home",href:"/"},{label:"Companies",href:"/companies"},{label:company.name}]}/><div className="mt-6 max-w-4xl"><h1 className="text-4xl font-semibold leading-[1.08] tracking-[-.04em] sm:text-5xl md:text-6xl">{company.name}</h1>{company.description&&<p className="mt-4 max-w-3xl text-lg leading-8 text-zinc-600">{company.description}</p>}<div className="mt-4 flex flex-wrap gap-2">{company.industry&&<span className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs">{company.industry}</span>}{company.foundedYear&&<span className="rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs">Founded {company.foundedYear}</span>}</div></div></div></section>
- <div className="sticky top-3 z-20 mx-auto max-w-6xl px-5 pt-3 md:px-8"><nav aria-label={`${company.name} page sections`} className="flex gap-2 overflow-x-auto rounded-2xl border border-zinc-200 bg-white/95 p-2 shadow-sm backdrop-blur">{sectionLinks.map((item)=><Link key={item.id} href={`#${item.id}`} prefetch={false} className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950">{item.label}</Link>)}</nav></div>
+ <Suspense fallback={<div className="h-16" aria-hidden="true" />}><CompanySectionNav company={company} peopleCount={peopleBehind.length} sections={sections}/></Suspense>
  <section id="overview" className="mx-auto grid max-w-6xl items-start scroll-mt-28 gap-6 px-5 py-8 md:grid-cols-[1.4fr_.8fr] md:px-8 md:py-12"><article className="rounded-3xl border border-zinc-200 bg-white p-7"><h2 className="text-3xl font-semibold">Company overview</h2>{company.body?.length?<div className="mt-6 max-w-none"><PortableText value={company.body} components={companyOverviewComponents}/></div>:<p className="mt-5 text-lg text-zinc-600">Company overview will appear here once added in Sanity.</p>}</article><aside className="rounded-3xl border border-zinc-200 bg-white p-7 md:sticky md:top-28"><p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Company facts</p><dl className="mt-5 space-y-4 text-sm">{company.parentCompany&&<div><dt className="text-zinc-500">Part of</dt><dd className="font-semibold">{company.parentCompany.slug?<Link href={`/companies/${company.parentCompany.slug}`} className="underline decoration-zinc-300 underline-offset-4 hover:text-amber-700">{company.parentCompany.name}</Link>:company.parentCompany.name}</dd></div>}{company.industry&&<div><dt className="text-zinc-500">Industry</dt><dd className="font-semibold">{company.industry}</dd></div>}{company.subIndustry&&<div><dt className="text-zinc-500">Sub-industry</dt><dd className="font-semibold">{company.subIndustry}</dd></div>}{company.foundedYear&&<div><dt className="text-zinc-500">Founded</dt><dd className="font-semibold">{company.foundedYear}</dd></div>}{executiveLeaders.map((item)=><div key={item._id}><dt className="text-zinc-500">{item.roleTitle||item.person?.role||"Chief Executive Officer / Managing Director"}</dt><dd className="font-semibold">{item.person?.slug?<Link href={`/people/${item.person.slug}`} className="underline decoration-zinc-300 underline-offset-4 hover:text-amber-700">{item.person.name}</Link>:item.person?.name}</dd></div>)}</dl></aside></section>
+ <Suspense fallback={<ProfileSectionsLoading/>}><CompanyLowerSections company={company} slug={slug} peopleCards={peopleCards} fallbackPeopleCards={fallbackPeopleCards} sections={sections}/></Suspense>
+ <Newsletter />
+ </main><Suspense fallback={null}><Footer/></Suspense></>;
+}
+
+async function getCompanySections(company: Company) {
+ const [funding,timeline,metrics,relatedArticles,groupCompanies,sameIndustryCandidates]=await Promise.all([
+  client.fetch<FundingRound[]>(fundingQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
+  client.fetch<TimelineEvent[]>(timelineQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
+  client.fetch<CompanyMetric[]>(metricQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
+  client.fetch<RelatedArticle[]>(relatedArticlesQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
+  client.fetch<GroupCompany[]>(groupCompaniesQuery,{companyId:company._id,parentId:company.parentCompany?._id||null},PROFILE_FETCH_OPTIONS),
+  company.industry?client.fetch<GroupCompany[]>(sameIndustryCompaniesQuery,{companyId:company._id,industryId:company.industryId||null,industry:company.industry,subIndustry:company.subIndustry||null},PROFILE_FETCH_OPTIONS):Promise.resolve([]),
+ ]);
+ const groupCompanyIds=new Set(groupCompanies.map((item)=>item._id));
+ const sameIndustryCompanies=sameIndustryCandidates.filter((item)=>!groupCompanyIds.has(item._id)).slice(0,6);
+ return {funding,timeline,metrics,relatedArticles,groupCompanies,sameIndustryCompanies};
+}
+type SectionsPromise = ReturnType<typeof getCompanySections>;
+async function CompanySectionNav({company,peopleCount,sections}:{company:Company;peopleCount:number;sections:SectionsPromise}) {
+ const {relatedArticles,funding,metrics,groupCompanies,sameIndustryCompanies,timeline}=await sections;
+ const sectionLinks=[{id:"overview",label:"Overview"},...(relatedArticles.length?[{id:"articles",label:"Articles"}]:[]),...(peopleCount||company.founderProfiles?.length?[{id:"people",label:"People"}]:[]),...(funding.length?[{id:"funding",label:"Funding"}]:[]),...(metrics.length?[{id:"metrics",label:"Key Metrics"}]:[]),...(groupCompanies.length?[{id:"group-companies",label:"Group Companies"}]:[]),...(sameIndustryCompanies.length?[{id:"same-industry",label:"Similar Companies"}]:[]),...(timeline.length?[{id:"timeline",label:"Timeline"}]:[])];
+ return (<div className="sticky top-3 z-20 mx-auto max-w-6xl px-5 pt-3 md:px-8"><nav aria-label={`${company.name} page sections`} className="flex gap-2 overflow-x-auto rounded-2xl border border-zinc-200 bg-white/95 p-2 shadow-sm backdrop-blur">{sectionLinks.map((item)=><Link key={item.id} href={`#${item.id}`} prefetch={false} className="shrink-0 rounded-xl px-3 py-2 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950">{item.label}</Link>)}</nav></div>);
+}
+async function CompanyLowerSections({company,slug,peopleCards,fallbackPeopleCards,sections}:{company:Company;slug:string;peopleCards:CompanyPersonCard[];fallbackPeopleCards:CompanyPersonCard[];sections:SectionsPromise}) {
+ const {relatedArticles,funding,metrics,groupCompanies,sameIndustryCompanies,timeline}=await sections;
+ return <>
  {relatedArticles.length?section("",`Articles about ${company.name}`,articleLinks(relatedArticles),"articles"):null}
  {peopleCards.length?section("People","People behind the company",<CompanyPeople people={peopleCards}/>,"people"):fallbackPeopleCards.length?section("People","People behind the company",<CompanyPeople people={fallbackPeopleCards}/>,"people"):null}
  {funding.length?section("Funding","Capital raised",<div className="divide-y divide-zinc-100">{funding.map(f=><article key={f._id} className="py-4"><div className="flex flex-wrap justify-between gap-2"><h3 className="font-semibold">{f.round}</h3>{f.amount!==undefined&&<p className="font-semibold text-amber-700">{new Intl.NumberFormat("en",{style:"currency",currency:f.currency||"USD",maximumFractionDigits:1,minimumFractionDigits:0}).format(f.amount)}</p>}</div><p className="mt-1 text-sm text-zinc-500">{f.date}{f.investors?.length?` · ${f.investors.join(", ")}`:""}</p>{f.notes&&<p className="mt-2 text-sm text-zinc-600">{f.notes}</p>}</article>)}</div>,"funding"):null}
@@ -124,7 +147,6 @@ export default async function CompanyPage({params}:Props){
  {groupCompanies.length?section("Group",company.parentCompany?`Other companies in the ${company.parentCompany.name} group`:`Companies and brands under ${company.name}`,<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{groupCompanies.map((item)=><Link key={item._id} href={item.slug?`/companies/${item.slug}`:"#"} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"><div className="flex items-center gap-4"><div aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-semibold text-zinc-500">{item.name[0]}</div><div><h3 className="font-semibold">{item.name}</h3>{item.industry&&<p className="mt-1 text-sm text-zinc-500">{item.industry}</p>}</div></div>{item.description&&<p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-600">{item.description}</p>}</Link>)}</div>,"group-companies"):null}
  {sameIndustryCompanies.length?section("Industry",`More companies in ${company.industry}`,companyLinks(sameIndustryCompanies),"same-industry"):null}
  {timeline.length?section("Timeline","Key moments",<ol className="space-y-6 border-l border-zinc-200 pl-6">{timeline.map(t=><li key={t._id}><p className="text-sm font-semibold text-amber-700">{t.date}</p><h3 className="mt-1 text-lg font-semibold">{t.title}</h3>{t.description&&<p className="mt-2 text-zinc-600">{t.description}</p>}</li>)}</ol>,"timeline"):null}
- <div className="border-t border-zinc-200 bg-white"><CompanyRow excludeSlug={slug} title="Explore More Companies" description="Continue exploring company profiles, articles, people and key numbers." /></div>
- <Newsletter />
- </main><Footer/></>;
+ <Suspense fallback={<ProfileSectionsLoading/>}><div className="border-t border-zinc-200 bg-white"><CompanyRow excludeSlug={slug} title="Explore More Companies" description="Continue exploring company profiles, articles, people and key numbers." /></div></Suspense>
+</>;
 }
