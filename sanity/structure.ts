@@ -2,6 +2,7 @@ import type { StructureResolver } from "sanity/structure";
 import { ArticlesManager } from "./components/ArticlesManager";
 import { CompaniesManager } from "./components/CompaniesManager";
 import {FinancialEditor} from "./components/FinancialEditor";
+import {INDUSTRY_TAXONOMY} from "../lib/industry-taxonomy.mjs";
 
 export const structure: StructureResolver = (S) =>
   S.list()
@@ -49,5 +50,5 @@ export const structure: StructureResolver = (S) =>
       S.documentTypeListItem("category").title("Article categories"),
       S.documentTypeListItem("author").title("Authors"),
       S.documentTypeListItem("concept").title("Concepts"),
-      S.documentTypeListItem("industry").title("Industries"),
+      S.listItem().title("Industries").child(S.documentList().title("Approved industries").schemaType("industry").filter('_type == "industry" && slug.current in $slugs').params({slugs: INDUSTRY_TAXONOMY.map(item => item.slug)})),
     ]);

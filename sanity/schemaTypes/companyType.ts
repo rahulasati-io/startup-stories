@@ -1,4 +1,6 @@
 import { ALL_FIELDS_GROUP, defineField, defineType } from "sanity";
+import {INDUSTRY_TAXONOMY, findIndustry, validateIndustryPair} from "../../lib/industry-taxonomy.mjs";
+import {SubIndustryInput} from "../components/SubIndustryInput";
 
 export const companyType = defineType({
   name: "company",
@@ -68,11 +70,29 @@ export const companyType = defineType({
     defineField({
       name: "industryCategory",
       title: "Industry",
-      description: "Search existing industries or create a new one if it does not exist.",
+      description: "Select an approved broad industry. Sub-industry captures the more specific activity.",
       type: "reference",
       group: "overview",
       to: [{ type: "industry" }],
-      options: { disableNew: false },
+      options: { disableNew: true, filter: "slug.current in $slugs", filterParams: {slugs: INDUSTRY_TAXONOMY.map(item => item.slug)} },
+      validation: Rule => Rule.required().custom(async (value, context) => {
+        if (!value?._ref) return true;
+        const slug = await context.getClient({apiVersion: "2026-08-23"}).fetch(`*[_id == $id][0].slug.current`, {id: value._ref});
+        return Boolean(findIndustry(slug)) || "Select an approved industry.";
+      }),
+    }),
+
+    defineField({
+      name: "subIndustry", title: "Sub-industry", type: "string", group: "overview",
+      description: "Options depend on the selected Industry. Changing Industry requires a matching sub-industry.",
+      components: {input: SubIndustryInput},
+      validation: Rule => Rule.required().custom(async (value, context) => {
+        if (!value) return true;
+        const ref = context.document?.industryCategory as {_ref?: string} | undefined;
+        if (!ref?._ref) return "Select an Industry first.";
+        const slug = await context.getClient({apiVersion: "2026-08-23"}).fetch(`*[_id == $id][0].slug.current`, {id: ref._ref});
+        try {validateIndustryPair(slug, value); return true;} catch (error) {return error instanceof Error ? error.message : "Invalid industry/sub-industry combination.";}
+      }),
     }),
 
     defineField({

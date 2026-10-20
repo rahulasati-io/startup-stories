@@ -10,6 +10,7 @@ export type Company = {
   name: string | null;
   slug: string | null;
   industry: string | null;
+  subIndustry?: string | null;
   foundedYear: number | null;
   description: string | null;
 };
@@ -79,7 +80,7 @@ export default function CompanyDirectory({
 
     return uniqueCompanies.filter((company) => {
       const matchesIndustry = industry === "All" || company.industry === industry;
-      const searchableText = [company.name, company.industry, company.description]
+      const searchableText = [company.name, company.industry, company.subIndustry, company.description]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();

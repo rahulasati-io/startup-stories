@@ -13,7 +13,7 @@ const published = '!(_id in path("drafts.**")) && !(_id in path("versions.**"))'
 const filters = {
   companies: `_type == "company" && ${published} && defined(name) && defined(slug.current) &&
     ($industry == "" || industry == $industry || industryCategory._ref in *[_type == "industry" && name == $industry]._id) &&
-    ($q == "" || name match $search || slug.current match $search || description match $search || industry match $search || industryCategory._ref in *[_type == "industry" && name match $search]._id)`,
+    ($q == "" || name match $search || slug.current match $search || description match $search || industry match $search || subIndustry match $search || industryCategory._ref in *[_type == "industry" && name match $search]._id)`,
   people: `_type == "founder" && ${published} && defined(name) && defined(slug.current) &&
     ($q == "" || name match $search || slug.current match $search || role match $search || _id in *[_type == "companyPersonRole" && company._ref in *[_type == "company" && name match $search]._id].person._ref)`,
   articles: `_type == "post" && ${published} && defined(title) && defined(slug.current) && defined(category._ref) &&
@@ -23,7 +23,7 @@ const filters = {
     ($q == "" || title match $search || seoDescription match $search || category._ref in *[_type == "category" && title match $search]._id || count(company[_ref in *[_type == "company" && (name match $search || industry match $search || industryCategory._ref in *[_type == "industry" && name match $search]._id)]._id]) > 0)`,
 };
 const projections = {
-  companies: `{_id, name, "slug": slug.current, "industry": coalesce(industryCategory->name, industry), foundedYear, description}`,
+  companies: `{_id, name, "slug": slug.current, "industry": coalesce(industryCategory->name, industry), subIndustry, foundedYear, description}`,
   people: `{_id, name, "slug": slug.current, role, "photoUrl": photo.asset->url, "photoAlt": coalesce(photo.alt, name), "companyNames": array::unique(*[_type == "companyPersonRole" && person._ref == ^._id].company->name)}`,
   articles: `{_id, _updatedAt, title, "slug": slug.current, "category": category->title, "categorySlug": category->slug.current,
     "description": coalesce(seoDescription, array::join(body[0...2].children[].text, " ")), publishedAt, contentUpdatedAt, promotion,

@@ -6,6 +6,7 @@ import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
 import { parseCompanyFinancials, checkLegacyFinancialOverlap } from "./lib/company-financials.mjs";
 import { prepareAnnualFinancials, saveAnnualFinancials } from "./lib/import-annual-financials.mjs";
 import {saveLegacyFinancialMetrics} from "./lib/import-legacy-financials.mjs";
+import {findIndustry, validateIndustryPair} from "../lib/industry-taxonomy.mjs";
 
 const filePath = process.argv[2];
 const companyFilter = process.argv.find((argument) => argument.startsWith("--company="))?.split("=")[1];
@@ -126,6 +127,9 @@ async function run() {
   if (financialsOnly && personFilter) throw new Error("--financials-only cannot be combined with --person.");
   const companyRows = rows("Companies").map((row, index) => ({...row, __rowNumber: index + 2}));
   const selectedCompanyRows = companyRows.filter(row => !companyFilter || clean(row.company_slug) === companyFilter);
+  if (!financialsOnly && !personFilter) {
+    for (const row of selectedCompanyRows) validateIndustryPair(row.industry, row.sub_industry, `Companies row ${row.__rowNumber}`);
+  }
   if (!financialsOnly && !selectedCompanyRows.length) throw new Error('The workbook needs a "Companies" sheet with at least one matching row.');
   const metricHeaders = workbook.Sheets.Metrics ? XLSX.utils.sheet_to_json(workbook.Sheets.Metrics, {header: 1, range: 0})[0] || [] : [];
   const wideMetrics = metricHeaders.some(header => /^fy\d{2}(?:\d{2})?_/.test(clean(header)));
@@ -184,10 +188,11 @@ async function run() {
     );
   }
   const personCompanySlugs = new Set(peopleRows.map((row) => clean(row.company_slug)).filter(Boolean));
-  const companies = rows("Companies").filter((row) =>
+  const companies = companyRows.filter((row) =>
     personFilter ? personCompanySlugs.has(clean(row.company_slug)) : (!companyFilter || clean(row.company_slug) === companyFilter)
   );
   if (!companies.length) throw new Error('The workbook needs a "Companies" sheet with at least one row.');
+  for (const row of companies) validateIndustryPair(row.industry, row.sub_industry, `Companies row ${row.__rowNumber}`);
   const relatedRows = (sheet) => personFilter ? [] : rows(sheet).filter((row) => !companyFilter || clean(row.company_slug) === companyFilter);
   const peopleRoles = peopleRows
     .filter((row) => clean(row.company_slug) && (!companyFilter || clean(row.company_slug) === companyFilter))
@@ -198,20 +203,20 @@ async function run() {
   const funding = relatedRows("Funding Rounds");
   const timeline = relatedRows("Timeline Events");
   const metrics = relatedRows(legacyMetricsSheet);
-  const industryNames = [...new Set(companies.map((row) => clean(row.industry)).filter(Boolean))];
-  const industrySlugs = industryNames.map(slugify);
+  const industryNames = [...new Set(companies.map((row) => findIndustry(row.industry).name))];
+  const industrySlugs = industryNames.map(name => findIndustry(name).slug);
   const existingIndustries = industrySlugs.length
     ? await client.fetch(`*[_type == "industry" && slug.current in $slugs]{_id,name,slug}`, { slugs: industrySlugs })
     : [];
   const industryIdBySlug = new Map(existingIndustries.map((industry) => [industry.slug.current, industry._id]));
   await mapLimit(industryNames, 8, async (name) => {
-    const slug = slugify(name);
+    const slug = findIndustry(name).slug;
     if (industryIdBySlug.has(slug)) return;
     if (dryRun) {
       industryIdBySlug.set(slug, `dryrun-industry-${slug}`);
       return;
     }
-    const saved = await client.create({ _type: "industry", name, slug: { _type: "slug", current: slug } });
+    const saved = await client.create({ _type: "industry", name, slug: { _type: "slug", current: slug }, taxonomyVersion: 1 });
     industryIdBySlug.set(slug, saved._id);
   });
   const slugs = new Set();
@@ -222,13 +227,13 @@ async function run() {
     if (slugs.has(slug)) throw new Error(`Companies row ${index + 2}: duplicate company_slug "${slug}".`);
     slugs.add(slug);
     const overview = markdownToPortableText(row.company_overview, `company-${slug}`);
-    const industryName = clean(row.industry);
-    const industryId = industryName ? industryIdBySlug.get(slugify(industryName)) : undefined;
-    const data = { _type: "company", name: clean(row.company_name), slug: { _type: "slug", current: slug }, industryCategory: industryId ? reference(industryId) : undefined, foundedYear: clean(row.founded_year) ? Number(row.founded_year) : undefined, founders: split(row.founders), description: clean(row.short_description) || undefined, seoTitle: clean(row.meta_title || row.seo_title) || undefined, seoDescription: clean(row.meta_description || row.seo_description) || undefined, ...(overview.length ? { body: overview } : {}) };
+    const classification = validateIndustryPair(row.industry, row.sub_industry, `Companies row ${row.__rowNumber}`);
+    const industryId = industryIdBySlug.get(classification.industrySlug);
+    const data = { _type: "company", name: clean(row.company_name), slug: { _type: "slug", current: slug }, industryCategory: reference(industryId), subIndustry: classification.subIndustry, foundedYear: clean(row.founded_year) ? Number(row.founded_year) : undefined, founders: split(row.founders), description: clean(row.short_description) || undefined, seoTitle: clean(row.meta_title || row.seo_title) || undefined, seoDescription: clean(row.meta_description || row.seo_description) || undefined, ...(overview.length ? { body: overview } : {}) };
     return { row, slug, data };
   });
   const existingCompanies = companyInputs.length
-    ? await client.fetch(`*[_type == "company" && slug.current in $slugs]{_id,name,slug,industry,industryCategory,foundedYear,founders,description,body,parentCompany,seoTitle,seoDescription}`, { slugs: [...slugs] })
+    ? await client.fetch(`*[_type == "company" && slug.current in $slugs]{_id,name,slug,industry,industryCategory,subIndustry,foundedYear,founders,description,body,parentCompany,seoTitle,seoDescription}`, { slugs: [...slugs] })
     : [];
   const existingCompanyBySlug = new Map(existingCompanies.map((company) => [company.slug.current, company]));
   let companyProgress = 0;

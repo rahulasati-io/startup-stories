@@ -10,6 +10,7 @@ export const COMPANIES_QUERY = defineQuery(/* groq */ `
     name,
     "slug": slug.current,
     "industry": coalesce(industryCategory->name, industry),
+    subIndustry,
     foundedYear,
     description
   }
