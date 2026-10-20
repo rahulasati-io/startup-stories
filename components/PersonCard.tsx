@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import type { DirectoryPerson } from "@/components/PersonDirectory";
 
 export default function PersonCard({ person, prefetch }: { person: DirectoryPerson; prefetch?: boolean }) {

@@ -1,7 +1,7 @@
 import { PortableText, type PortableTextBlock, type PortableTextComponents } from "@portabletext/react";
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
 import type { Person as PersonSchema, WithContext } from "schema-dts";
@@ -201,9 +201,9 @@ export default async function PersonPage({ params }: Props) {
 
         <div className="sticky top-16 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur md:top-20">
           <nav aria-label={`${person.name} page sections`} className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-5 md:px-8">
-            <a href="#about" className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">Biography</a>
-            {associatedCompanies.length > 0 && <a href="#associated-companies" className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</a>}
-            {relatedArticles.length > 0 && <a href="#related-articles" className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</a>}
+            <Link href="#about" prefetch={false} className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">Biography</Link>
+            {associatedCompanies.length > 0 && <Link href="#associated-companies" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</Link>}
+            {relatedArticles.length > 0 && <Link href="#related-articles" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</Link>}
           </nav>
         </div>
 

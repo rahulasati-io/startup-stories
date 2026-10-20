@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 
 export type CompanyPersonCard = {
   id: string;

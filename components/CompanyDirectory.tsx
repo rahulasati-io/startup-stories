@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import { useMemo, useState } from "react";
 import {DirectoryControls, DirectoryPageLinks} from "@/components/DirectoryControls";
 import type {DirectoryPagination} from "@/lib/directory-pagination";

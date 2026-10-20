@@ -615,9 +615,9 @@ export default async function ArticlePage({
                 <ol className="mt-4 space-y-2 border-t border-zinc-200 pt-4">
                   {articleHeadings.map((heading) => (
                     <li key={heading.key}>
-                      <a href={`#${heading.id}`} className="text-sm leading-6 text-zinc-700 hover:text-amber-800 hover:underline">
+                      <Link href={`#${heading.id}`} prefetch={false} className="text-sm leading-6 text-zinc-700 hover:text-amber-800 hover:underline">
                         {heading.text}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ol>

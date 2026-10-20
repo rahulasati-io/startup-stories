@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
 import { articleHref, articleImageUrl, type ArticleCardData } from "@/lib/article-card-data";
 import { formatIstDate } from "@/lib/display-dates.mjs";
 
