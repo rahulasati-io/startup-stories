@@ -4,15 +4,39 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sourcePath = path.join(projectRoot, "app", "icon.png");
+// Keep the approved artwork in the repository so all icon formats can be rebuilt.
+const sourcePath = path.join(projectRoot, "assets", "brand", "misterstory-mark-source.png");
 const outputPath = path.join(projectRoot, "app", "favicon.ico");
-const sizes = [48, 16, 32, 96, 192];
+const sizes = [48, 16, 32, 96, 192, 256];
+
+const mark = await sharp(sourcePath)
+  .resize(512, 512, { fit: "contain", background: "#000000" })
+  .flatten({ background: "#000000" })
+  .png({ compressionLevel: 9, palette: true, colours: 16, dither: 0 })
+  .toBuffer();
+
+await fs.writeFile(path.join(projectRoot, "app", "icon.png"), mark);
+await fs.writeFile(path.join(projectRoot, "public", "brand", "misterstory-mark.png"), mark);
+await sharp(mark)
+  .resize(180, 180)
+  .png({ compressionLevel: 9 })
+  .toFile(path.join(projectRoot, "app", "apple-icon.png"));
+
+// Preserve the existing public SVG URL without substituting a different font.
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">MisterStory mark</title>
+  <desc id="description">White rounded Mr. lettering on a black square.</desc>
+  <image width="512" height="512" href="data:image/png;base64,${mark.toString("base64")}"/>
+</svg>\n`;
+await fs.writeFile(path.join(projectRoot, "public", "brand", "misterstory-mark.svg"), svg);
 
 const pngImages = await Promise.all(
   sizes.map((size) =>
-    sharp(sourcePath)
+    sharp(mark)
       .resize(size, size, { fit: "cover" })
-      .png({ compressionLevel: 9, palette: true })
+      // Next's ICO decoder requires each embedded PNG to use RGBA, not indexed RGB.
+      .ensureAlpha()
+      .png({ compressionLevel: 9, palette: false })
       .toBuffer(),
   ),
 );
