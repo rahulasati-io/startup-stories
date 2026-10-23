@@ -30,6 +30,7 @@ export const companyType = defineType({
 
   fields: [
     defineField({name: "financialWriteVersion", type: "string", hidden: true, readOnly: true, description: "Concurrency guard managed by the Financial Editor and importers."}),
+    defineField({name: "fundingWriteVersion", type: "string", hidden: true, readOnly: true, description: "Concurrency guard managed by the funding importer."}),
     defineField({
       name: "name",
       title: "Company Name",

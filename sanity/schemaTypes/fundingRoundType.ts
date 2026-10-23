@@ -8,6 +8,7 @@ export const fundingRoundType = defineType({
   type: "document",
   icon: CreditCardIcon,
   fields: [
+    defineField({name: "fundingImportKey", type: "string", hidden: true, readOnly: true, description: "Stable Excel round-block identity. Managed by the importer."}),
     defineField({
       name: "company",
       title: "Company",

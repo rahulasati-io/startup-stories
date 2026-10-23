@@ -13,6 +13,8 @@
     "import:companies:check": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --dry-run",
     "import:financials": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --financials-only",
     "import:financials:check": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --financials-only --dry-run",
+    "import:funding": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --funding-only",
+    "import:funding:check": "node --env-file=.env.local scripts/import-companies.mjs companies.xlsx --funding-only --dry-run",
     "import:articles": "node --env-file=.env.local scripts/import-articles.mjs",
     "import:articles:check": "node --env-file=.env.local scripts/import-articles.mjs --dry-run",
     "import:articles:publish": "node --env-file=.env.local scripts/import-articles.mjs --publish",

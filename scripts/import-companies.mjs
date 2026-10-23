@@ -7,13 +7,16 @@ import { parseCompanyFinancials, checkLegacyFinancialOverlap } from "./lib/compa
 import { prepareAnnualFinancials, saveAnnualFinancials } from "./lib/import-annual-financials.mjs";
 import {saveLegacyFinancialMetrics} from "./lib/import-legacy-financials.mjs";
 import {findIndustry, validateIndustryPair} from "../lib/industry-taxonomy.mjs";
+import {parseCompanyFunding} from "./lib/company-funding.mjs";
+import {prepareFundingImports, saveFundingImports} from "./lib/import-company-funding.mjs";
 
 const filePath = process.argv[2];
 const companyFilter = process.argv.find((argument) => argument.startsWith("--company="))?.split("=")[1];
 const personFilter = process.argv.find((argument) => argument.startsWith("--person="))?.split("=")[1];
 const dryRun = process.argv.includes("--dry-run");
 const financialsOnly = process.argv.includes("--financials-only");
-if (!filePath) throw new Error('Usage: node scripts/import-companies.mjs "companies.xlsx" [--dry-run] [--company=slug] [--person=slug] [--financials-only]');
+const fundingOnly = process.argv.includes("--funding-only");
+if (!filePath) throw new Error('Usage: node scripts/import-companies.mjs "companies.xlsx" [--dry-run] [--company=slug] [--person=slug] [--financials-only | --funding-only]');
 const { NEXT_PUBLIC_SANITY_PROJECT_ID: projectId, NEXT_PUBLIC_SANITY_DATASET: dataset, SANITY_WRITE_TOKEN: token } = process.env;
 if (!projectId || !dataset || !token) throw new Error("Missing NEXT_PUBLIC_SANITY_PROJECT_ID, NEXT_PUBLIC_SANITY_DATASET, or SANITY_WRITE_TOKEN.");
 const client = createClient({ projectId, dataset, token, apiVersion: "2026-08-23", useCdn: false });
@@ -125,12 +128,32 @@ async function batchReplace(documents, label) {
 
 async function run() {
   if (financialsOnly && personFilter) throw new Error("--financials-only cannot be combined with --person.");
+  if (fundingOnly && (personFilter || financialsOnly)) throw new Error("--funding-only cannot be combined with --person or --financials-only.");
   const companyRows = rows("Companies").map((row, index) => ({...row, __rowNumber: index + 2}));
   const selectedCompanyRows = companyRows.filter(row => !companyFilter || clean(row.company_slug) === companyFilter);
   if (!financialsOnly && !personFilter) {
     for (const row of selectedCompanyRows) validateIndustryPair(row.industry, row.sub_industry, `Companies row ${row.__rowNumber}`);
   }
   if (!financialsOnly && !selectedCompanyRows.length) throw new Error('The workbook needs a "Companies" sheet with at least one matching row.');
+  const fundingHeaders = workbook.Sheets['Funding Rounds'] ? XLSX.utils.sheet_to_json(workbook.Sheets['Funding Rounds'], {header:1})[0] || [] : [];
+  const wideFunding = fundingHeaders.some(header => /^round_\d+_/i.test(clean(header)));
+  const fundingRows = personFilter || financialsOnly ? [] : rows('Funding Rounds').map((row,index)=>({...row,__rowNumber:(row.__rowNum__ ?? index+1)+1})).filter(row=>!companyFilter||clean(row.company_slug)===companyFilter);
+  for (const row of fundingRows) {
+    for (const [column,header] of fundingHeaders.entries()) {
+      const address=XLSX.utils.encode_cell({r:row.__rowNumber-1,c:column});
+      if (workbook.Sheets['Funding Rounds'][address]?.t==='e') throw new Error(`Funding Rounds!${address}: fix the Excel error in ${header} before importing. No records were written.`);
+    }
+  }
+  const fundingObservations = wideFunding ? parseCompanyFunding(fundingRows, fundingHeaders, {companySlugs:new Set(companyRows.map(row=>clean(row.company_slug)))}) : [];
+  // Resolve ambiguous saved rounds/drafts before any company or related record write.
+  if (fundingOnly && !wideFunding) throw new Error('Funding-only import requires the one-row-per-company Funding Rounds layout.');
+  const fundingOperations = await prepareFundingImports(client, fundingObservations, {allowMissingCompanies:!fundingOnly});
+  if (fundingOnly) {
+    const savedCompanies = fundingObservations.length ? await client.fetch(`*[_type == "company" && slug.current in $slugs && !(_id in path("drafts.**"))]{_id,"slug":slug.current}`, {slugs:[...new Set(fundingObservations.map(row=>row.companySlug))]}, {perspective:'published'}) : [];
+    await saveFundingImports(client, fundingOperations, {dryRun,companyIds:new Map(savedCompanies.map(company=>[company.slug,company._id]))});
+    console.log(`${dryRun ? "Funding check" : "Funding import"} complete: ${fundingObservations.length} rounds. Company profile content, people, SEO, financials and articles were not written.`);
+    return;
+  }
   const metricHeaders = workbook.Sheets.Metrics ? XLSX.utils.sheet_to_json(workbook.Sheets.Metrics, {header: 1, range: 0})[0] || [] : [];
   const wideMetrics = metricHeaders.some(header => /^fy\d{2}(?:\d{2})?_/.test(clean(header)));
   const financialSheet = wideMetrics ? "Metrics" : "Companies";
@@ -200,7 +223,7 @@ async function run() {
       ...row,
       id: clean(row.id) || slugify(`${clean(row.company_slug)}-${clean(row.person_slug || row.founder_slug)}-${clean(row.relationship)}-${clean(row.role_title)}`),
     }));
-  const funding = relatedRows("Funding Rounds");
+  const funding = wideFunding ? fundingObservations : relatedRows("Funding Rounds");
   const timeline = relatedRows("Timeline Events");
   const metrics = relatedRows(legacyMetricsSheet);
   const industryNames = [...new Set(companies.map((row) => findIndustry(row.industry).name))];
@@ -333,11 +356,11 @@ async function run() {
     if (!personIds.has(personSlug)) throw new Error(`People: person_slug "${personSlug}" could not be imported.`);
     return { person: reference(personIds.get(personSlug)), relationship: normalizeRelationship(row.relationship), roleTitle: clean(row.role_title) || undefined, startDate: clean(row.start_date) || undefined, endDate: clean(row.end_date) || undefined, status: normalizeStatus(row.status), notes: clean(row.notes) || undefined, verificationStatus: clean(row.verification_status) || "needsResearch", sourceDate: clean(row.source_date) || undefined, internalNotes: clean(row.internal_notes) || undefined };
   });
-  const fundingDocuments = prepareDocuments(funding, "Funding Rounds", "fundingRound", (row) => ({ round: clean(row.round), date: clean(row.date) || undefined, amount: clean(row.amount) ? Number(row.amount) : undefined, currency: clean(row.currency) || undefined, investors: split(row.investors), notes: clean(row.notes) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
+  const fundingDocuments = wideFunding ? [] : prepareDocuments(funding, "Funding Rounds", "fundingRound", (row) => ({ round: clean(row.round), date: clean(row.date) || undefined, amount: clean(row.amount) ? Number(row.amount) : undefined, currency: clean(row.currency) || undefined, investors: split(row.investors), notes: clean(row.notes) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
   const timelineDocuments = prepareDocuments(timeline, "Timeline Events", "timelineEvent", (row) => ({ date: clean(row.date), title: clean(row.title), description: clean(row.description) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
   const metricDocuments = prepareDocuments(metrics, legacyMetricsSheet, "companyMetric", (row) => ({ label: clean(row.label), value: clean(row.value), period: clean(row.period) || undefined, notes: clean(row.notes) || undefined, sourceUrl: clean(row.source_url) || undefined, ...verification(row) }));
   const roleResult = await batchReplace(roleDocuments, "People roles");
-  const fundingResult = await batchReplace(fundingDocuments, "Funding rounds");
+  const fundingResult = wideFunding ? await saveFundingImports(client, fundingOperations, {dryRun,companyIds}) : await batchReplace(fundingDocuments, "Funding rounds");
   const timelineResult = await batchReplace(timelineDocuments, "Timeline events");
   const metricResult = await batchReplace(metricDocuments, "Metrics");
   await saveAnnualFinancials(client, annualOperations, {dryRun, companyIds});
