@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { ArticleCardData } from "@/lib/article-card-data";
 import {homepageHref, type HomepageLink} from "@/lib/homepage-config";
+import {defineQuery} from "next-sanity";
+import {client} from "@/sanity/lib/client";
+import {homepageTopicCountQuery} from "@/lib/homepage-topic-counts";
 
 const topics = [
   { label: "Business Models", href: "/topics/business-model", categorySlug: "business-model" },
@@ -13,21 +16,15 @@ const topics = [
   { label: "Food Delivery", href: "/articles?q=Food%20Delivery", search: "food delivery" },
 ];
 
-function searchableArticleText(article: ArticleCardData) {
-  return [
-    article.title,
-    article.description,
-    article.category,
-    ...article.companies.flatMap((company) => [company.name, company.industry]),
-  ].filter(Boolean).join(" ").toLowerCase();
-}
-
-export default function Topics({ articles, title = "Topics worth following", eyebrow = "Explore by idea", description, links }: { articles: ArticleCardData[]; title?: string; eyebrow?: string; description?: string; links?: HomepageLink[] }) {
+export default async function Topics({ articles, title = "Topics worth following", eyebrow = "Explore by idea", description, links }: { articles: ArticleCardData[]; title?: string; eyebrow?: string; description?: string; links?: HomepageLink[] }) {
   const choices = links?.map((link) => ({...link, label: link.title})) ?? topics;
-  const visibleTopics = choices.flatMap((topic) => {
-    const count = articles.filter((article) => topic.categorySlug
-      ? article.categorySlug === topic.categorySlug
-      : Boolean(topic.search) && searchableArticleText(article).includes(topic.search!.toLowerCase())).length;
+  const request=homepageTopicCountQuery(choices.map(topic=>topic.href));
+  const counts=request.query?await client.fetch<Record<string,number>>(defineQuery(request.query),request.params,{perspective:'published',next:{revalidate:60},signal:AbortSignal.timeout(6000)}).catch(()=>({} as Record<string,number>)):{};
+  const visibleTopics = choices.flatMap((topic,index) => {
+    // Category pages use the same full card collection as their destination.
+    // Search pages use the shared server-side filter, including legacy industry.
+    const categoryPath=/^\/topics\/([^/?#]+)\/?$/.exec(topic.href);
+    const count=categoryPath?articles.filter(article=>article.categorySlug===decodeURIComponent(categoryPath[1])).length:counts[`topic${index}`];
 
     return count ? [{ ...topic, count }] : [];
   });

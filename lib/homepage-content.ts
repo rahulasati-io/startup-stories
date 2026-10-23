@@ -9,6 +9,7 @@ export type HomepageSettings = {
   seoDescription?: string;
   socialImageUrl?: string;
   heroTitle?: string;
+  homepageHeading?: string;
   heroDescription?: string;
   showSearch?: boolean;
   searchPlaceholder?: string;
@@ -19,8 +20,7 @@ export type HomepageSettings = {
 export const HOMEPAGE_SETTINGS_QUERY = defineQuery(/* groq */ `
   *[_type == "homepageSettings" && _id == "homepageSettings"][0]{
     seoTitle, seoDescription, "socialImageUrl": socialImage.asset->url,
-    heroTitle, heroDescription, showSearch, searchPlaceholder,
-    "popularCompanies": popularCompanies[]->{"label": name, "slug": slug.current},
+    homepageHeading, heroDescription,
     sections[]{_key, kind, enabled, title, eyebrow, description, href, linkLabel,
       "categorySlug": coalesce(category->slug.current, categorySlug), excludeFunding, limit,
       "articleIds": articles[]._ref,

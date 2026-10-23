@@ -1,6 +1,6 @@
 import { CogIcon } from "@sanity/icons/Cog";
 import { defineArrayMember, defineField, defineType } from "sanity";
-import {DEFAULT_HOME_SECTIONS, DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION} from "../../lib/homepage-config";
+import {DEFAULT_HOME_SECTIONS, DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, DEFAULT_HOME_HEADING} from "../../lib/homepage-config";
 
 const internalLink = (name: string, title: string) => defineField({name, title, type: "string", description: "Same-site path, for example /articles or /companies/zomato.", validation: (rule) => rule.custom((value) => !value || (/^\/(?!\/)/.test(value) && !/[\\\s\u0000-\u001f]/.test(value)) || "Use a same-site path beginning with one /.")});
 
@@ -11,28 +11,29 @@ export const homepageSettingsType = defineType({
   icon: CogIcon,
   groups: [
     {name: "seo", title: "SEO & sharing"},
-    {name: "intro", title: "Heading & search"},
+    {name: "intro", title: "Heading & introduction"},
     {name: "sections", title: "Page sections", default: true},
     {name: "featured", title: "Featured stories"},
   ],
-  initialValue: {seoTitle: DEFAULT_HOME_TITLE, seoDescription: DEFAULT_HOME_DESCRIPTION, heroTitle: "No BS Business Breakdown", heroDescription: "Discover interesting companies, the decisions that shaped them, and the strategies behind their success.", showSearch: true, sections: DEFAULT_HOME_SECTIONS.map((section) => ({...section, _type: "homepageSection"}))},
+  initialValue: {seoTitle: DEFAULT_HOME_TITLE, seoDescription: DEFAULT_HOME_DESCRIPTION, homepageHeading: DEFAULT_HOME_HEADING, heroDescription: DEFAULT_HOME_DESCRIPTION, sections: DEFAULT_HOME_SECTIONS.map((section) => ({...section, _type: "homepageSection"}))},
   fields: [
     defineField({name: "seoTitle", title: "Homepage SEO title", type: "string", group: "seo", description: `Fallback: ${DEFAULT_HOME_TITLE}`, validation: (rule) => rule.max(70).warning("Long titles may be shortened in search results.")}),
     defineField({name: "seoDescription", title: "Homepage meta description", type: "text", rows: 3, group: "seo", description: `Fallback: ${DEFAULT_HOME_DESCRIPTION}`, validation: (rule) => rule.max(170).warning("Keep the description concise; Google may choose a different snippet.")}),
     defineField({name: "socialImage", title: "Homepage social sharing image", type: "image", group: "seo", options: {hotspot: true}}),
-    defineField({name: "heroTitle", title: "Main homepage heading (the only H1)", type: "string", group: "intro", description: "Fallback: No BS Business Breakdown. Section titles are always H2.", validation: (rule) => rule.max(150)}),
-    defineField({name: "heroDescription", title: "Introduction below the heading", type: "text", rows: 3, group: "intro"}),
-    defineField({name: "showSearch", title: "Show homepage company search", type: "boolean", initialValue: true, group: "intro"}),
-    defineField({name: "searchPlaceholder", title: "Search placeholder", type: "string", group: "intro"}),
-    defineField({name: "popularCompanies", title: "Popular company shortcuts", type: "array", group: "intro", description: "Select companies in display order. An empty list hides shortcuts; unset uses the current defaults.", of: [defineArrayMember({type: "reference", to: [{type: "company"}]})], validation: (rule) => rule.unique().max(10)}),
+    defineField({name: "homepageHeading", title: "Compact homepage heading (the only H1)", type: "string", group: "intro", description: `Shown above Featured Stories. Fallback: ${DEFAULT_HOME_HEADING}`, validation: (rule) => rule.max(100)}),
+    defineField({name: "heroTitle", title: "Previous hero heading", type: "string", group: "intro", readOnly: true, hidden: ({value})=>value===undefined, deprecated: {reason: "The large hero has been removed. Use Compact homepage heading instead."}}),
+    defineField({name: "heroDescription", title: "About MisterStory introduction", type: "text", rows: 3, group: "intro", description: "Shown in the compact About section near the bottom, not above the stories."}),
+    defineField({name: "showSearch", title: "Previous hero search setting", type: "boolean", group: "intro", readOnly: true, hidden: ({value})=>value===undefined, deprecated: {reason: "Header search replaces the duplicate homepage search."}}),
+    defineField({name: "searchPlaceholder", title: "Previous hero search placeholder", type: "string", group: "intro", readOnly: true, hidden: ({value})=>value===undefined, deprecated: {reason: "The separate hero search has been removed."}}),
+    defineField({name: "popularCompanies", title: "Previous popular company shortcuts", type: "array", group: "intro", readOnly: true, hidden: ({value})=>value===undefined, deprecated: {reason: "The hero shortcut row has been removed. Existing selections are retained."}, of: [defineArrayMember({type: "reference", to: [{type: "company"}]})]}),
     defineField({
       name: "sections", title: "Homepage sections — drag to reorder", type: "array", group: "sections",
-      description: "Add, hide or reorder sections. Empty sections/topics stay hidden. Category shelves avoid repeating stories. The built-in Latest Stories can repeat stories shown elsewhere, includes funding, and excludes Business Model articles.",
+      description: "Add, hide or reorder sections. Featured Stories stays first when enabled; other sections follow your order. Empty sections/topics stay hidden. Latest Stories can repeat stories shown elsewhere, includes funding, and excludes Business Model articles.",
       initialValue: DEFAULT_HOME_SECTIONS.map((section) => ({...section, _type: "homepageSection"})),
       of: [defineArrayMember({name: "homepageSection", title: "Homepage section", type: "object", icon: CogIcon,
         initialValue: {enabled: true, kind: "articles", limit: 4},
         fields: [
-          defineField({name: "kind", title: "Section type", type: "string", options: {list: [{title: "Featured stories (2 highlights + 4 supporting)", value: "featured"}, {title: "Article collection", value: "articles"}, {title: "Explore cards", value: "explore"}, {title: "Topic links", value: "topics"}, {title: "Company directory preview", value: "companies"}, {title: "Newsletter signup", value: "newsletter"}, {title: "Text introduction", value: "text"}]}, validation: (rule) => rule.required()}),
+          defineField({name: "kind", title: "Section type", type: "string", options: {list: [{title: "Featured stories (1 lead + 4 side stories)", value: "featured"}, {title: "Article collection", value: "articles"}, {title: "Explore cards", value: "explore"}, {title: "Topic links", value: "topics"}, {title: "Company directory preview", value: "companies"}, {title: "Newsletter signup", value: "newsletter"}, {title: "Text introduction", value: "text"}]}, validation: (rule) => rule.required()}),
           defineField({name: "enabled", title: "Show this section", type: "boolean", initialValue: true}),
           defineField({name: "title", title: "Section heading (H2)", type: "string", validation: (rule) => rule.required()}),
           defineField({name: "eyebrow", title: "Small label above heading", type: "string"}),
@@ -62,23 +63,21 @@ export const homepageSettingsType = defineType({
     defineField({
       name: "featuredArticle",
       group: "featured",
-      title: "First Highlighted Story",
+      title: "Lead Story",
       type: "reference",
       to: [{ type: "post" }],
       description:
-        "The first of two highlighted stories at the top of Featured Stories. Spreadsheet imports do not change this selection.",
+        "The large lead story beside four smaller stories. Spreadsheet imports do not change this selection.",
     }),
     defineField({
       name: "secondFeaturedArticle",
       group: "featured",
-      title: "Second Highlighted Story",
+      title: "Previous Second Highlighted Story",
       type: "reference",
       to: [{ type: "post" }],
-      description: "Shown beside the first highlighted story on desktop and below it on mobile.",
-      validation: (rule) => rule.custom((value, context) => {
-        const first = context.document?.featuredArticle as {_ref?: string} | undefined;
-        return !value?._ref || value._ref !== first?._ref || "Choose a different article for the second highlighted story.";
-      }),
+      readOnly: true,
+      hidden: ({value})=>value===undefined,
+      deprecated: {reason: "Use Supporting Featured Stories for the four side stories. This saved selection only fills a spare slot."},
     }),
     defineField({
       name: "supportingFeaturedArticles",
@@ -86,13 +85,13 @@ export const homepageSettingsType = defineType({
       title: "Supporting Featured Stories",
       type: "array",
       description:
-        "Up to four smaller stories below the two highlights. Their order here controls their order on the homepage. Choose different articles from the two highlights.",
+        "Up to four smaller stories beside the lead on desktop and below it on mobile. Their order here controls display order. Choose different articles from the lead.",
       of: [defineArrayMember({ type: "reference", to: [{ type: "post" }] })],
       validation: (rule) => rule.unique().max(4).custom((value, context) => {
-        const highlights = [context.document?.featuredArticle, context.document?.secondFeaturedArticle] as Array<{_ref?: string} | undefined>;
+        const highlights = [context.document?.featuredArticle] as Array<{_ref?: string} | undefined>;
         const highlightedIds = new Set(highlights.map((item) => item?._ref).filter(Boolean));
         const supporting = (value || []) as Array<{_ref?: string}>;
-        return !supporting.some((item) => highlightedIds.has(item._ref)) || "Supporting stories must be different from the two highlighted stories.";
+        return !supporting.some((item) => highlightedIds.has(item._ref)) || "Supporting stories must be different from the lead story.";
       }),
     }),
   ],

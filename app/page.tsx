@@ -1,7 +1,7 @@
 import type {Metadata} from "next";
 import {cache} from "react";
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
+import Link from "next/link";
 import FeaturedStories from "@/components/FeaturedStories";
 import HomepageArticleSection from "@/components/HomepageArticleSection";
 import IntentCards from "@/components/IntentCards";
@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 import type {Company} from "@/components/CompanyDirectory";
 import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data";
 import {HOMEPAGE_SETTINGS_QUERY, type HomepageSettings} from "@/lib/homepage-content";
-import {DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, homepageHref, homepageSections, selectHomepageArticles} from "@/lib/homepage-config";
+import {DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, DEFAULT_HOME_HEADING, homepageHref, homepageSections, selectHomepageArticles, selectFeaturedHomepageArticles} from "@/lib/homepage-config";
 import {client} from "@/sanity/lib/client";
 import {absoluteUrl} from "@/lib/site-url";
 
@@ -43,14 +43,12 @@ export default async function Home() {
     client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, {perspective: "published", next: {revalidate: 60}, signal: AbortSignal.timeout(6000)}).catch(() => [] as ArticleCardData[]),
     getHomepageSettings(),
   ]);
-  const byId = new Map(articles.map((article) => [article._id, article]));
-  const featuredIds = [...new Set([settings?.featuredArticleId, settings?.secondFeaturedArticleId, ...(settings?.supportingFeaturedArticleIds || [])].filter((id): id is string => Boolean(id)))];
-  const configuredFeatured = featuredIds.flatMap((id) => byId.get(id) ? [byId.get(id)!] : []);
-  const featured = (featuredIds.length ? configuredFeatured : articles).slice(0, 6);
+  const featured = selectFeaturedHomepageArticles(articles, settings);
   const sections = homepageSections(settings?.sections);
+  const orderedSections = [...sections.filter(section=>section.kind==='featured'),...sections.filter(section=>section.kind!=='featured')];
   // Reserve editorial highlights even when their section is moved below another shelf.
   const used = new Set(sections.some((section) => section.kind === "featured") ? featured.map((article) => article._id) : []);
-  const renderedSections = sections.map((section) => {
+  const renderedSections = orderedSections.map((section) => {
     const limit = Math.min(12, Math.max(1, Math.trunc(section.limit || 4)));
     const href = homepageHref(section.href, "/articles");
     const links = section.links?.map((link) => ({...link, href: homepageHref(link.href, "/articles")}));
@@ -77,8 +75,18 @@ export default async function Home() {
   return <>
     <Header />
     <main>
-      <Hero companies={companies} title={settings?.heroTitle?.trim() || undefined} description={settings?.heroDescription ?? undefined} showSearch={settings?.showSearch !== false} searchPlaceholder={settings?.searchPlaceholder ?? undefined} popularCompanies={settings?.popularCompanies ?? undefined} />
+      <h1 className="sr-only">{settings?.homepageHeading?.trim() || DEFAULT_HOME_HEADING}</h1>
       {renderedSections}
+      <section aria-labelledby="homepage-about-title" className="border-t border-zinc-200 bg-zinc-50">
+        <div className="mx-auto max-w-7xl px-5 py-8 md:px-8">
+          <h2 id="homepage-about-title" className="text-lg font-semibold text-zinc-950">About MisterStory</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-600">{settings?.heroDescription?.trim() || DEFAULT_HOME_DESCRIPTION}</p>
+          <div className="mt-3 flex flex-wrap gap-5 text-sm font-semibold text-zinc-800">
+            <Link href="/about" className="underline underline-offset-4">About us</Link>
+            <Link href="/editorial-policy" className="underline underline-offset-4">Editorial & research policy</Link>
+          </div>
+        </div>
+      </section>
     </main>
     <Footer />
   </>;

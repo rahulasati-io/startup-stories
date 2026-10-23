@@ -5,6 +5,7 @@ import {notFound} from "next/navigation";
 import {defineQuery} from "next-sanity";
 import {client} from "@/sanity/lib/client";
 import {toSearchMatch} from "@/lib/global-search";
+import {ARTICLE_DIRECTORY_FILTER} from "@/lib/article-directory-filter";
 import {absoluteUrl} from "@/lib/site-url";
 import {directoryHref, directoryParams, DIRECTORY_PAGE_SIZE, type DirectoryParams, type DirectoryPagination} from "@/lib/directory-pagination";
 
@@ -16,11 +17,7 @@ const filters = {
     ($q == "" || name match $search || slug.current match $search || description match $search || industry match $search || subIndustry match $search || industryCategory._ref in *[_type == "industry" && name match $search]._id)`,
   people: `_type == "founder" && ${published} && defined(name) && defined(slug.current) &&
     ($q == "" || name match $search || slug.current match $search || role match $search || _id in *[_type == "companyPersonRole" && company._ref in *[_type == "company" && name match $search]._id].person._ref)`,
-  articles: `_type == "post" && ${published} && defined(title) && defined(slug.current) && defined(category._ref) &&
-    ($category == "" || category._ref in *[_type == "category" && (title == $category || slug.current == $category)]._id) &&
-    ($company == "" || count(company[_ref in *[_type == "company" && (name == $company || slug.current == $company)]._id]) > 0) &&
-    ($industry == "" || count(company[_ref in *[_type == "company" && (industry == $industry || industryCategory._ref in *[_type == "industry" && name == $industry]._id)]._id]) > 0) &&
-    ($q == "" || title match $search || seoDescription match $search || category._ref in *[_type == "category" && title match $search]._id || count(company[_ref in *[_type == "company" && (name match $search || industry match $search || industryCategory._ref in *[_type == "industry" && name match $search]._id)]._id]) > 0)`,
+  articles: ARTICLE_DIRECTORY_FILTER,
 };
 const projections = {
   companies: `{_id, name, "slug": slug.current, "industry": coalesce(industryCategory->name, industry), subIndustry, foundedYear, description}`,

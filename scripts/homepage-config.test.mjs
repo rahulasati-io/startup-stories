@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {DEFAULT_HOME_SECTIONS, homepageSections, homepageHref, selectHomepageArticles} from '../lib/homepage-config.ts';
+import {DEFAULT_HOME_SECTIONS, homepageSections, homepageHref, selectHomepageArticles, selectFeaturedHomepageArticles} from '../lib/homepage-config.ts';
 
 test('unset settings preserve the existing eight sections and funding before business models', () => {
   assert.equal(homepageSections(null).length, 8);
@@ -59,4 +59,18 @@ test('other shelves retain shared deduplication and explicit funding filters',()
 test('latest honours limits and cannot repeat the same card within its own shelf',()=>{
   assert.deepEqual(selectHomepageArticles({...latest,limit:2},[articles[1],articles[1],...articles],new Set()).map(a=>a._id),['funding','featured']);
   assert.deepEqual(selectHomepageArticles(latest,[],new Set()),[]);
+});
+
+test('one lead and four supporting selections take precedence over the legacy second highlight',()=>{
+  const items=Array.from({length:8},(_,i)=>({_id:String(i)}));
+  const settings={featuredArticleId:'1',secondFeaturedArticleId:'2',supportingFeaturedArticleIds:['3','4','5','6']};
+  assert.deepEqual(selectFeaturedHomepageArticles(items,settings).map(item=>item._id),['1','3','4','5','6']);
+  assert.equal(settings.secondFeaturedArticleId,'2');
+});
+
+test('legacy second selection fills only a spare slot; unavailable/duplicate picks do not introduce latest uploads',()=>{
+  const items=Array.from({length:8},(_,i)=>({_id:String(i)}));
+  assert.deepEqual(selectFeaturedHomepageArticles(items,{featuredArticleId:'1',secondFeaturedArticleId:'2',supportingFeaturedArticleIds:['3','3','missing']}).map(item=>item._id),['1','3','2']);
+  assert.deepEqual(selectFeaturedHomepageArticles(items,{featuredArticleId:'missing'}),[]);
+  assert.deepEqual(selectFeaturedHomepageArticles(items,null).map(item=>item._id),['0','1','2','3','4']);
 });

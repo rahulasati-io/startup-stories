@@ -28,6 +28,16 @@ export const DEFAULT_HOME_SECTIONS: HomepageSection[] = [
 
 export const DEFAULT_HOME_TITLE = "MisterStory — Company News, Financials & Business Stories";
 export const DEFAULT_HOME_DESCRIPTION = "Understand companies through business news, financial results, funding updates and clear explanations of how they make money.";
+export const DEFAULT_HOME_HEADING = "Company News & Business Stories";
+
+export function selectFeaturedHomepageArticles<T extends {_id:string}>(articles:T[], settings:{featuredArticleId?:string|null; secondFeaturedArticleId?:string|null; supportingFeaturedArticleIds?:string[]}|null|undefined):T[]{
+  // New uploads never replace configured picks. The legacy second highlight
+  // fills a spare side slot only; its stored selection is not removed.
+  const ids=[...new Set([settings?.featuredArticleId,...(settings?.supportingFeaturedArticleIds||[]),settings?.secondFeaturedArticleId].filter((id):id is string=>Boolean(id)))];
+  if(!ids.length)return articles.slice(0,5);
+  const byId=new Map(articles.map(article=>[article._id,article]));
+  return ids.flatMap(id=>byId.get(id)?[byId.get(id)!]:[]).slice(0,5);
+}
 
 // Only relative, same-site links are accepted, even for API-written settings.
 export function homepageHref(value: string | undefined, fallback: string) {
