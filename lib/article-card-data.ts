@@ -61,6 +61,6 @@ export function articleHref(article: Pick<ArticleCardData, "slug">) {
   return `/articles/${article.slug}`;
 }
 
-export function articleImageUrl(article: ArticleCardData) {
+export function articleImageUrl(article: Pick<ArticleCardData,'socialImageUrl'|'mainImageUrl'|'categorySlug'|'slug'|'_updatedAt'>) {
   return article.socialImageUrl || article.mainImageUrl || getGeneratedArticleThumbnailPath(article.categorySlug, article.slug, article._updatedAt);
 }

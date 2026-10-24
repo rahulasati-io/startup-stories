@@ -3,6 +3,7 @@ import { defineQuery } from "next-sanity";
 import SiteLogo from "@/components/SiteLogo";
 import { sanityFetch } from "@/sanity/lib/live";
 import { TOPIC_ARTICLE_FILTER } from "@/lib/topic-visibility";
+import {DATA_CATEGORIES,dataCategoryHref} from '@/lib/data-navigation';
 
 const FOOTER_CONTENT_QUERY = defineQuery(/* groq */ `{
   "companies": *[_type == "company" && defined(slug.current)] | order(name asc) [0...8] {
@@ -39,7 +40,7 @@ export default async function Footer() {
 
   return (
     <footer className="bg-zinc-950 text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-4 md:px-8 md:py-16">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 md:px-8 md:py-16">
         <div>
           <Link href="/" aria-label="MisterStory home" className="inline-block">
             <SiteLogo className="h-10 w-auto" />
@@ -59,6 +60,14 @@ export default async function Footer() {
             <Link href="/articles" className="block hover:text-white">All Articles</Link>
             {topicSlugs.includes("business-model") && <Link href="/topics/business-model" className="block hover:text-white">Business Models</Link>}
             {topicSlugs.includes("strategy") && <Link href="/topics/strategy" className="block hover:text-white">Strategies</Link>}
+          </nav>
+        </div>
+
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Data</h2>
+          <nav className="mt-4 space-y-3 text-sm text-zinc-300" aria-label="Data navigation">
+            <Link href="/data" className="block hover:text-white">All Data</Link>
+            {DATA_CATEGORIES.map(name=><Link key={name} href={dataCategoryHref(name)} className="block hover:text-white">{name}</Link>)}
           </nav>
         </div>
 

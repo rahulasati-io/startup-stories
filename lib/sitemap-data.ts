@@ -3,6 +3,7 @@ import {absoluteUrl} from "@/lib/site-url";
 import type {SitemapEntry} from "@/lib/sitemap-xml";
 import {client} from "@/sanity/lib/client";
 import {TOPIC_ARTICLE_FILTER} from "@/lib/topic-visibility";
+import {dataPages} from "@/lib/data-library";
 
 type SitemapDocumentType = "company" | "founder" | "post" | "category" | "author";
 
@@ -61,6 +62,7 @@ export function getStaticSitemap(): SitemapEntry[] {
     {url: absoluteUrl("/people")},
     {url: absoluteUrl("/authors")},
     {url: absoluteUrl("/articles")},
+    ...dataPages.some(page=>!page.reviewRequired&&!page.withheld)?[{url:absoluteUrl('/data')},...dataPages.filter(page=>!page.reviewRequired&&!page.withheld).map(page=>({url:absoluteUrl(`/data/${page.slug}`)}))]:[],
     {url: absoluteUrl("/about"), lastModified: "2026-09-24"},
     {url: absoluteUrl("/editorial-policy"), lastModified: "2026-09-24"},
     {url: absoluteUrl("/contact"), lastModified: "2026-09-24"},

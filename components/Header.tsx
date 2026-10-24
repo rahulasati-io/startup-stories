@@ -11,6 +11,7 @@ const navigation = [
   { href: "/people", label: "People" },
   { href: "/authors", label: "Authors" },
   { href: "/articles", label: "Articles" },
+  { href: "/data", label: "Data" },
 ];
 
 export default function Header() {
@@ -26,7 +27,7 @@ export default function Header() {
 
           <GlobalSearch />
 
-          <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
+          <nav className="hidden shrink-0 items-center gap-4 md:flex lg:gap-6" aria-label="Main navigation">
             {navigation.map((item) => (
               <Link key={item.href} href={item.href} className="text-sm font-medium text-zinc-700 transition hover:text-black">
                 {item.label}

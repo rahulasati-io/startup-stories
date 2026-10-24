@@ -1,5 +1,5 @@
 import type {Metadata} from "next";
-import {cache} from "react";
+import {cache, Fragment} from "react";
 import Header from "@/components/Header";
 import Link from "next/link";
 import FeaturedStories from "@/components/FeaturedStories";
@@ -9,6 +9,7 @@ import Topics from "@/components/Topics";
 import CompanyRow, {COMPANIES_QUERY} from "@/components/CompanyRow";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
+import HomepageDataSection from "@/components/HomepageDataSection";
 import type {Company} from "@/components/CompanyDirectory";
 import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data";
 import {HOMEPAGE_SETTINGS_QUERY, type HomepageSettings} from "@/lib/homepage-content";
@@ -46,6 +47,7 @@ export default async function Home() {
   const featured = selectFeaturedHomepageArticles(articles, settings);
   const sections = homepageSections(settings?.sections);
   const orderedSections = [...sections.filter(section=>section.kind==='featured'),...sections.filter(section=>section.kind!=='featured')];
+  const dataAfterIndex=orderedSections.findIndex(section=>section.kind==='articles'&&(section.categorySlug==='business-model'||section._key==='business'));
   // Reserve editorial highlights even when their section is moved below another shelf.
   const used = new Set(sections.some((section) => section.kind === "featured") ? featured.map((article) => article._id) : []);
   const renderedSections = orderedSections.map((section) => {
@@ -76,7 +78,8 @@ export default async function Home() {
     <Header />
     <main>
       <h1 className="sr-only">{settings?.homepageHeading?.trim() || DEFAULT_HOME_HEADING}</h1>
-      {renderedSections}
+      {renderedSections.map((section,index)=><Fragment key={orderedSections[index]._key}>{section}{index===dataAfterIndex&&<HomepageDataSection/>}</Fragment>)}
+      {dataAfterIndex<0&&<HomepageDataSection/>}
       <section aria-labelledby="homepage-about-title" className="border-t border-zinc-200 bg-zinc-50">
         <div className="mx-auto max-w-7xl px-5 py-8 md:px-8">
           <h2 id="homepage-about-title" className="text-lg font-semibold text-zinc-950">About MisterStory</h2>
