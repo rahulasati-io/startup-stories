@@ -30,7 +30,7 @@ test('owner-approved data, semantic headings, canonical routes and deferred scop
   const library=fs.readFileSync(new URL('../lib/data-library.ts',import.meta.url),'utf8');
   const detail=fs.readFileSync(new URL('../app/data/[slug]/page.tsx',import.meta.url),'utf8');
   const shelf=fs.readFileSync(new URL('../components/DatasetShelf.tsx',import.meta.url),'utf8');
-  assert.equal((library.match(/slug:'/g)||[]).length,8);assert.ok(library.includes('const reviewRequired=false'));assert.ok(!library.includes('withheld:true'));assert.ok(library.includes('rows:observations.ipo.map'));
+  assert.equal((library.match(/slug:'/g)||[]).length,9);assert.ok(library.includes('const reviewRequired=false'));assert.ok(!library.includes('withheld:true'));assert.ok(library.includes('rows:observations.ipo.map'));
   assert.ok(detail.includes('index:!page.reviewRequired'));assert.ok(detail.includes('alternates:{canonical:'));assert.ok(detail.includes('<h1'));
   assert.ok(shelf.includes('<h2'));assert.ok(shelf.includes('<h3'));assert.ok(shelf.includes('aria-expanded'));assert.ok(shelf.includes('Show all datasets'));
   assert.ok(!detail.includes('Dataset information'));assert.ok(!detail.includes('Source review pending'));assert.ok(!shelf.includes('{page.frequency}'));assert.ok(library.includes("title:'Nifty 50 Annual Return'"));assert.ok(library.includes('calendar year, January to December'));
@@ -48,7 +48,7 @@ test('source names are optional plain text with no MisterStory fallback',()=>{
   assert.ok(detail.includes('Source: {page.source.trim()}'));
   assert.ok(!detail.includes('href={page.sourceUrl}'));
   assert.ok(!library.includes("source:'MisterStory"));
-  const ipo=library.split("slug:'largest-indian-ipos'")[1].split('\n];')[0];
+  const ipo=library.split("slug:'largest-indian-ipos'")[1].split('\n  {slug:')[0];
   assert.ok(!ipo.includes('source:'));assert.ok(!ipo.includes('sourceUrl:'));
 });
 test('inflation page exposes only two base-year inflation series and the requested SEO text',()=>{
@@ -70,11 +70,11 @@ test('dataset controls sit alongside their content without duplicate chart label
   assert.ok(detail.includes("choiceHref(metric.key,'weekly','historical-table')"));
   assert.ok(chart.includes('<figcaption className="sr-only">'));
 });
-test('eight datasets use the four approved categories',()=>{
+test('datasets use the approved categories including the new Money & Credit group',()=>{
   const library=fs.readFileSync(new URL('../lib/data-library.ts',import.meta.url),'utf8');
   const categories={};
   for(const match of library.matchAll(/segment:'([^']+)'/g))categories[match[1]]=(categories[match[1]]||0)+1;
-  assert.deepEqual(categories,{'Monetary Policy Data':2,'Economy Data':2,'Trade Data':1,'Market Data':3});
+  assert.deepEqual(categories,{'Monetary Policy Data':2,'Economy Data':2,'Trade Data':1,'Market Data':3,'Money & Credit Data':1});
   for(const [slug,category] of [['india-cpi-inflation-history','Economy Data'],['india-monthly-sip-contributions','Market Data'],['inr-usd-exchange-rate-history','Trade Data'],['rbi-repo-rate-history','Monetary Policy Data']]){
     assert.ok(library.split(`slug:'${slug}'`)[1].split('\n')[0].includes(`segment:'${category}'`));
   }
@@ -84,12 +84,12 @@ test('exchange rate display name uses Rupee Dollar while retaining the existing 
   assert.ok(library.includes("slug:'inr-usd-exchange-rate-history',title:'Rupee Dollar Exchange Rate History'"));
   assert.ok(!library.includes("title:'INR–USD Exchange Rate History'"));
 });
-test('all eight datasets have distinct descriptive SEO titles and substantial accurate descriptions',()=>{
+test('all datasets have distinct descriptive SEO titles and substantial accurate descriptions',()=>{
   const library=fs.readFileSync(new URL('../lib/data-library.ts',import.meta.url),'utf8');
   const titles=[...library.matchAll(/seoTitle:'([^']+)'/g)].map(match=>match[1]);
   const descriptions=[...library.matchAll(/description:'([^']+)'/g)].map(match=>match[1]);
-  assert.equal(titles.length,8);assert.equal(new Set(titles).size,8);
-  assert.equal(descriptions.length,8);assert.equal(new Set(descriptions).size,8);
+  assert.equal(titles.length,9);assert.equal(new Set(titles).size,9);
+  assert.equal(descriptions.length,9);assert.equal(new Set(descriptions).size,9);
   for(const title of titles){assert.ok(title.length<=70);assert.ok(!/\b(live|today|best|2026)\b/i.test(title));}
   for(const description of descriptions)assert.ok(description.length>=100&&description.length<=180);
   assert.ok(titles.some(title=>title.includes('(CRR)')));assert.ok(titles.some(title=>title.includes('TRI')));
@@ -106,19 +106,34 @@ test('Dataset markup is withheld for review content and describes only an approv
 test('every data page has six unique keywords and the metadata uses them',()=>{
   const library=fs.readFileSync(new URL('../lib/data-library.ts',import.meta.url),'utf8');
   const lists=[...library.matchAll(/keywords:\[([^\]]+)\]/g)].map(match=>[...match[1].matchAll(/'([^']+)'/g)].map(word=>word[1]));
-  assert.equal(lists.length,8);
+  assert.equal(lists.length,9);
   for(const keywords of lists){assert.equal(keywords.length,6);assert.equal(new Set(keywords.map(word=>word.toLowerCase())).size,6);}
   const detail=fs.readFileSync(new URL('../app/data/[slug]/page.tsx',import.meta.url),'utf8');
   const hub=fs.readFileSync(new URL('../app/data/page.tsx',import.meta.url),'utf8');
   assert.ok(detail.includes('keywords:page.keywords'));assert.ok(hub.includes('keywords:['));assert.ok(hub.includes('<JsonLd data={catalog}/>'));
 });
 test('catalog publisher reuses the organization and excludes unapproved entries',()=>{
-  const visible={slug:'repo',title:'Repo history',reviewRequired:false};
+  const visible={slug:'repo',title:'Repo history',description:'Historical RBI repo rate observations with a chart and table.',reviewRequired:false};
   const catalog=dataCatalogJsonLd([visible,{...visible,slug:'draft',reviewRequired:true},{...visible,slug:'hidden',withheld:true}],'https://misterstory.in');
   assert.equal(catalog['@type'],'DataCatalog');assert.equal(catalog.dataset.length,1);
   assert.deepEqual(catalog.publisher,{'@id':'https://misterstory.in/#organization'});
   assert.equal(catalog.dataset[0]['@id'],'https://misterstory.in/data/repo#dataset');
+  assert.equal(JSON.parse(JSON.stringify(catalog)).dataset[0].description,visible.description);
   assert.equal(dataCatalogJsonLd([{...visible,reviewRequired:true}],'https://misterstory.in'),null);
   const root=fs.readFileSync(new URL('../app/layout.tsx',import.meta.url),'utf8');
   assert.ok(root.includes('misterStoryOrganizationJsonLd()'));
+});
+
+test('every current catalog Dataset includes its existing page description after serialization',()=>{
+  const library=fs.readFileSync(new URL('../lib/data-library.ts',import.meta.url),'utf8');
+  const pages=[...library.matchAll(/slug:'([^']+)'[^\n]*?title:'([^']+)'[^\n]*?description:'([^']+)'/g)]
+    .map(([,slug,title,description])=>({slug,title,description,reviewRequired:false}));
+  assert.equal(pages.length,9);
+  const catalog=JSON.parse(JSON.stringify(dataCatalogJsonLd(pages,'https://misterstory.in')));
+  for(const [index,dataset] of catalog.dataset.entries()){
+    assert.equal(dataset.description,pages[index].description);
+    assert.ok(dataset.description.trim().length>=100);
+    assert.equal(dataset.creator,undefined);
+    assert.equal(dataset.license,undefined);
+  }
 });
