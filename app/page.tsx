@@ -1,7 +1,6 @@
 import type {Metadata} from "next";
 import {cache, Fragment} from "react";
 import Header from "@/components/Header";
-import Link from "next/link";
 import FeaturedStories from "@/components/FeaturedStories";
 import HomepageArticleSection from "@/components/HomepageArticleSection";
 import IntentCards from "@/components/IntentCards";
@@ -80,16 +79,6 @@ export default async function Home() {
       <h1 className="sr-only">{settings?.homepageHeading?.trim() || DEFAULT_HOME_HEADING}</h1>
       {renderedSections.map((section,index)=><Fragment key={orderedSections[index]._key}>{section}{index===dataAfterIndex&&<HomepageDataSection/>}</Fragment>)}
       {dataAfterIndex<0&&<HomepageDataSection/>}
-      <section aria-labelledby="homepage-about-title" className="border-t border-zinc-200 bg-zinc-50">
-        <div className="mx-auto max-w-7xl px-5 py-8 md:px-8">
-          <h2 id="homepage-about-title" className="text-lg font-semibold text-zinc-950">About MisterStory</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-600">{settings?.heroDescription?.trim() || DEFAULT_HOME_DESCRIPTION}</p>
-          <div className="mt-3 flex flex-wrap gap-5 text-sm font-semibold text-zinc-800">
-            <Link href="/about" className="underline underline-offset-4">About us</Link>
-            <Link href="/editorial-policy" className="underline underline-offset-4">Editorial & research policy</Link>
-          </div>
-        </div>
-      </section>
     </main>
     <Footer />
   </>;

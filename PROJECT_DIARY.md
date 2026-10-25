@@ -1526,3 +1526,9 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Reused each page's existing description in dataCatalogJsonLd. No visible content, data observations, canonical URLs, indexing rules, creator attribution or licence claims changed.
 - All 23 Data and Gross NPA tests passed, including a new serialization regression check covering all nine local catalogue entries. The live warning can only be revalidated after deployment and Google's subsequent processing.
 
+# 2026-10-25 — Remove the extra homepage About block
+
+- **Status:** Implemented locally; not committed, pushed or deployed. User explicitly requested removal of the About MisterStory block above the footer after clarifying that it had not been separately approved during the hero redesign.
+- Removed only that homepage section and its now-unused Link import. Footer, homepage sections, metadata and the accessible H1 remain unchanged; no Sanity settings or records were modified. Updated the homepage regression check to require absence of the block and presence of the footer.
+- User's scope rule: consider and explain related changes, but obtain approval before implementing additions beyond the requested change.
+

@@ -60,7 +60,9 @@ test('homepage removes hero/duplicate search, keeps one accessible H1 and retain
   assert.ok(page.includes('alternates: {canonical: absoluteUrl("/")}'));
   assert.ok(page.includes('openGraph:'));
   assert.ok(page.includes('kind===\'featured\''));
-  assert.ok(page.includes('About MisterStory'));
+  assert.ok(!page.includes('homepage-about-title'));
+  assert.ok(!page.includes('About MisterStory'));
+  assert.ok(page.includes('<Footer />'));
 });
 
 test('desktop side rows follow the lead height without headline-driven column growth',()=>{
