@@ -1532,3 +1532,9 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Removed only that homepage section and its now-unused Link import. Footer, homepage sections, metadata and the accessible H1 remain unchanged; no Sanity settings or records were modified. Updated the homepage regression check to require absence of the block and presence of the footer.
 - User's scope rule: consider and explain related changes, but obtain approval before implementing additions beyond the requested change.
 
+# 2026-10-25 — Explicit site-wide index/follow default
+
+- **Status:** Implemented locally; not committed, pushed or deployed. User requested explicit robots metadata on public pages, except existing intentionally restricted routes.
+- Root metadata now declares index: true and follow: true. This makes the existing default permission explicit; it does not force indexing. Next.js route metadata overrides the parent robots object, preserving search noindex/follow, empty-topic exclusion, and dataset approval/withheld restrictions. Studio still exports next-sanity's noindex metadata; robots.txt exclusions remain unchanged.
+- Added two passing regression tests for the default and existing exceptions. No Googlebot-specific override, CMS records, Gross NPA changes or additional indexing restrictions were introduced.
+

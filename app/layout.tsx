@@ -12,6 +12,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "MisterStory",
+  robots: { index: true, follow: true },
   description:
     "Stories, strategy and numbers that explain how interesting businesses work.",
   alternates: {
