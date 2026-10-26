@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { defineQuery } from "next-sanity";
 import SiteLogo from "@/components/SiteLogo";
 import { sanityFetch } from "@/sanity/lib/live";
@@ -19,7 +20,13 @@ const FOOTER_CONTENT_QUERY = defineQuery(/* groq */ `{
 
 type FooterCompany = { _id: string; name?: string; slug?: string };
 
-export default async function Footer() {
+export default function Footer() {
+  // Keep optional CMS navigation from holding up the main route on a cache miss.
+  // The existing live fetch and its publishing invalidation stay unchanged.
+  return <Suspense fallback={<FooterView companies={[]} topicSlugs={[]} />}><FooterContent /></Suspense>;
+}
+
+async function FooterContent() {
   let companies: FooterCompany[] = [];
   let topicSlugs: string[] = [];
   try {
@@ -30,6 +37,10 @@ export default async function Footer() {
   } catch {
     // Core navigation and legal information should remain available if Sanity is briefly unreachable.
   }
+  return <FooterView companies={companies} topicSlugs={topicSlugs} />;
+}
+
+function FooterView({companies, topicSlugs}: {companies: FooterCompany[]; topicSlugs: string[]}) {
   const uniqueCompanies = Array.from(
     companies.reduce((items, company) => {
       const key = company.slug?.toLowerCase();

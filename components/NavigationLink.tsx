@@ -20,8 +20,12 @@ function heading(node: ReactNode): string {
   return "";
 }
 
-function Pending({label}: {label: string}) {
+function Pending({label, feedback}: {label: string; feedback: "overlay" | "navigation"}) {
   const {pending} = useLinkStatus();
+  if (pending && feedback === "navigation") return <span className="navigation-bar-status" role="status">
+    <span className="navigation-bar-progress" aria-hidden="true" />
+    <span className="sr-only">Opening {label}…</span>
+  </span>;
   return pending ? <span className="navigation-link-status" role="status">
     <span className="navigation-spinner" aria-hidden="true" />
     <span>Opening {label}…</span>
@@ -30,7 +34,7 @@ function Pending({label}: {label: string}) {
 
 // Only warm a complete public profile/article after intent, not every visible card.
 // Next owns the prefetch cache and invalidation; click/history handling stays native.
-export default function NavigationLink({children, loadingLabel, intentPrefetch = true, ...props}: ComponentProps<typeof Link> & {loadingLabel?: string; intentPrefetch?: boolean}) {
+export default function NavigationLink({children, loadingLabel, intentPrefetch = true, feedback = "overlay", ...props}: ComponentProps<typeof Link> & {loadingLabel?: string; intentPrefetch?: boolean; feedback?: "overlay" | "navigation"}) {
   const [intentHref, setIntentHref] = useState<string | null>(null);
   const href = typeof props.href === "string" ? props.href : props.href.pathname || "";
   const eligible = intentPrefetch && /^\/(companies|people|articles)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(href)
@@ -53,6 +57,6 @@ export default function NavigationLink({children, loadingLabel, intentPrefetch =
     onBlur={event => {props.onBlur?.(event); setIntentHref(null);}}
   >
     {children}
-    {!href.startsWith("#") && <Pending label={loadingLabel || heading(children) || fallback} />}
+    {!href.startsWith("#") && <Pending label={loadingLabel || heading(children) || fallback} feedback={feedback} />}
   </Link>;
 }

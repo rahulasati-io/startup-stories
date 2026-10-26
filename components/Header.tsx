@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/NavigationLink";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import GlobalSearch from "@/components/GlobalSearch";
 import SiteLogo from "@/components/SiteLogo";
@@ -15,13 +16,15 @@ const navigation = [
 ];
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const menuOpen = menuPath === pathname;
 
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-5 md:h-20 md:gap-6 md:px-8">
-          <Link href="/" aria-label="MisterStory home" className="shrink-0">
+          <Link href="/" aria-label="MisterStory home" loadingLabel="Home" feedback="navigation" className="shrink-0">
             <SiteLogo className="h-8 w-auto md:h-9" />
           </Link>
 
@@ -29,7 +32,7 @@ export default function Header() {
 
           <nav className="hidden shrink-0 items-center gap-4 md:flex lg:gap-6" aria-label="Main navigation">
             {navigation.map((item) => (
-              <Link key={item.href} href={item.href} className="text-sm font-medium text-zinc-700 transition hover:text-black">
+              <Link key={item.href} href={item.href} loadingLabel={item.label} feedback="navigation" className="text-sm font-medium text-zinc-700 transition hover:text-black">
                 {item.label}
               </Link>
             ))}
@@ -39,7 +42,7 @@ export default function Header() {
             type="button"
             aria-label="Open menu"
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(true)}
+            onClick={() => setMenuPath(pathname)}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-lg md:hidden"
           >
             ☰
@@ -50,13 +53,13 @@ export default function Header() {
       {menuOpen && (
         <div className="fixed inset-0 z-[60] bg-white">
           <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-5">
-            <Link href="/" aria-label="MisterStory home" onClick={() => setMenuOpen(false)}>
+            <Link href="/" aria-label="MisterStory home" loadingLabel="Home" feedback="navigation" onClick={() => { if (pathname === "/") setMenuPath(null); }}>
               <SiteLogo className="h-8 w-auto" />
             </Link>
             <button
               type="button"
               aria-label="Close menu"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => setMenuPath(null)}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 text-xl"
             >
               ×
@@ -68,7 +71,9 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMenuOpen(false)}
+                loadingLabel={item.label}
+                feedback="navigation"
+                onClick={() => { if (item.href === pathname) setMenuPath(null); }}
                 className="border-b border-zinc-100 py-5 text-3xl font-bold"
               >
                 {item.label}

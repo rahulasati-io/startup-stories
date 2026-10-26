@@ -42,6 +42,17 @@ test('hash navigation has no card overlay even if Next reports pending',()=>{
   pending=true;
   assert.doesNotMatch(render({href:'#same-industry'},'Similar Companies'),/role="status"|Opening/);
 });
+
+test('main navigation pending feedback is out of flow and retains its destination label',()=>{
+  pending=true;
+  const html=render({href:'/data',loadingLabel:'Data',feedback:'navigation'},'Data');
+  assert.match(html,/navigation-bar-status/);
+  assert.match(html,/Opening Data…/);
+  assert.doesNotMatch(html,/navigation-link-status/);
+  assert.equal(forwarded.feedback,undefined);
+  pending=false;
+  assert.doesNotMatch(render({href:'/data',feedback:'navigation'},'Data'),/navigation-bar-status|role="status"/);
+});
 test('prefetch opt-outs, new-tab modifiers and event props are not intercepted',()=>{
   pending=false;
   const onClick=()=>{};

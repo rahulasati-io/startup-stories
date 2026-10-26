@@ -53,9 +53,29 @@ html {
   animation: navigation-spin .75s linear infinite;
 }
 .page-arrival main:not([aria-busy="true"]) { animation: page-arrival 140ms ease-out; }
+.navigation-bar-status {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 100;
+  overflow: hidden;
+  background: #fef3c7;
+  pointer-events: none;
+}
+.navigation-bar-progress {
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: #b45309;
+  animation: navigation-progress 1s ease-in-out infinite;
+}
+@keyframes navigation-progress { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
 @keyframes navigation-spin { to { transform: rotate(360deg); } }
 @keyframes page-arrival { from { opacity: .8; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .navigation-spinner, .page-arrival main:not([aria-busy="true"]) { animation: none; }
+  .navigation-bar-progress { animation: none; width: 100%; }
 }
