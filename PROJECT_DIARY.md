@@ -1538,3 +1538,9 @@ MisterStory is a research-led website explaining companies, the people behind th
 - Root metadata now declares index: true and follow: true. This makes the existing default permission explicit; it does not force indexing. Next.js route metadata overrides the parent robots object, preserving search noindex/follow, empty-topic exclusion, and dataset approval/withheld restrictions. Studio still exports next-sanity's noindex metadata; robots.txt exclusions remain unchanged.
 - Added two passing regression tests for the default and existing exceptions. No Googlebot-specific override, CMS records, Gross NPA changes or additional indexing restrictions were introduced.
 
+# 2026-10-26 — Homepage lead-image priority experiment
+
+- **Status:** Implemented locally; not committed, pushed or deployed. User explicitly approved a small reversible test after the live homepage scored 94 mobile / 100 desktop with mobile LCP approximately 3.0 seconds in one PageSpeed lab run.
+- Replaced only the Featured Stories lead image's explicit preload prop with loading="eager" and fetchPriority="high", following installed Next.js image guidance. Four supporting images retain default lazy loading. Image source selection, responsive sizes, compression quality, visual design, text, navigation and indexing remain unchanged. No pending Gross NPA work was modified.
+- Updated regression coverage for one eager/high-priority lead, four lazy supporting images and no explicit preload prop. All five featured-layout tests passed. This is an experiment, not a claimed measured improvement; a comparable post-deployment PageSpeed run is still required to establish benefit or decide whether to revert.
+

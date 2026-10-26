@@ -26,7 +26,7 @@ export default function FeaturedStories({articles,title="Featured Stories",eyebr
         <article data-featured-lead className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white transition hover:border-zinc-300 hover:shadow-md">
           <Link href={articleHref(lead)} className="block">
             <div className="relative aspect-video overflow-hidden bg-zinc-100">
-              {image&&<Image src={image} alt={lead.title} fill preload unoptimized={image.startsWith('/api/article-thumbnail/')} sizes="(min-width:1280px) 660px, (min-width:768px) 55vw, calc(100vw - 2.5rem)" className="object-cover transition duration-300 group-hover:scale-[1.015]"/>}
+              {image&&<Image src={image} alt={lead.title} fill loading="eager" fetchPriority="high" unoptimized={image.startsWith('/api/article-thumbnail/')} sizes="(min-width:1280px) 660px, (min-width:768px) 55vw, calc(100vw - 2.5rem)" className="object-cover transition duration-300 group-hover:scale-[1.015]"/>}
             </div>
             <div className="p-5 md:p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">{lead.category}</p>

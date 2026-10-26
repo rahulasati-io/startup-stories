@@ -11,7 +11,7 @@ const source=fs.readFileSync(new URL('../components/FeaturedStories.tsx',import.
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
 const loaded={exports:{}};
 new Function('require','module','exports',compiled)(name=>{
-  if(name==='next/image')return {__esModule:true,default:({src,alt,preload,sizes})=>React.createElement('img',{src,alt,sizes,'data-preload':String(Boolean(preload))})};
+  if(name==='next/image')return {__esModule:true,default:({src,alt,preload,sizes,loading='lazy',fetchPriority})=>React.createElement('img',{src,alt,sizes,loading,fetchPriority,'data-preload':String(Boolean(preload))})};
   if(name==='@/components/NavigationLink')return {__esModule:true,default:({href,children,...props})=>React.createElement('a',{href,...props},children)};
   if(name==='@/lib/article-card-data')return {articleHref:article=>'/articles/'+article.slug,articleImageUrl:article=>article.mainImageUrl};
   if(name==='@/lib/display-dates.mjs')return {formatIstDate:()=> '23 Oct 2026'};
@@ -32,10 +32,17 @@ test('featured HTML includes one lead, four side stories and five crawlable arti
   assert.ok(!html.includes('<h1'));
 });
 
-test('only the lead image is preloaded; date labels reflect publication versus update',()=>{
+test('only the lead image is eager and high-priority, without explicit preload; dates remain unchanged',()=>{
   const html=render(items);
-  assert.equal((html.match(/data-preload="true"/g)||[]).length,1);
-  assert.equal((html.match(/data-preload="false"/g)||[]).length,4);
+  const images=html.match(/<img\b[^>]*>/g)||[];
+  assert.equal(images.length,5);
+  assert.match(images[0],/loading="eager"/);
+  assert.match(images[0],/fetchPriority="high"/i);
+  for(const image of images){assert.match(image,/data-preload="false"/);}
+  for(const image of images.slice(1)){
+    assert.match(image,/loading="lazy"/);
+    assert.doesNotMatch(image,/fetchPriority="high"/i);
+  }
   assert.ok(html.includes('Published 23 Oct 2026'));
   assert.ok(html.includes('Updated 23 Oct 2026'));
   assert.ok(html.includes('dateTime="2026-10-23T07:00:00Z"'));
