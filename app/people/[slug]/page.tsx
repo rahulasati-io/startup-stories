@@ -1,5 +1,8 @@
 import { cache, Suspense } from "react";
 import ProfileSectionsLoading from "@/components/ProfileSectionsLoading";
+import SidebarArticleLinks, {type SidebarStory} from "@/components/SidebarArticleLinks";
+import {getDataFeaturedStories} from "@/lib/data-featured-stories";
+import {selectSidebarStories} from "@/lib/sidebar-stories";
 import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
 import { PortableText, type PortableTextBlock, type PortableTextComponents } from "@portabletext/react";
 import type { Metadata } from "next";
@@ -47,10 +50,11 @@ const PERSON_QUERY = defineQuery(/* groq */ `
 const PERSON_ARTICLES_QUERY = defineQuery(`
 *[
       _type == "post" &&
+      !(_id in path("drafts.**")) && !(_id in path("versions.**")) && defined(title) &&
       $personId in people[]._ref &&
       defined(slug.current) &&
       defined(category->slug.current)
-    ] | order(publishedAt desc)[0...3] {
+    ] | order(publishedAt desc)[0...5] {
       _id,
       _updatedAt,
       title,
@@ -64,7 +68,7 @@ const PERSON_ARTICLES_QUERY = defineQuery(`
     }
 `);
 
-const getPersonArticles = cache((personId: string) => client.fetch<RelatedArticle[]>(PERSON_ARTICLES_QUERY, {personId}, PROFILE_FETCH_OPTIONS));
+const getPersonArticles = cache((personId: string) => client.fetch<RelatedArticle[]>(PERSON_ARTICLES_QUERY, {personId}, {...PROFILE_FETCH_OPTIONS, signal: AbortSignal.timeout(3000)}).catch(()=>[]));
 
 type CompanyRole = {
   _id: string;
@@ -213,7 +217,7 @@ export default async function PersonPage({ params }: Props) {
           </nav>
         </div>
 
-        <div id="about" className={`mx-auto grid max-w-6xl items-start scroll-mt-36 gap-6 px-5 py-8 md:px-8 md:py-12 ${associatedCompanies.length > 0 ? "md:grid-cols-[minmax(0,2.35fr)_minmax(260px,.8fr)]" : "md:grid-cols-1"}`}>
+        <div id="about" className="mx-auto grid max-w-6xl items-start scroll-mt-36 gap-6 px-5 py-8 md:px-8 md:py-12 lg:grid-cols-[minmax(0,2.35fr)_minmax(280px,.9fr)]">
           <article className="rounded-3xl border border-zinc-200 bg-white p-7 md:p-9">
             <h2 className="text-3xl font-semibold">Biography</h2>
             {person.bio?.length ? (
@@ -223,8 +227,9 @@ export default async function PersonPage({ params }: Props) {
             )}
           </article>
 
+          <div className="min-w-0 space-y-6">
           {associatedCompanies.length > 0 && (
-            <aside id="associated-companies" className="scroll-mt-36 rounded-3xl border border-zinc-200 bg-white p-7 md:sticky md:top-28">
+            <aside id="associated-companies" className="scroll-mt-36 rounded-3xl border border-zinc-200 bg-white p-7">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-zinc-500">Connections</p>
               <h2 className="mt-3 text-2xl font-semibold">Associated companies</h2>
               <div className="mt-5 divide-y divide-zinc-100">
@@ -246,6 +251,8 @@ export default async function PersonPage({ params }: Props) {
               </div>
             </aside>
           )}
+          <Suspense fallback={null}><PersonSidebarArticles articles={articles}/></Suspense>
+          </div>
         </div>
 
         <Suspense fallback={<ProfileSectionsLoading/>}><PersonArticles person={person} articles={articles}/></Suspense>
@@ -270,8 +277,24 @@ async function PersonArticlesNav({articles}:{articles:ReturnType<typeof getPerso
  const relatedArticles=await articles;
  return <>{relatedArticles.length > 0 && <Link href="#related-articles" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Related articles</Link>}</>;
 }
+async function PersonSidebarArticles({articles}:{articles:ReturnType<typeof getPersonArticles>}) {
+  const related=(await articles).map((article):SidebarStory=>({
+    _id:article._id, _updatedAt:article._updatedAt, title:article.title, slug:article.slug,
+    category:article.category?.title, categorySlug:article.category?.slug||"",
+    mainImageUrl:article.imageUrl||null, socialImageUrl:null,
+  }));
+  const personStories=selectSidebarStories(related,[]);
+  const featured=personStories.length<5 ? await getDataFeaturedStories() : [];
+  const selected=selectSidebarStories(personStories,featured);
+  if(!selected.length)return null;
+  return <section aria-labelledby="person-sidebar-articles-title" className="rounded-2xl border border-zinc-200 bg-white p-5">
+    <h2 id="person-sidebar-articles-title" className="mb-4 text-lg font-bold text-zinc-950">Read next</h2>
+    <SidebarArticleLinks articles={selected}/>
+  </section>;
+}
+
 async function PersonArticles({person,articles}:{person:Person;articles:ReturnType<typeof getPersonArticles>}) {
- const relatedArticles=await articles;
+ const relatedArticles=(await articles).slice(0,3);
  return <>
         {relatedArticles.length > 0 && (
           <section id="related-articles" className="mx-auto max-w-6xl scroll-mt-36 px-5 pb-16 md:px-8 md:pb-20">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Newsletter from "@/components/Newsletter";
-import { articleHref, type ArticleLinkData } from "@/lib/article-card-data";
+import { type ArticleLinkData } from "@/lib/article-card-data";
+import SidebarArticleLinks from "@/components/SidebarArticleLinks";
 
 export type SidebarCompany = {
   _id: string;
@@ -18,22 +19,7 @@ export type SidebarPerson = {
 };
 
 function ArticleLinks({ articles }: { articles: ArticleLinkData[] }) {
-  return (
-    <ol className="divide-y divide-zinc-200">
-      {articles.map((item) => (
-        <li key={item._id} className="py-3 first:pt-0 last:pb-0">
-          <Link href={articleHref(item)} className="group block">
-            <span className="block text-sm font-semibold leading-5 text-zinc-900 group-hover:text-amber-800">
-              {item.title}
-            </span>
-            <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.1em] text-zinc-500">
-              {item.category}
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ol>
-  );
+  return <SidebarArticleLinks articles={articles} />;
 }
 
 export default function ArticleSidebar({

@@ -86,9 +86,13 @@ const ARTICLE_PAGE_SUPPORT_QUERY = defineQuery(/* groq */ `{
     defined(category->slug.current)
   ] | order(publishedAt desc, _updatedAt desc)[0...10] {
     _id,
+    _updatedAt,
     title,
     "slug": slug.current,
-    "category": category->title
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    "socialImageUrl": socialImage.asset->url,
+    "mainImageUrl": mainImage.asset->url
   },
   "popularArticles": *[
     _type == "post" &&
@@ -100,9 +104,13 @@ const ARTICLE_PAGE_SUPPORT_QUERY = defineQuery(/* groq */ `{
     defined(category->slug.current)
   ] | order(publishedAt desc, _updatedAt desc)[0...10] {
     _id,
+    _updatedAt,
     title,
     "slug": slug.current,
-    "category": category->title
+    "category": category->title,
+    "categorySlug": category->slug.current,
+    "socialImageUrl": socialImage.asset->url,
+    "mainImageUrl": mainImage.asset->url
   },
   "relatedCandidates": *[
     _type == "post" &&
