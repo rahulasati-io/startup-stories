@@ -4,6 +4,7 @@ import type {ArticleCardData} from "@/lib/article-card-data";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import DirectoryPageLayout from "@/components/DirectoryPageLayout";
+import DirectoryBreadcrumbs from "@/components/DirectoryBreadcrumbs";
 import {directoryMetadata, getPublicDirectory} from "@/lib/public-directories";
 import {getDirectoryPageSettings, directorySharing} from "@/lib/directory-page-settings";
 import type {DirectoryParams} from "@/lib/directory-pagination";
@@ -20,7 +21,7 @@ export default async function DirectoryPage({searchParams}: Props) {
     getPublicDirectory<ArticleCardData>("articles", await searchParams),
     getDirectoryPageSettings("articles"),
   ]);
-  return <><Header /><DirectoryPageLayout settings={settings}>
+  return <><Header /><DirectoryPageLayout settings={settings} breadcrumb={<DirectoryBreadcrumbs label="Articles" path="/articles" pagination={pagination} />}>
     <ArticleDirectory articles={items} pagination={pagination} title={settings.title} eyebrow={settings.eyebrow} description={settings.description} searchPlaceholder={settings.searchPlaceholder} />
   </DirectoryPageLayout><Footer /></>;
 }

@@ -4,6 +4,7 @@ import AuthorDirectory, { type DirectoryAuthor } from "@/components/AuthorDirect
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import DirectoryPageLayout from "@/components/DirectoryPageLayout";
+import DirectoryBreadcrumbs from "@/components/DirectoryBreadcrumbs";
 import {getDirectoryPageSettings, directorySharing} from "@/lib/directory-page-settings";
 import { absoluteUrl } from "@/lib/site-url";
 import { client } from "@/sanity/lib/client";
@@ -32,5 +33,5 @@ const AUTHORS_QUERY = defineQuery(/* groq */ `
 
 export default async function AuthorsPage() {
   const [authors, settings] = await Promise.all([client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } }), getDirectoryPageSettings("authors")]);
-  return <><Header /><DirectoryPageLayout settings={settings}><AuthorDirectory authors={authors} title={settings.title} eyebrow={settings.eyebrow} description={settings.description} searchPlaceholder={settings.searchPlaceholder} /></DirectoryPageLayout><Footer /></>;
+  return <><Header /><DirectoryPageLayout settings={settings} breadcrumb={<DirectoryBreadcrumbs label="Authors" path="/authors" />}><AuthorDirectory authors={authors} title={settings.title} eyebrow={settings.eyebrow} description={settings.description} searchPlaceholder={settings.searchPlaceholder} /></DirectoryPageLayout><Footer /></>;
 }
