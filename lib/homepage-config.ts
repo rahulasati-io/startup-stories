@@ -23,12 +23,28 @@ export const DEFAULT_HOME_SECTIONS: HomepageSection[] = [
   {_key: "explore", kind: "explore", enabled: true, eyebrow: "Explore MisterStory", title: "What do you want to explore?"},
   {_key: "topics", kind: "topics", enabled: true, eyebrow: "Explore by idea", title: "Topics worth following"},
   {_key: "companies", kind: "companies", enabled: true, eyebrow: "Company directory", title: "Explore Companies", description: "Find company profiles, articles, people and key numbers.", href: "/companies", linkLabel: "View all companies", limit: 6},
-  {_key: "newsletter", kind: "newsletter", enabled: true, title: "One business story every week.", description: "Interesting companies, smart strategies and the numbers behind them.", linkLabel: "Subscribe"},
+  {_key: "newsletter", kind: "newsletter", enabled: true, title: "Get MisterStory in your inbox", description: "Subscribe for business stories, company analysis and funding updates.", linkLabel: "Subscribe"},
 ];
 
-export const DEFAULT_HOME_TITLE = "MisterStory — Company News, Financials & Business Stories";
-export const DEFAULT_HOME_DESCRIPTION = "Understand companies through business news, financial results, funding updates and clear explanations of how they make money.";
+export const DEFAULT_HOME_TITLE = "MisterStory: Business News, Startup Funding and Company Analysis";
+export const DEFAULT_HOME_DESCRIPTION = "Explore Indian business news, startup funding, company financials and clear breakdowns of how businesses make money.";
 export const DEFAULT_HOME_HEADING = "Company News & Business Stories";
+
+export function resolveHomepageSeo(settings?: {seoTitle?: string | null; seoDescription?: string | null} | null) {
+  const title = settings?.seoTitle?.trim();
+  const description = settings?.seoDescription?.trim();
+  // Existing Sanity documents can still contain the previous standard defaults.
+  // Replace only those exact values, leaving future custom SEO copy editable.
+  const legacyTitles = [
+    "MisterStory — Company News, Financials & Business Stories",
+    "MisterStory: Company News, Financials & Business Stories",
+  ];
+  return {
+    title: !title || legacyTitles.includes(title) ? DEFAULT_HOME_TITLE : title,
+    description: !description || description === "Understand companies through business news, financial results, funding updates and clear explanations of how they make money."
+      ? DEFAULT_HOME_DESCRIPTION : description,
+  };
+}
 
 export function selectFeaturedHomepageArticles<T extends {_id:string}>(articles:T[], settings:{featuredArticleId?:string|null; secondFeaturedArticleId?:string|null; supportingFeaturedArticleIds?:string[]}|null|undefined):T[]{
   // New uploads never replace configured picks. The legacy second highlight

@@ -12,7 +12,7 @@ import HomepageDataSection from "@/components/HomepageDataSection";
 import type {Company} from "@/components/CompanyDirectory";
 import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data";
 import {HOMEPAGE_SETTINGS_QUERY, type HomepageSettings} from "@/lib/homepage-content";
-import {DEFAULT_HOME_TITLE, DEFAULT_HOME_DESCRIPTION, DEFAULT_HOME_HEADING, homepageHref, homepageSections, selectHomepageArticles, selectFeaturedHomepageArticles} from "@/lib/homepage-config";
+import {DEFAULT_HOME_HEADING, resolveHomepageSeo, homepageHref, homepageSections, selectHomepageArticles, selectFeaturedHomepageArticles} from "@/lib/homepage-config";
 import {client} from "@/sanity/lib/client";
 import {absoluteUrl} from "@/lib/site-url";
 
@@ -27,8 +27,7 @@ const getHomepageSettings = cache(async () => {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getHomepageSettings();
-  const title = settings?.seoTitle?.trim() || DEFAULT_HOME_TITLE;
-  const description = settings?.seoDescription?.trim() || DEFAULT_HOME_DESCRIPTION;
+  const {title, description} = resolveHomepageSeo(settings);
   const images = settings?.socialImageUrl ? [{url: settings.socialImageUrl}] : undefined;
   return {
     title, description, alternates: {canonical: absoluteUrl("/")},

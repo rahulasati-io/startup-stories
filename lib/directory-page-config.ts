@@ -13,7 +13,7 @@ export type DirectoryPageSettings = {
 };
 export const DEFAULT_DIRECTORY_SECTIONS: DirectoryPageSection[] = [
   {_key: "directory", kind: "directory", enabled: true},
-  {_key: "newsletter", kind: "newsletter", enabled: true, title: "One business story every week.", description: "Interesting companies, smart strategies and the numbers behind them.", linkLabel: "Subscribe"},
+  {_key: "newsletter", kind: "newsletter", enabled: true, title: "Get MisterStory in your inbox", description: "Subscribe for business stories, company analysis and funding updates.", linkLabel: "Subscribe"},
 ];
 export const DIRECTORY_PAGE_DEFAULTS: Record<DirectoryPageKind, Omit<DirectoryPageSettings, "sections">> = {
   companies: {seoTitle: "Companies | MisterStory", seoDescription: "Explore company profiles, articles, people and key numbers.", title: "All Companies", description: "Search the complete MisterStory company directory by name or industry.", eyebrow: "Company directory", searchPlaceholder: "Search by company or industry"},

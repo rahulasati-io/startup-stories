@@ -12,6 +12,15 @@ export default function Newsletter({ compact = false, title, description, button
   const [message, setMessage] = useState("");
   const emailInputId = useId();
   const websiteInputId = useId();
+  // Replace the old default even when a Sanity section still stores that copy.
+  // Preserve deliberately customised copy and explicitly empty fields.
+  const newsletterTitle = title?.trim() === "One business story every week."
+    ? "Get MisterStory in your inbox"
+    : title ?? "Get MisterStory in your inbox";
+  const legacyDescription = description?.trim();
+  const newsletterDescription = description == null || legacyDescription === "Interesting companies, smart strategies and the numbers behind them." || legacyDescription === "One clear company story in your inbox every week."
+    ? "Subscribe for business stories, company analysis and funding updates."
+    : description;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,14 +69,11 @@ export default function Newsletter({ compact = false, title, description, button
       }>
         <div>
           <h2 className={compact ? "text-xl font-bold tracking-tight text-zinc-950" : "text-2xl font-bold tracking-tight text-zinc-950"}>
-            {title ?? (compact ? "Understand companies better." : "One business story every week.")}
+            {newsletterTitle}
           </h2>
 
           <p className={compact ? "mt-2 text-sm leading-6 text-zinc-600" : "mt-2 max-w-xl text-sm leading-6 text-zinc-600"}>
-            {description ?? (compact
-              ? "One clear company story in your inbox every week."
-              : "Interesting companies, smart strategies and the numbers behind them."
-            )}
+            {newsletterDescription}
           </p>
         </div>
 
