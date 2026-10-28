@@ -6,6 +6,7 @@ import {
   type ThumbnailPalette,
 } from "@/lib/business-model-thumbnail";
 import { client } from "@/sanity/lib/client";
+import {generatedThumbnailSize, SIDEBAR_IMAGE_QUALITY} from "@/lib/sidebar-image";
 
 export const runtime = "nodejs";
 
@@ -138,10 +139,11 @@ function DecorativePattern({ pattern, palette }: { pattern: number; palette: Thu
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ category: string; slug: string }> },
 ) {
   const { category, slug } = await params;
+  const size = generatedThumbnailSize(request.url);
 
   const article = await client.fetch<ThumbnailArticle | null>(
     THUMBNAIL_QUERY,
@@ -163,7 +165,7 @@ export async function GET(
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-  return new ImageResponse(
+  const response = new ImageResponse(
     (
       <div
         style={{
@@ -240,4 +242,19 @@ export async function GET(
       },
     },
   );
+  if (size.width === 1200) return response;
+
+  // Render the existing artwork unchanged, then downsample only sidebar variants.
+  // This avoids scaling artefacts in the text layout and keeps social/hero PNGs intact.
+  const sharp = (await import("sharp")).default;
+  const thumbnail = await sharp(Buffer.from(await response.arrayBuffer()))
+    .resize(size.width, size.height)
+    .webp({quality: SIDEBAR_IMAGE_QUALITY})
+    .toBuffer();
+  return new Response(new Uint8Array(thumbnail), {
+    headers: {
+      "Content-Type": "image/webp",
+      "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+    },
+  });
 }

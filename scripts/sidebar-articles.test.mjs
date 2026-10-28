@@ -18,9 +18,9 @@ function compile(source,mocks){
 }
 const story=id=>({_id:id,title:`Article ${id}`,slug:id,_updatedAt:'2026-10-28',category:'News',categorySlug:'news',socialImageUrl:null,mainImageUrl:`https://example.com/${id}.webp`});
 const shared=compile(read('components/SidebarArticleLinks.tsx'),{
-  'next/image':{__esModule:true,default:({src,alt,sizes,loading,unoptimized})=>React.createElement('img',{src,alt,sizes,loading,'data-unoptimized':String(unoptimized)})},
   '@/components/NavigationLink':{__esModule:true,default:({href,children,prefetch,...props})=>React.createElement('a',{href,...props,'data-prefetch':String(prefetch)},children)},
   '@/lib/article-card-data':{articleHref:a=>`/articles/${a.slug}`,articleImageUrl:a=>a.socialImageUrl||a.mainImageUrl||(a.categorySlug?`/api/article-thumbnail/${a.categorySlug}/${a.slug}`:null)},
+  '@/lib/sidebar-image':compile(read('lib/sidebar-image.ts'),{}),
 }).default;
 
 test('compact lists retain every title/category/link, use lazy 88px images and avoid bulk prefetch',()=>{
@@ -41,7 +41,7 @@ test('image precedence, generated fallback and missing image keep working',()=>{
   ]}));
   assert.match(html,/social-override.webp/);
   assert.match(html,/api\/article-thumbnail\/news\/generated/);
-  assert.match(html,/data-unoptimized="true"/);
+  assert.match(html,/variant=sidebar&amp;width=88/);
   assert.equal((html.match(/<img /g)||[]).length,2);
   assert.match(html,/Article none/);
 });
