@@ -23,26 +23,28 @@ const shared=compile(read('components/SidebarArticleLinks.tsx'),{
   '@/lib/sidebar-image':compile(read('lib/sidebar-image.ts'),{}),
 }).default;
 
-test('compact lists retain every title/category/link, use lazy 88px images and avoid bulk prefetch',()=>{
+test('text-only compact lists retain every title/category/link and avoid bulk prefetch',()=>{
   const html=renderToStaticMarkup(React.createElement(shared,{articles:Array.from({length:10},(_,i)=>story(String(i)))}));
   assert.equal((html.match(/<li /g)||[]).length,10);
-  assert.equal((html.match(/loading="lazy"/g)||[]).length,10);
-  assert.equal((html.match(/sizes="88px"/g)||[]).length,10);
+  assert.doesNotMatch(html,/<img\b|<picture\b|srcSet=|grid-cols-/);
   assert.equal((html.match(/data-prefetch="false"/g)||[]).length,10);
   assert.doesNotMatch(html,/fetchPriority="high"|rel="preload"/);
-  for(let i=0;i<10;i++)assert.match(html,new RegExp(`href="/articles/${i}"`));
+  for(let i=0;i<10;i++){
+    assert.match(html,new RegExp(`href="/articles/${i}"`));
+    assert.match(html,new RegExp(`Article ${i}`));
+  }
+  assert.equal((html.match(/>News</g)||[]).length,10);
 });
 
-test('image precedence, generated fallback and missing image keep working',()=>{
+test('custom, generated and missing image stories all render text without image requests',()=>{
   const html=renderToStaticMarkup(React.createElement(shared,{articles:[
     {...story('social'),socialImageUrl:'https://example.com/social-override.webp'},
     {...story('generated'),mainImageUrl:null},
     {...story('none'),categorySlug:'',mainImageUrl:null},
   ]}));
-  assert.match(html,/social-override.webp/);
-  assert.match(html,/api\/article-thumbnail\/news\/generated/);
-  assert.match(html,/variant=sidebar&amp;width=88/);
-  assert.equal((html.match(/<img /g)||[]).length,2);
+  assert.doesNotMatch(html,/<img\b|social-override.webp|api\/article-thumbnail|variant=sidebar/);
+  assert.match(html,/Article social/);
+  assert.match(html,/Article generated/);
   assert.match(html,/Article none/);
 });
 
