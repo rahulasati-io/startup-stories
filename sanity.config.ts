@@ -14,6 +14,7 @@ import {schema} from './sanity/schemaTypes'
 import {structure} from './sanity/structure'
 import {ArticlePublishAction} from './sanity/actions/ArticlePublishAction'
 import {AuthorUnpublishAction} from './sanity/actions/AuthorUnpublishAction'
+import {GuardedDocumentLayout, StudioDraftGuardLayout} from './sanity/components/DraftNavigationGuard'
 
 const companyRecordTemplates = [
   ['companyPersonRole', 'Person role'],
@@ -28,6 +29,7 @@ export default defineConfig({
   basePath: '/studio',
   projectId,
   dataset,
+  studio: {components: {layout: StudioDraftGuardLayout}},
   // Add and edit the content schema in the './sanity/schemaTypes' folder
   schema: {
     ...schema,
@@ -47,6 +49,7 @@ export default defineConfig({
     ],
   },
   document: {
+    components: {unstable_layout: GuardedDocumentLayout},
     actions: (previousActions, context) => {
       if (context.schemaType === 'author') {
         const publishAction = previousActions.find((action) => action.action === 'publish')

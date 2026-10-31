@@ -15,6 +15,7 @@ import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { absoluteUrl } from "@/lib/site-url";
+import {ARTICLE_AUTHOR_PROJECTION} from "@/lib/article-author.mjs";
 import { formatIstDateTime } from "@/lib/display-dates.mjs";
 import { type ArticleCardData, type ArticleLinkData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
@@ -37,10 +38,7 @@ const ARTICLE_QUERY = defineQuery(/* groq */ `
     "category": category->title,
     "categorySlug": category->slug.current,
     "categoryId": category._ref,
-    "author": author->{
-      name,
-      "slug": slug.current
-    },
+    "author": ${ARTICLE_AUTHOR_PROJECTION},
     publishedAt,
     contentUpdatedAt,
     body,
@@ -375,6 +373,7 @@ export async function generateMetadata({
 
   return {
     title: article.seoTitle || article.title,
+    authors: article.author?.name ? [{name: article.author.name, ...(article.author.slug ? {url: absoluteUrl(`/authors/${article.author.slug}`)} : {})}] : undefined,
     description: article.seoDescription || undefined,
     keywords: keywords?.length ? keywords : undefined,
     alternates: {

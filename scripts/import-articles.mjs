@@ -6,6 +6,7 @@ import { createClient } from "@sanity/client";
 import { markdownToPortableText } from "./lib/markdown-to-portable-text.mjs";
 import {buildLinkTargets, interlinkArticle, LINK_TARGETS_QUERY} from "./lib/article-interlinks.mjs";
 import { assertArticleSlug, isValidArticleSlug } from "../lib/article-slug.mjs";
+import {PUBLISHED_AUTHORS_QUERY, importedArticleAuthorId} from "../lib/article-author.mjs";
 
 const args = process.argv.slice(2);
 const filePath = args.find((argument) => !argument.startsWith("--"));
@@ -87,7 +88,7 @@ async function run() {
     const companySlugs = split(row.company_slug);
     const categoryInput = clean(row.article_tag) || clean(row.category_slug);
     const categorySlug = categoryAliases.get(categoryInput.toLowerCase()) || categoryInput;
-    const authorSlug = clean(row.author_slug) || "rahul";
+    const authorSlug = clean(row.author_slug);
     const hasPeopleSlugs = clean(row.people_slugs) !== "";
     const peopleSlugs = split(row.people_slugs);
     const hasConceptSlugs = clean(row.concept_slugs) !== "";
@@ -113,13 +114,12 @@ async function run() {
 
   const companySlugs = [...new Set(inputs.flatMap((input) => input.companySlugs))];
   const categorySlugs = [...new Set(inputs.map((input) => input.categorySlug))];
-  const authorSlugs = [...new Set(inputs.map((input) => input.authorSlug))];
   const peopleSlugs = [...new Set(inputs.flatMap((input) => input.peopleSlugs))];
   const conceptSlugs = [...new Set(inputs.flatMap((input) => input.conceptSlugs))];
   const [companies, categories, authors, people, concepts, articles, linkDocuments] = await Promise.all([
     client.fetch(`*[_type == "company" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: companySlugs }),
     client.fetch(`*[_type == "category" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: categorySlugs }),
-    client.fetch(`*[_type == "author" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: authorSlugs }),
+    client.fetch(PUBLISHED_AUTHORS_QUERY, {}, {perspective: "published"}),
     peopleSlugs.length ? client.fetch(`*[_type == "founder" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: peopleSlugs }) : [],
     conceptSlugs.length ? client.fetch(`*[_type == "concept" && slug.current in $slugs]{_id,"slug":slug.current}`, { slugs: conceptSlugs }) : [],
     client.fetch(`*[_type == "post" && (importId in $importIds || slug.current in $slugs)]|order(_updatedAt asc){...,"slugValue":slug.current}`, { importIds: [...importIds], slugs: [...slugs] }),
@@ -134,7 +134,6 @@ async function run() {
   }
   const companiesBySlug = new Map(companies.map((item) => [item.slug, item._id]));
   const categoriesBySlug = new Map(categories.map((item) => [item.slug, item._id]));
-  const authorsBySlug = new Map(authors.map((item) => [item.slug, item._id]));
   const peopleBySlug = new Map(people.map((item) => [item.slug, item._id]));
   const conceptsBySlug = new Map(concepts.map((item) => [item.slug, item._id]));
   const articlesBySlug = new Map();
@@ -169,7 +168,9 @@ async function run() {
     }
     for (const slug of input.companySlugs) if (!companiesBySlug.has(slug)) errors.push(`row ${input.rowNumber}: company_slug "${slug}" was not found in Sanity`);
     if (!categoriesBySlug.has(input.categorySlug)) errors.push(`row ${input.rowNumber}: article_tag "${input.categorySlug}" was not found in Sanity`);
-    if (!authorsBySlug.has(input.authorSlug)) errors.push(`row ${input.rowNumber}: author_slug "${input.authorSlug}" was not found in Sanity`);
+    const existing = (input.importId ? articlesByImportId.get(input.importId) : undefined) || articlesBySlug.get(input.slug);
+    input.authorId = importedArticleAuthorId(input.authorSlug, (existing?.draft || existing?.published)?.author, authors);
+    if (!input.authorId) errors.push(`row ${input.rowNumber}: ${input.authorSlug ? `author_slug "${input.authorSlug}"` : 'default author Rahul Asati'} was not found among published authors in Sanity`);
     for (const slug of input.peopleSlugs) if (!peopleBySlug.has(slug)) errors.push(`row ${input.rowNumber}: people_slugs value "${slug}" was not found in Sanity`);
     for (const slug of input.conceptSlugs) if (!conceptsBySlug.has(slug)) errors.push(`row ${input.rowNumber}: concept_slugs value "${slug}" was not found in Sanity`);
   }
@@ -193,7 +194,7 @@ async function run() {
       body: input.body,
       category: reference(categoriesBySlug.get(input.categorySlug)),
       company: input.companySlugs.map((slug) => ({ ...reference(companiesBySlug.get(slug)), _key: `company-${slug}` })),
-      author: reference(authorsBySlug.get(input.authorSlug)),
+      author: reference(input.authorId),
       seoTitle: input.seoTitle,
       seoDescription: input.seoDescription,
       seoKeywords: input.seoKeywords,

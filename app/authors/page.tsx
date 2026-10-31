@@ -7,6 +7,7 @@ import DirectoryPageLayout from "@/components/DirectoryPageLayout";
 import DirectoryBreadcrumbs from "@/components/DirectoryBreadcrumbs";
 import {getDirectoryPageSettings, directorySharing} from "@/lib/directory-page-settings";
 import { absoluteUrl } from "@/lib/site-url";
+import {DEFAULT_ARTICLE_AUTHOR_QUERY} from "@/lib/article-author.mjs";
 import { client } from "@/sanity/lib/client";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,7 +25,7 @@ const AUTHORS_QUERY = defineQuery(/* groq */ `
     experience,
     "articleCount": count(*[
       _type == "post" &&
-      author._ref == ^._id &&
+      (author._ref == ^._id || (!defined(author->_id) && ^._id == (${DEFAULT_ARTICLE_AUTHOR_QUERY})._id)) &&
       !(_id in path("drafts.**")) &&
       defined(slug.current)
     ])

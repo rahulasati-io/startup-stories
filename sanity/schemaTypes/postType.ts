@@ -3,6 +3,7 @@ import OptimizedArticleImageInput from "../components/OptimizedArticleImageInput
 import PasteAwareArticleBodyInput from "../components/PasteAwareArticleBodyInput";
 import { ARTICLE_SLUG_ERROR, isValidArticleSlug } from "../../lib/article-slug.mjs";
 import {apiVersion} from "../env";
+import {DEFAULT_ARTICLE_AUTHOR_QUERY} from "../../lib/article-author.mjs";
 
 export const postType = defineType({
   name: "post",
@@ -10,16 +11,10 @@ export const postType = defineType({
   type: "document",
   __experimental_formPreviewTitle: false,
   initialValue: async (_, context) => {
-    const authorId = await context.getClient({apiVersion}).fetch<string | null>(/* groq */ `
-      *[
-        _type == "author" &&
-        slug.current == "rahul" &&
-        !(_id in path("drafts.**"))
-      ][0]._id
-    `);
+    const author = await context.getClient({apiVersion}).fetch<{_id: string} | null>(DEFAULT_ARTICLE_AUTHOR_QUERY, {}, {perspective: "published"});
 
-    return authorId
-      ? {author: {_type: "reference", _ref: authorId}}
+    return author
+      ? {author: {_type: "reference", _ref: author._id}}
       : {};
   },
 
@@ -175,6 +170,7 @@ export const postType = defineType({
     defineField({
       name: "author",
       title: "Author",
+      description: "Defaults to Rahul Asati. Select another published author to override it.",
       type: "reference",
       group: "connections",
       to: [{ type: "author" }],

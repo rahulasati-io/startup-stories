@@ -3,6 +3,7 @@ import {getGeneratedArticleThumbnailPath} from "@/lib/business-model-thumbnail";
 import {absoluteUrl} from "@/lib/site-url";
 import {escapeXml} from "@/lib/sitemap-xml";
 import {client} from "@/sanity/lib/client";
+import {ARTICLE_AUTHOR_PROJECTION} from "@/lib/article-author.mjs";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,7 @@ const FEED_QUERY = defineQuery(/* groq */ `
     contentUpdatedAt,
     "category": category->title,
     "categorySlug": category->slug.current,
-    "author": author->name,
+    "author": (${ARTICLE_AUTHOR_PROJECTION}).name,
     "socialImageUrl": socialImage.asset->url,
     "mainImageUrl": mainImage.asset->url
   }

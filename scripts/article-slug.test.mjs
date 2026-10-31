@@ -20,8 +20,8 @@ test("importer rejects invalid selected rows before querying Sanity in every mod
     for (const slug of ["story ", "story\n", "quanfluence-quantum-computer-funding   Copy"]) {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet([
-        { import_id: "valid", article_slug: "valid-story", company_slug: "company", title: "Valid", article_tag: "strategy", author_slug: "author", article_body: "Body", status: "published" },
-        { import_id: "invalid", article_slug: slug, company_slug: "company", title: "Invalid", article_tag: "strategy", author_slug: "author", article_body: "Body", status: "published" },
+        { import_id: "valid", article_slug: "valid-story", company_slug: "company", title: "Valid", article_tag: "strategy", author_slug: "author", article_body: "Body", seo_description: "Valid description", status: "published" },
+        { import_id: "invalid", article_slug: slug, company_slug: "company", title: "Invalid", article_tag: "strategy", author_slug: "author", article_body: "Body", seo_description: "Valid description", status: "published" },
       ]), "Articles");
       const filename = path.join(directory, "articles.xlsx");
       XLSX.writeFile(workbook, filename);

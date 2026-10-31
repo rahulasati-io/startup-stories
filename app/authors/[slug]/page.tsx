@@ -11,6 +11,7 @@ import JsonLd from "@/components/JsonLd";
 import Newsletter from "@/components/Newsletter";
 import type { ArticleCardData } from "@/lib/article-card-data";
 import { absoluteUrl } from "@/lib/site-url";
+import {DEFAULT_ARTICLE_AUTHOR_QUERY} from "@/lib/article-author.mjs";
 import {
   breadcrumbJsonLd,
   MISTERSTORY_ORGANIZATION_ID,
@@ -30,7 +31,7 @@ const AUTHOR_QUERY = defineQuery(/* groq */ `
     "slug": slug.current,
     "articles": *[
       _type == "post" &&
-      author._ref == ^._id &&
+      (author._ref == ^._id || (!defined(author->_id) && ^._id == (${DEFAULT_ARTICLE_AUTHOR_QUERY})._id)) &&
       !(_id in path("drafts.**")) &&
       defined(slug.current) &&
       defined(category->slug.current)
