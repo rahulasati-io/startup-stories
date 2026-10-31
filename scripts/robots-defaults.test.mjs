@@ -4,9 +4,9 @@ import fs from 'node:fs';
 
 const read=path=>fs.readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 
-test('root metadata explicitly defaults to index and follow without a competing Googlebot override',()=>{
+test('root metadata leaves indexing implicit without a site-wide robots override',()=>{
   const root=read('app/layout.tsx');
-  assert.match(root,/robots:\s*\{\s*index:\s*true,\s*follow:\s*true\s*\}/);
+  assert.doesNotMatch(root,/\brobots\s*:/);
   assert.doesNotMatch(root,/googleBot\s*:/);
 });
 
