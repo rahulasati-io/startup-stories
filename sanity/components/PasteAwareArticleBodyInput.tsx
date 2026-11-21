@@ -2,7 +2,7 @@
 
 import {ExpandIcon} from "@sanity/icons/Expand";
 import {Box, Button, Card, Flex, Stack, Text} from "@sanity/ui";
-import {useState} from "react";
+import {useCallback, useState} from "react";
 import {
   PortableTextInput,
   type OnPasteFn,
@@ -282,7 +282,7 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
   const [focusSession, setFocusSession] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const onPaste: OnPasteFn = (data) => {
+  const onPaste: OnPasteFn = useCallback((data) => {
     const clipboard = data.event.clipboardData;
     const plainText = clipboard.getData("text/plain");
     const mixedBlocks = blocksFromHtml(clipboard.getData("text/html")) || blocksFromMarkdown(plainText);
@@ -292,7 +292,13 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
 
     data.event.preventDefault();
     return {path: data.path, insert};
-  };
+  }, []);
+
+  const notifyFullscreen = props.onFullScreenChange;
+  const onFullScreenChange = useCallback((fullscreen: boolean) => {
+    setIsFullscreen(fullscreen);
+    notifyFullscreen?.(fullscreen);
+  }, [notifyFullscreen]);
 
   return (
     <Stack space={3}>
@@ -320,10 +326,7 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
           key={`article-body-${focusSession}`}
           {...props}
           initialFullscreen={focusSession > 0}
-          onFullScreenChange={(fullscreen) => {
-            setIsFullscreen(fullscreen);
-            props.onFullScreenChange?.(fullscreen);
-          }}
+          onFullScreenChange={onFullScreenChange}
           onPaste={onPaste}
         />
       </Box>

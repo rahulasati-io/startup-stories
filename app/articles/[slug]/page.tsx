@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { defineQuery } from "next-sanity";
 import type { Article as ArticleSchema, WithContext } from "schema-dts";
 import ArticleCard from "@/components/ArticleCard";
+import ArticleBodyImage from "@/components/ArticleBodyImage";
 import ArticleSidebar, { type SidebarCompany } from "@/components/ArticleSidebar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
@@ -404,6 +405,7 @@ export async function generateMetadata({
 
 const portableTextComponents: PortableTextComponents = {
   types: {
+    image: ArticleBodyImage,
     articleTable: ({value}) => <ArticleTable value={value as ArticleTableValue} />,
   },
   block: {

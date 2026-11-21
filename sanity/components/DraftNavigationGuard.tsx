@@ -36,9 +36,18 @@ export function DraftGuardDialog({guard}: {guard: DraftNavigationController}) {
 }
 
 export function StudioDraftGuardLayout(props: LayoutProps) {
-  const history = useContext(RouterHistoryContext);
   const guard = useMemo(() => new DraftNavigationController(), []);
   useEffect(() => () => guard.dispose(), [guard]);
+  return <GuardContext.Provider value={guard}>
+    {props.renderDefault(props)}
+    <DraftGuardEffects guard={guard} />
+  </GuardContext.Provider>;
+}
+
+// Autosave/validation updates must not re-render the entire Studio layout.
+// Keep the navigation subscriptions and dialog in their own sibling subtree.
+function DraftGuardEffects({guard}: {guard: DraftNavigationController}) {
+  const history = useContext(RouterHistoryContext);
   useSyncExternalStore(guard.subscribe, guard.getSnapshot, guard.getServerSnapshot);
   const active = guard.hasDrafts || Boolean(guard.pending);
   const supported = Boolean(history && "block" in history && typeof history.block === "function");
@@ -54,11 +63,10 @@ export function StudioDraftGuardLayout(props: LayoutProps) {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [active]);
-  return <GuardContext.Provider value={guard}>
+  return <>
     {active && !supported && <Card padding={3} tone="critical"><Text size={1}>This Studio history does not support the navigation guard. Publish or discard changes before leaving.</Text></Card>}
-    {props.renderDefault(props)}
     <DraftGuardDialog guard={guard} />
-  </GuardContext.Provider>;
+  </>;
 }
 
 // These extension points are supplied by the installed Sanity Studio.
