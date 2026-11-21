@@ -1,6 +1,6 @@
 import { cache, Suspense } from "react";
 import ProfileSectionsLoading from "@/components/ProfileSectionsLoading";
-import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
+import { COMPANY_DEPENDENCIES, PEOPLE_DEPENDENCIES, publicContentOptions } from "@/lib/content-cache";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import type { Metadata } from "next";
@@ -80,13 +80,13 @@ const articleLinks=(articles:RelatedArticle[])=><div className="grid gap-4 sm:gr
 const companyLinks=(companies:GroupCompany[])=><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{companies.map((item)=><Link key={item._id} href={item.slug?`/companies/${item.slug}`:"#"} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-md"><div className="flex items-center gap-4"><div aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-xl font-semibold text-zinc-500">{item.name[0]}</div><div><h3 className="font-semibold">{item.name}</h3>{item.industry&&<p className="mt-1 text-sm text-zinc-500">{item.industry}</p>}</div></div>{item.description&&<p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-600">{item.description}</p>}</Link>)}</div>;
 const companyOverviewComponents:PortableTextComponents={block:{normal:({children})=><p className="mb-5 text-[17px] leading-8 text-zinc-700 last:mb-0">{children}</p>,h2:({children})=><h3 className="mb-3 mt-9 text-2xl font-semibold tracking-tight text-zinc-950 first:mt-0">{children}</h3>,h3:({children})=><h4 className="mb-3 mt-7 text-xl font-semibold tracking-tight text-zinc-950">{children}</h4>,h4:({children})=><h5 className="mb-2 mt-6 text-lg font-semibold text-zinc-950">{children}</h5>,blockquote:({children})=><blockquote className="my-6 border-l-2 border-amber-700 pl-4 italic text-zinc-600">{children}</blockquote>},list:{bullet:({children})=><ul className="mb-5 list-disc space-y-2 pl-6 text-[17px] leading-8 text-zinc-700">{children}</ul>,number:({children})=><ol className="mb-5 list-decimal space-y-2 pl-6 text-[17px] leading-8 text-zinc-700">{children}</ol>},marks:{strong:({children})=><strong className="font-semibold text-zinc-950">{children}</strong>,em:({children})=><em>{children}</em>,link:PortableTextLink}};
 
-const getCompany = cache((slug: string) => client.fetch<Company|null>(companyQuery, {slug}, PROFILE_FETCH_OPTIONS));
+const getCompany = cache((slug: string) => client.fetch<Company|null>(companyQuery, {slug}, publicContentOptions(...COMPANY_DEPENDENCIES)));
 
 export async function generateMetadata({params}:Props):Promise<Metadata>{
  const {slug}=await params;
  const [company,settings]=await Promise.all([
   getCompany(slug),
-  client.fetch<SeoSettings|null>(SEO_SETTINGS_QUERY,{}, {perspective:"published",stega:false,next:{revalidate:60}}),
+  client.fetch<SeoSettings|null>(SEO_SETTINGS_QUERY,{}, publicContentOptions("seoSettings")),
  ]);
  if(!company)return {};
  const values={company_name:company.name,industry:company.industry};
@@ -99,7 +99,7 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
 
 export default async function CompanyPage({params}:Props){
  const {slug}=await params;
- const [company,people]=await Promise.all([getCompany(slug),client.fetch<CompanyPerson[]>(peopleQuery,{slug},PROFILE_FETCH_OPTIONS)]);
+ const [company,people]=await Promise.all([getCompany(slug),client.fetch<CompanyPerson[]>(peopleQuery,{slug},publicContentOptions(...PEOPLE_DEPENDENCIES))]);
  if(!company)notFound();
  const sections = getCompanySections(company);
  const canonicalUrl=absoluteUrl(`/companies/${slug}`);
@@ -120,12 +120,12 @@ export default async function CompanyPage({params}:Props){
 
 async function getCompanySections(company: Company) {
  const [funding,timeline,metrics,relatedArticles,groupCompanies,sameIndustryCandidates]=await Promise.all([
-  client.fetch<FundingRound[]>(fundingQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
-  client.fetch<TimelineEvent[]>(timelineQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
-  client.fetch<CompanyMetric[]>(metricQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
-  client.fetch<RelatedArticle[]>(relatedArticlesQuery,{companyId:company._id},PROFILE_FETCH_OPTIONS),
-  client.fetch<GroupCompany[]>(groupCompaniesQuery,{companyId:company._id,parentId:company.parentCompany?._id||null},PROFILE_FETCH_OPTIONS),
-  company.industry?client.fetch<GroupCompany[]>(sameIndustryCompaniesQuery,{companyId:company._id,industryId:company.industryId||null,industry:company.industry,subIndustry:company.subIndustry||null},PROFILE_FETCH_OPTIONS):Promise.resolve([]),
+  client.fetch<FundingRound[]>(fundingQuery,{companyId:company._id},publicContentOptions("fundingRound")),
+  client.fetch<TimelineEvent[]>(timelineQuery,{companyId:company._id},publicContentOptions("timelineEvent")),
+  client.fetch<CompanyMetric[]>(metricQuery,{companyId:company._id},publicContentOptions("companyMetric")),
+  client.fetch<RelatedArticle[]>(relatedArticlesQuery,{companyId:company._id},publicContentOptions("post", "category")),
+  client.fetch<GroupCompany[]>(groupCompaniesQuery,{companyId:company._id,parentId:company.parentCompany?._id||null},publicContentOptions("company", "industry")),
+  company.industry?client.fetch<GroupCompany[]>(sameIndustryCompaniesQuery,{companyId:company._id,industryId:company.industryId||null,industry:company.industry,subIndustry:company.subIndustry||null},publicContentOptions("company", "industry")):Promise.resolve([]),
  ]);
  const groupCompanyIds=new Set(groupCompanies.map((item)=>item._id));
  const sameIndustryCompanies=sameIndustryCandidates.filter((item)=>!groupCompanyIds.has(item._id)).slice(0,6);

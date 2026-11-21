@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
 import React from 'react';
+import * as contentCache from '../lib/content-cache.ts';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {parse,evaluate} from 'groq-js';
 import {selectFeaturedHomepageArticles} from '../lib/homepage-config.ts';
@@ -12,7 +13,7 @@ const require=createRequire(import.meta.url);
 function compile(path,mocks){
   const source=fs.readFileSync(new URL(path,import.meta.url),'utf8');
   const compiled=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
-  const loaded={exports:{}};new Function('require','module','exports',compiled)(name=>mocks[name]??require(name),loaded,loaded.exports);return loaded.exports;
+  const loaded={exports:{}};new Function('require','module','exports',compiled)(name=>mocks[name]??(name==='@/lib/content-cache'?contentCache:name==='@/components/NavigationLink'?mocks['next/link']:require(name)),loaded,loaded.exports);return loaded.exports;
 }
 function loader(results){
   const calls=[];

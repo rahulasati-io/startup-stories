@@ -9,6 +9,7 @@ import {getDirectoryPageSettings, directorySharing} from "@/lib/directory-page-s
 import { absoluteUrl } from "@/lib/site-url";
 import {DEFAULT_ARTICLE_AUTHOR_QUERY} from "@/lib/article-author.mjs";
 import { client } from "@/sanity/lib/client";
+import {publicContentOptions} from "@/lib/content-cache";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getDirectoryPageSettings("authors");
@@ -33,6 +34,6 @@ const AUTHORS_QUERY = defineQuery(/* groq */ `
 `);
 
 export default async function AuthorsPage() {
-  const [authors, settings] = await Promise.all([client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } }), getDirectoryPageSettings("authors")]);
+  const [authors, settings] = await Promise.all([client.fetch<DirectoryAuthor[]>(AUTHORS_QUERY, {}, publicContentOptions("author", "post")), getDirectoryPageSettings("authors")]);
   return <><Header /><DirectoryPageLayout settings={settings} breadcrumb={<DirectoryBreadcrumbs label="Authors" path="/authors" />}><AuthorDirectory authors={authors} title={settings.title} eyebrow={settings.eyebrow} description={settings.description} searchPlaceholder={settings.searchPlaceholder} /></DirectoryPageLayout><Footer /></>;
 }

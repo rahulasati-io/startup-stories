@@ -36,7 +36,7 @@ test('all public route families have lightweight fallbacks; detailed profile fal
   const PageLoading=load('components/PageLoading.tsx',{'@/components/Header':{__esModule:true,default:()=>React.createElement('header',null,'Navigation')}});
   const html=renderToStaticMarkup(React.createElement(PageLoading,{label:'data'}));
   assert.match(html,/aria-busy="true"/);
-  assert.match(html,/role="status"[^>]*>Opening data…/);
+  assert.match(html,/class="sr-only"[^>]*>Loading data…/);
   assert.match(html,/motion-reduce:animate-none/);
   assert.doesNotMatch(html,/<h1|noindex|fetch\(/);
 });

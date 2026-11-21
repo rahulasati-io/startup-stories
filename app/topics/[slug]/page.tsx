@@ -11,6 +11,7 @@ import { ARTICLE_CARDS_QUERY, type ArticleCardData } from "@/lib/article-card-da
 import { absoluteUrl } from "@/lib/site-url";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
+import {ARTICLE_DEPENDENCIES, publicContentOptions} from "@/lib/content-cache";
 import { TOPIC_ARTICLE_FILTER } from "@/lib/topic-visibility";
 
 const TOPIC_QUERY = defineQuery(/* groq */ `
@@ -32,7 +33,7 @@ type Topic = {
 type Props = { params: Promise<{ slug: string }> };
 
 async function getTopic(slug: string) {
-  return client.fetch<Topic | null>(TOPIC_QUERY, { slug }, { perspective: "published", next: { revalidate: 60 } });
+  return client.fetch<Topic | null>(TOPIC_QUERY, { slug }, publicContentOptions("category", "post"));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -51,7 +52,7 @@ export default async function TopicPage({ params }: Props) {
   const { slug } = await params;
   const [topic, allArticles] = await Promise.all([
     getTopic(slug),
-    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, { perspective: "published", next: { revalidate: 60 } }),
+    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, publicContentOptions(...ARTICLE_DEPENDENCIES)),
   ]);
   if (!topic) notFound();
 

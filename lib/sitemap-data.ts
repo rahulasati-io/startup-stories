@@ -4,13 +4,16 @@ import type {SitemapEntry} from "@/lib/sitemap-xml";
 import {client} from "@/sanity/lib/client";
 import {TOPIC_ARTICLE_FILTER} from "@/lib/topic-visibility";
 import {dataPages} from "@/lib/data-library";
+import {articleDates} from "@/lib/article-dates";
 
 type SitemapDocumentType = "company" | "founder" | "post" | "category" | "author";
 
 type SitemapDocument = {
   _type: SitemapDocumentType;
   slug: string;
-  lastModified: string;
+  lastModified?: string;
+  publishedAt?: string | null;
+  contentUpdatedAt?: string | null;
 };
 
 const CONTENT_SITEMAP_QUERY = defineQuery(/* groq */ `
@@ -22,10 +25,9 @@ const CONTENT_SITEMAP_QUERY = defineQuery(/* groq */ `
   ] | order(_updatedAt desc) {
     _type,
     "slug": slug.current,
-    "lastModified": select(
-      _type == "post" => coalesce(contentUpdatedAt, publishedAt, _updatedAt),
-      _updatedAt
-    )
+    publishedAt,
+    contentUpdatedAt,
+    "lastModified": _updatedAt
   }
 `);
 
@@ -51,7 +53,8 @@ export async function getContentSitemap(types: SitemapDocumentType[]): Promise<S
     const path = documentPath(document);
     if (!path) return [];
 
-    return [{url: absoluteUrl(path), lastModified: document.lastModified}];
+    const lastModified = document._type === "post" ? articleDates(document).modifiedAt : document.lastModified;
+    return [{url: absoluteUrl(path), lastModified}];
   });
 }
 

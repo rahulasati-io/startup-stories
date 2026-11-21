@@ -1,5 +1,6 @@
 import {revalidatePath, revalidateTag} from "next/cache";
 import {PROFILE_CACHE_TAG} from "@/lib/profile-cache";
+import {contentCacheTag, KNOWN_CONTENT_TYPES} from "@/lib/content-cache";
 import {type NextRequest, NextResponse} from "next/server";
 import {parseBody} from "next-sanity/webhook";
 
@@ -41,10 +42,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // A company, person, article, author or category can affect several directories,
-    // cards and relationship sections. Refreshing the root layout keeps them in sync.
-    revalidateTag(PROFILE_CACHE_TAG, {expire: 0});
-    revalidatePath("/", "layout");
+    const type = body?._type;
+    if (type && KNOWN_CONTENT_TYPES.has(type)) {
+      // Every manual public read carries its document-type dependencies. This
+      // also handles deletes, old slugs and empty/missing cached query results.
+      revalidateTag(contentCacheTag(type), {expire: 0});
+    } else {
+      // Preserve compatibility with older/minimal webhook projections. Never
+      // silently acknowledge a new content type without refreshing its pages.
+      revalidateTag(PROFILE_CACHE_TAG, {expire: 0});
+      revalidatePath("/", "layout");
+    }
 
     return NextResponse.json({
       ok: true,

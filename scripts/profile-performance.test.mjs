@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import ts from 'typescript';
 import {parse, evaluate} from 'groq-js';
 import React from 'react';
+import * as contentCache from '../lib/content-cache.ts';
 
 const require=createRequire(import.meta.url);
 const read=path=>fs.readFileSync(new URL('../'+path,import.meta.url),'utf8');
@@ -31,6 +32,7 @@ function load(source,mocks){
     if(name in mocks)return mocks[name];
     if(name==='react'||name==='react/jsx-runtime')return require(name);
     if(name==='next-sanity')return {defineQuery:query=>query};
+    if(name==='@/lib/content-cache')return contentCache;
     if(name==='@/lib/profile-cache')return {PROFILE_FETCH_OPTIONS:options,PROFILE_CACHE_TAG:'published-profiles'};
     if(name==='@/sanity/lib/seo')return {SEO_SETTINGS_QUERY:'seo',DEFAULT_SEO_TEMPLATES:{},fillSeoTemplate:()=>''};
     if(name.startsWith('@/components/')||name==='next/image')return {__esModule:true,default:()=>null};
@@ -80,7 +82,10 @@ test('company page returns overview and Suspense boundaries while secondary quer
   assert.ok(text.includes('Company overview'));
   assert.ok(types.filter(type=>type===React.Suspense).length>=2);
   assert.ok(calls.length>=7,'secondary requests begin eagerly and in parallel');
-  assert.ok(calls.every(call=>call.opts===options));
+  assert.ok(calls.every(call=>call.opts.cache==='force-cache' && call.opts.next.revalidate===60));
+  const overview=calls.find(call=>call.query===queries(company).companyQuery);
+  assert.ok(!overview.opts.next.tags.includes(contentCache.contentCacheTag('post')));
+  assert.ok(calls.find(call=>call.query===queries(company).relatedArticlesQuery).opts.next.tags.includes(contentCache.contentCacheTag('post')));
 });
 
 test('missing companies remain a not-found response, never a blank successful profile',async()=>{
@@ -126,7 +131,7 @@ test('only a valid signed webhook expires profile cache and invalidates pages',a
       });
       const response=await route.POST({headers:new Headers({'sanity-webhook-signature':'test-only'})});
       assert.equal(response.status,valid?200:401);
-      assert.deepEqual(calls,valid?[['tag','published-profiles',{expire:0}],['path','/','layout']]:[]);
+      assert.deepEqual(calls,valid?[['tag',contentCache.contentCacheTag('company'),{expire:0}]]:[]);
     }
   }finally{if(previous===undefined)delete process.env.SANITY_REVALIDATE_SECRET;else process.env.SANITY_REVALIDATE_SECRET=previous;}
 });

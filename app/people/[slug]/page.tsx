@@ -3,7 +3,7 @@ import ProfileSectionsLoading from "@/components/ProfileSectionsLoading";
 import SidebarArticleLinks, {type SidebarStory} from "@/components/SidebarArticleLinks";
 import {getDataFeaturedStories} from "@/lib/data-featured-stories";
 import {selectSidebarStories} from "@/lib/sidebar-stories";
-import { PROFILE_FETCH_OPTIONS } from "@/lib/profile-cache";
+import { PEOPLE_DEPENDENCIES, publicContentOptions } from "@/lib/content-cache";
 import { PortableText, type PortableTextBlock, type PortableTextComponents } from "@portabletext/react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -68,7 +68,7 @@ const PERSON_ARTICLES_QUERY = defineQuery(`
     }
 `);
 
-const getPersonArticles = cache((personId: string) => client.fetch<RelatedArticle[]>(PERSON_ARTICLES_QUERY, {personId}, {...PROFILE_FETCH_OPTIONS, signal: AbortSignal.timeout(3000)}).catch(()=>[]));
+const getPersonArticles = cache((personId: string) => client.fetch<RelatedArticle[]>(PERSON_ARTICLES_QUERY, {personId}, {...publicContentOptions("post", "category"), signal: AbortSignal.timeout(3000)}).catch(()=>[]));
 
 type CompanyRole = {
   _id: string;
@@ -129,13 +129,13 @@ const relationshipLabels: Record<string, string> = {
 
 const statusLabel = (status?: string) => status ? status.charAt(0).toUpperCase() + status.slice(1) : "";
 
-const getPerson = cache((slug: string) => client.fetch<Person | null>(PERSON_QUERY, {slug}, PROFILE_FETCH_OPTIONS));
+const getPerson = cache((slug: string) => client.fetch<Person | null>(PERSON_QUERY, {slug}, publicContentOptions(...PEOPLE_DEPENDENCIES)));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const [person, settings] = await Promise.all([
     getPerson(slug),
-    client.fetch<SeoSettings | null>(SEO_SETTINGS_QUERY, {}, { perspective: "published", stega: false, next: { revalidate: 60 } }),
+    client.fetch<SeoSettings | null>(SEO_SETTINGS_QUERY, {}, publicContentOptions("seoSettings")),
   ]);
   if (!person) return {};
   const values = { person_name: person.name, primary_role: person.role };

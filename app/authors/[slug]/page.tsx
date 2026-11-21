@@ -18,6 +18,7 @@ import {
   portableTextToPlainText,
 } from "@/lib/structured-data";
 import { client } from "@/sanity/lib/client";
+import {ARTICLE_DEPENDENCIES, publicContentOptions} from "@/lib/content-cache";
 
 const AUTHOR_QUERY = defineQuery(/* groq */ `
   *[_type == "author" && slug.current == $slug][0]{
@@ -71,7 +72,7 @@ type Author = {
 type Props = { params: Promise<{ slug: string }> };
 
 async function getAuthor(slug: string) {
-  return client.fetch<Author | null>(AUTHOR_QUERY, { slug }, { perspective: "published", next: { revalidate: 60 } });
+  return client.fetch<Author | null>(AUTHOR_QUERY, { slug }, publicContentOptions(...ARTICLE_DEPENDENCIES));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

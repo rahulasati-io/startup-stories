@@ -3,6 +3,7 @@ import {cache} from "react";
 import type {Metadata} from "next";
 import {defineQuery} from "next-sanity";
 import {client} from "@/sanity/lib/client";
+import {publicContentOptions} from "@/lib/content-cache";
 import {resolveDirectorySettings, type DirectoryPageKind, type DirectoryPageSettings} from "@/lib/directory-page-config";
 import {absoluteUrl} from "@/lib/site-url";
 
@@ -15,7 +16,7 @@ export const DIRECTORY_PAGE_SETTINGS_QUERY = defineQuery(/* groq */ `*[_type == 
 
 export const getDirectoryPageSettings = cache(async (kind: DirectoryPageKind) => {
   try {
-    const value = await client.fetch<Partial<DirectoryPageSettings> | null>(DIRECTORY_PAGE_SETTINGS_QUERY, {id: `directoryPageSettings-${kind}`}, {perspective: "published", stega: false, next: {revalidate: 60}, signal: AbortSignal.timeout(6000)});
+    const value = await client.fetch<Partial<DirectoryPageSettings> | null>(DIRECTORY_PAGE_SETTINGS_QUERY, {id: `directoryPageSettings-${kind}`}, {...publicContentOptions("directoryPageSettings"), signal: AbortSignal.timeout(6000)});
     return resolveDirectorySettings(kind, value);
   } catch {
     return resolveDirectorySettings(kind);

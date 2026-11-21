@@ -74,11 +74,14 @@ test('route scrolling uses the Next 16 opt-in and motion preferences are respect
   const css=fs.readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');
   assert.match(layout,/data-scroll-behavior="smooth"/);
   assert.match(css,/@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(css,/\.navigation-spinner, \.page-arrival main:not\(\[aria-busy="true"\]\) \{ animation: none; \}/);
+  assert.match(css,/\.navigation-bar-status, \.navigation-link-hint \{ animation: none; opacity: 1; \}/);
+  assert.doesNotMatch(css,/page-arrival 140ms|navigation-link-status|navigation-spin/);
+  assert.match(css,/navigation-hint-appear 0s 100ms forwards/);
+  assert.doesNotMatch(source,/setTimeout|preventDefault|router\.push/);
 });
 
 test('profile/article prefetch is off until hover, keyboard focus or touch intent',()=>{
-  for(const href of ['/companies/safari','/people/example','/articles/example']){
+  for(const href of ['/companies/safari','/people/example','/articles/example','/data/rbi-repo-rate-history']){
     for(const handler of ['onMouseEnter','onFocus','onTouchStart']){
       intentHref=null;
       render({href,prefetch:false},'Profile');
@@ -88,6 +91,23 @@ test('profile/article prefetch is off until hover, keyboard focus or touch inten
       assert.equal(forwarded.prefetch,true);
     }
   }
+});
+test('main navigation retains default shell prefetch and upgrades only on intent',()=>{
+  for(const href of ['/','/companies','/people','/authors','/articles','/data']){
+    intentHref=null;
+    render({href},'Navigation');
+    assert.equal(forwarded.prefetch,undefined);
+    forwarded.onFocus({defaultPrevented:false});
+    render({href},'Navigation');
+    assert.equal(forwarded.prefetch,true);
+  }
+});
+test('legacy overlay callers get a thin underline, not a covering layer',()=>{
+  pending=true;
+  const html=render({href:'/companies/safari',feedback:'overlay'},'Safari');
+  assert.match(html,/navigation-link-hint/);
+  assert.match(html,/sr-only/);
+  assert.doesNotMatch(html,/navigation-link-status|navigation-spinner/);
 });
 test('intent prefetch preserves explicit opt-outs, new tabs, downloads, hashes and other routes',()=>{
   for(const props of [{href:'/companies/safari',intentPrefetch:false,prefetch:false},{href:'/companies/safari',target:'_blank',prefetch:false},{href:'/companies/safari',download:'',prefetch:false},{href:'#overview',prefetch:false},{href:'/search?q=example',prefetch:false},{href:'https://example.com/companies/safari',prefetch:false},{href:'//example.com/companies/safari',prefetch:false}]){

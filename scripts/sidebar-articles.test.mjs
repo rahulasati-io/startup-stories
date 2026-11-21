@@ -7,13 +7,14 @@ import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {parse,evaluate} from 'groq-js';
 import {selectSidebarStories} from '../lib/sidebar-stories.ts';
+import * as contentCache from '../lib/content-cache.ts';
 
 const require=createRequire(import.meta.url);
 const read=path=>fs.readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 function compile(source,mocks){
   const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
   const module={exports:{}};
-  new Function('require','module','exports',output)(name=>mocks[name]??require(name),module,module.exports);
+  new Function('require','module','exports',output)(name=>name==='@/lib/content-cache'?contentCache:mocks[name]??require(name),module,module.exports);
   return module.exports;
 }
 const story=id=>({_id:id,title:`Article ${id}`,slug:id,_updatedAt:'2026-10-28',category:'News',categorySlug:'news',socialImageUrl:null,mainImageUrl:`https://example.com/${id}.webp`});

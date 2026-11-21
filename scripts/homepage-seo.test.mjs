@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
 import * as config from '../lib/homepage-config.ts';
+import * as contentCache from '../lib/content-cache.ts';
 
 test('approved homepage title and description include funding without an ampersand', () => {
   assert.equal(config.DEFAULT_HOME_TITLE, 'MisterStory: Business News, Startup Funding and Company Analysis');
@@ -30,6 +31,7 @@ test('homepage metadata uses identical approved SEO copy across search and shari
   const module = {exports: {}};
   const require = createRequire(import.meta.url);
   const mocks = {
+    '@/lib/content-cache': contentCache,
     '@/lib/homepage-config': config,
     '@/lib/site-url': {absoluteUrl: path => new URL(path, 'https://misterstory.in/').href},
     '@/sanity/lib/client': {client: {fetch: async () => ({seoTitle: 'MisterStory: Company News, Financials & Business Stories', socialImageUrl: 'https://cdn.sanity.io/example.webp'})}},

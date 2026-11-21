@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/NavigationLink';
 import {dataPages} from '@/lib/data-library';
 import {DATA_CATEGORIES,dataCategoryHref} from '@/lib/data-navigation';
 

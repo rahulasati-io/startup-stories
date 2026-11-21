@@ -3,6 +3,7 @@ import {defineQuery} from 'next-sanity';
 import {client} from '@/sanity/lib/client';
 import {selectFeaturedHomepageArticles} from '@/lib/homepage-config';
 import type {ArticleCardData} from '@/lib/article-card-data';
+import {ARTICLE_DEPENDENCIES,publicContentOptions} from '@/lib/content-cache';
 
 export type DataFeaturedStory=Pick<ArticleCardData,'_id'|'_updatedAt'|'title'|'slug'|'categorySlug'|'socialImageUrl'|'mainImageUrl'>;
 type FeaturedSettings={featuredArticleId?:string|null;supportingFeaturedArticleIds?:string[]};
@@ -25,12 +26,11 @@ export const getDataFeaturedStories=cache(async():Promise<DataFeaturedStory[]>=>
   try{
     // One deadline for both bounded reads. Optional stories must not break data pages.
     const signal=AbortSignal.timeout(3000);
-    const options={perspective:'published' as const,stega:false,next:{revalidate:60},signal};
-    const settings=await client.fetch<FeaturedSettings|null>(DATA_FEATURED_SETTINGS_QUERY,{},options);
+    const settings=await client.fetch<FeaturedSettings|null>(DATA_FEATURED_SETTINGS_QUERY,{}, {...publicContentOptions('homepageSettings'),signal});
     const ids=[...new Set([settings?.featuredArticleId,...(settings?.supportingFeaturedArticleIds||[])].filter((id):id is string=>Boolean(id)))].slice(0,5);
     // Unlike homepage fallback, never label ordinary recent uploads as featured here.
     if(!ids.length)return [];
-    const articles=await client.fetch<DataFeaturedStory[]>(DATA_FEATURED_ARTICLES_QUERY,{ids},options);
+    const articles=await client.fetch<DataFeaturedStory[]>(DATA_FEATURED_ARTICLES_QUERY,{ids},{...publicContentOptions(...ARTICLE_DEPENDENCIES),signal});
     return selectFeaturedHomepageArticles(articles,settings).slice(0,5);
   }catch{return [];}
 });

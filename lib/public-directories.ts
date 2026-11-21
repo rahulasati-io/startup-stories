@@ -6,6 +6,7 @@ import {defineQuery} from "next-sanity";
 import {client} from "@/sanity/lib/client";
 import {toSearchMatch} from "@/lib/global-search";
 import {ARTICLE_DIRECTORY_FILTER} from "@/lib/article-directory-filter";
+import {ARTICLE_DEPENDENCIES, PEOPLE_DEPENDENCIES, publicContentOptions} from "@/lib/content-cache";
 import {absoluteUrl} from "@/lib/site-url";
 import {directoryHref, directoryParams, DIRECTORY_PAGE_SIZE, type DirectoryParams, type DirectoryPagination} from "@/lib/directory-pagination";
 
@@ -32,21 +33,36 @@ const optionsQuery = defineQuery(/* groq */ `{
   "categories": *[_type == "category" && _id in *[_type == "post"].category._ref].title,
   "companies": *[_type == "company" && _id in *[_type == "post"].company[]._ref].name
 }`);
+const companyOptionsQuery = defineQuery(/* groq */ `{
+  "industries": array::unique(*[_type == "company" && defined(slug.current)]{"value": coalesce(industryCategory->name, industry)}.value)
+}`);
 type Options = {industries: string[]; categories: string[]; companies: string[]};
-const getOptions = cache(() => client.fetch<Options>(optionsQuery, {}, {perspective: "published", next: {revalidate: 60}}));
+const getOptions = cache(async (kind: PublicDirectoryKind): Promise<Options> => {
+  if (kind === "people") return {industries: [], categories: [], companies: []};
+  if (kind === "companies") {
+    const result = await client.fetch<Pick<Options, "industries">>(companyOptionsQuery, {}, publicContentOptions("company", "industry"));
+    return {...result, categories: [], companies: []};
+  }
+  return client.fetch<Options>(optionsQuery, {}, publicContentOptions(...ARTICLE_DEPENDENCIES));
+});
 
 export async function getPublicDirectory<T>(kind: PublicDirectoryKind, raw: DirectoryParams): Promise<{items: T[]; pagination: DirectoryPagination}> {
   const {page, query} = directoryParams(raw);
   if (!page) notFound();
   const params = {q: query.q || "", search: toSearchMatch(query.q || ""), category: query.category || "", company: query.company || "", industry: query.industry || ""};
-  const [total, options] = await Promise.all([
-    client.fetch<number>(defineQuery(`count(*[${filters[kind]}])`), params, {perspective: "published", next: {revalidate: 60}}),
-    kind === "people" ? Promise.resolve({industries: [], categories: [], companies: []}) : getOptions(),
+  const start = (page - 1) * DIRECTORY_PAGE_SIZE;
+  // Reject unsafe offsets before interpolation, even for syntactically valid pages.
+  if (!Number.isSafeInteger(start + DIRECTORY_PAGE_SIZE)) notFound();
+  const order = kind === "articles" ? "publishedAt desc, _updatedAt desc, _id asc" : "name asc, _id asc";
+  const dependencies = kind === "articles" ? ARTICLE_DEPENDENCIES : kind === "people" ? PEOPLE_DEPENDENCIES : ["company", "industry"];
+  const fetchOptions = publicContentOptions(...dependencies);
+  // All inputs are available now. Do not wait for count/options before cards.
+  const [total, options, items] = await Promise.all([
+    client.fetch<number>(defineQuery(`count(*[${filters[kind]}])`), params, fetchOptions),
+    getOptions(kind),
+    client.fetch<T[]>(defineQuery(`*[${filters[kind]}] | order(${order})[${start}...${start + DIRECTORY_PAGE_SIZE}] ${projections[kind]}`), params, fetchOptions),
   ]);
   if (page > Math.max(1, Math.ceil(total / DIRECTORY_PAGE_SIZE))) notFound();
-  const start = (page - 1) * DIRECTORY_PAGE_SIZE;
-  const order = kind === "articles" ? "publishedAt desc, _updatedAt desc, _id asc" : "name asc, _id asc";
-  const items = await client.fetch<T[]>(defineQuery(`*[${filters[kind]}] | order(${order})[${start}...${start + DIRECTORY_PAGE_SIZE}] ${projections[kind]}`), params, {perspective: "published", next: {revalidate: 60}});
   const names = kind === "articles" ? ["category", "company", "industry"] : kind === "companies" ? ["industry"] : [];
   const filterOptions: Record<string, string[]> = {category: options.categories, company: options.companies, industry: options.industries};
   return {items, pagination: {path: `/${kind}`, page, total, pageSize: DIRECTORY_PAGE_SIZE, query, filters: names.map((name) => ({name, label: name === "category" ? "Categories" : name === "company" ? "Companies" : "Industries", value: query[name] || "", options: [...new Set(filterOptions[name].filter(Boolean).concat(query[name] ? [query[name]] : []))].sort((a, b) => a.localeCompare(b))}))}};

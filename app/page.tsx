@@ -14,12 +14,13 @@ import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data
 import {HOMEPAGE_SETTINGS_QUERY, type HomepageSettings} from "@/lib/homepage-content";
 import {DEFAULT_HOME_HEADING, resolveHomepageSeo, homepageHref, homepageSections, selectHomepageArticles, selectFeaturedHomepageArticles} from "@/lib/homepage-config";
 import {client} from "@/sanity/lib/client";
+import {ARTICLE_DEPENDENCIES, publicContentOptions} from "@/lib/content-cache";
 import {absoluteUrl} from "@/lib/site-url";
 
 // Share one settings read between metadata and the visible page; outages retain safe defaults.
 const getHomepageSettings = cache(async () => {
   try {
-    return await client.fetch<HomepageSettings | null>(HOMEPAGE_SETTINGS_QUERY, {}, {perspective: "published", stega: false, next: {revalidate: 60}, signal: AbortSignal.timeout(6000)});
+    return await client.fetch<HomepageSettings | null>(HOMEPAGE_SETTINGS_QUERY, {}, {...publicContentOptions("homepageSettings", "category"), signal: AbortSignal.timeout(6000)});
   } catch {
     return null;
   }
@@ -38,8 +39,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Home() {
   const [companies, articles, settings] = await Promise.all([
-    client.fetch<Company[]>(COMPANIES_QUERY, {}, {perspective: "published", next: {revalidate: 60}, signal: AbortSignal.timeout(6000)}).catch(() => [] as Company[]),
-    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, {perspective: "published", next: {revalidate: 60}, signal: AbortSignal.timeout(6000)}).catch(() => [] as ArticleCardData[]),
+    client.fetch<Company[]>(COMPANIES_QUERY, {}, {...publicContentOptions("company", "industry"), signal: AbortSignal.timeout(6000)}).catch(() => [] as Company[]),
+    client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, {...publicContentOptions(...ARTICLE_DEPENDENCIES), signal: AbortSignal.timeout(6000)}).catch(() => [] as ArticleCardData[]),
     getHomepageSettings(),
   ]);
   const featured = selectFeaturedHomepageArticles(articles, settings);

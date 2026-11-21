@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import Link from '@/components/NavigationLink';
 import {useEffect,useId,useRef,useState} from 'react';
 import {dataCategoryId} from '@/lib/data-navigation';
 

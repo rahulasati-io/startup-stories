@@ -11,12 +11,14 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import PortableTextLink from "@/components/PortableTextLink";
 import { client } from "@/sanity/lib/client";
+import { ARTICLE_DEPENDENCIES, publicContentOptions } from "@/lib/content-cache";
 import { urlFor } from "@/sanity/lib/image";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { absoluteUrl } from "@/lib/site-url";
 import {ARTICLE_AUTHOR_PROJECTION} from "@/lib/article-author.mjs";
 import { formatIstDateTime } from "@/lib/display-dates.mjs";
+import { articleDates } from "@/lib/article-dates";
 import { type ArticleCardData, type ArticleLinkData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import {
@@ -343,12 +345,14 @@ export async function generateMetadata({
     {
       slug,
     },
-    { perspective: "published", stega: false, next: { revalidate: 60 } }
+    publicContentOptions(...ARTICLE_DEPENDENCIES)
   );
 
   if (!article) {
     return {};
   }
+
+  const dates = articleDates(article);
 
   const canonicalUrl = absoluteUrl(
     `/articles/${article.slug}`,
@@ -384,8 +388,8 @@ export async function generateMetadata({
       description: article.seoDescription || undefined,
       url: canonicalUrl,
       type: "article",
-      publishedTime: article.publishedAt,
-      modifiedTime: article.contentUpdatedAt,
+      publishedTime: dates.publishedAt,
+      modifiedTime: dates.modifiedAt,
       authors: article.author?.name ? [article.author.name] : undefined,
       images: socialImage ? [socialImage] : undefined,
     },
@@ -468,12 +472,14 @@ export default async function ArticlePage({
   const article = await client.fetch<Article | null>(
     ARTICLE_QUERY,
     { slug },
-    { perspective: "published", next: { revalidate: 60 } },
+    publicContentOptions(...ARTICLE_DEPENDENCIES),
   );
 
   if (!article) {
     notFound();
   }
+
+  const dates = articleDates(article);
 
   const readingTime = calculateReadingTime(article.body);
   const articleHeadings = getArticleHeadings(article.body);
@@ -491,7 +497,7 @@ export default async function ArticlePage({
         referenceIds,
         currentDate: article.publishedAt || article._createdAt,
       },
-      { perspective: "published", next: { revalidate: 60 } },
+      publicContentOptions(...ARTICLE_DEPENDENCIES),
     ),
     primaryCompany?.industry
       ? client.fetch<SidebarCompany[]>(
@@ -501,7 +507,7 @@ export default async function ArticlePage({
             industryId: primaryCompany.industryId || null,
             industry: primaryCompany.industry,
           },
-          { perspective: "published", next: { revalidate: 60 } },
+          publicContentOptions("company", "industry"),
         )
       : Promise.resolve([]),
   ]);
@@ -544,8 +550,8 @@ export default async function ArticlePage({
     url: canonicalUrl,
     mainEntityOfPage: canonicalUrl,
     image: structuredImage,
-    datePublished: article.publishedAt,
-    dateModified: article.contentUpdatedAt || article._updatedAt || article.publishedAt,
+    datePublished: dates.publishedAt,
+    dateModified: dates.modifiedAt,
     author: article.author
       ? {
           "@type": "Person",
@@ -590,11 +596,11 @@ export default async function ArticlePage({
           <span>·</span>
           <span>{readingTime}</span>
 
-          {(article.contentUpdatedAt || article.publishedAt) && (
+          {dates.visibleDate && (
             <>
               <span>·</span>
-              <time dateTime={article.contentUpdatedAt || article.publishedAt}>
-                {article.contentUpdatedAt ? "Updated" : "Published"} {formatIstDateTime(article.contentUpdatedAt || article.publishedAt)}
+              <time dateTime={dates.visibleDate}>
+                {dates.label} {formatIstDateTime(dates.visibleDate)}
               </time>
             </>
           )}

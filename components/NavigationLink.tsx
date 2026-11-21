@@ -22,22 +22,21 @@ function heading(node: ReactNode): string {
 
 function Pending({label, feedback}: {label: string; feedback: "overlay" | "navigation"}) {
   const {pending} = useLinkStatus();
-  if (pending && feedback === "navigation") return <span className="navigation-bar-status" role="status">
+  return pending ? <span className={feedback === "navigation" ? "navigation-bar-status" : "navigation-link-hint"} role="status">
     <span className="navigation-bar-progress" aria-hidden="true" />
     <span className="sr-only">Opening {label}…</span>
-  </span>;
-  return pending ? <span className="navigation-link-status" role="status">
-    <span className="navigation-spinner" aria-hidden="true" />
-    <span>Opening {label}…</span>
   </span> : null;
 }
 
-// Only warm a complete public profile/article after intent, not every visible card.
+const mainNavigation = new Set(["/", "/companies", "/people", "/authors", "/articles", "/data"]);
+
+// Warm complete destinations only after intent, not every visible card.
 // Next owns the prefetch cache and invalidation; click/history handling stays native.
 export default function NavigationLink({children, loadingLabel, intentPrefetch = true, feedback = "overlay", ...props}: ComponentProps<typeof Link> & {loadingLabel?: string; intentPrefetch?: boolean; feedback?: "overlay" | "navigation"}) {
   const [intentHref, setIntentHref] = useState<string | null>(null);
   const href = typeof props.href === "string" ? props.href : props.href.pathname || "";
-  const eligible = intentPrefetch && /^\/(companies|people|articles)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(href)
+  const isMainNavigation = mainNavigation.has(href);
+  const eligible = intentPrefetch && (isMainNavigation || /^\/(companies|people|articles|data)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(href))
     && (!props.target || props.target === "_self") && (props.download === undefined || props.download === false);
   const activate = () => {
     if (!eligible || props.prefetch === true) return;
@@ -47,7 +46,9 @@ export default function NavigationLink({children, loadingLabel, intentPrefetch =
   };
   // A caller's false still prevents viewport-wide prefetch. intentPrefetch=false
   // is the explicit opt-out for hover/focus/touch warming as well.
-  const prefetch = eligible && props.prefetch !== true ? (intentHref === href ? true : false) : props.prefetch;
+  // Keep Next's lightweight default shell prefetch for the six main routes.
+  // Only the intended destination is upgraded to a complete route prefetch.
+  const prefetch = eligible && props.prefetch !== true ? (intentHref === href ? true : isMainNavigation ? props.prefetch : false) : props.prefetch;
   const fallback = href.startsWith("/companies/") ? "company profile" : href.startsWith("/people/") ? "person profile" : href.startsWith("/articles/") ? "article" : "page";
   return <Link {...props} prefetch={prefetch} data-navigation-link="true"
     onMouseEnter={event => {props.onMouseEnter?.(event); if (!event.defaultPrevented) activate();}}

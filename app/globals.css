@@ -26,36 +26,7 @@ html {
 }
 
 [data-navigation-link] { position: relative; }
-.navigation-link-status {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .6rem;
-  padding: .75rem;
-  border-radius: inherit;
-  background: rgb(255 255 255 / .94);
-  color: #18181b;
-  font-size: .875rem;
-  font-weight: 600;
-  text-align: center;
-  pointer-events: none;
-}
-.navigation-spinner {
-  height: 1rem;
-  width: 1rem;
-  flex-shrink: 0;
-  border: 2px solid #d4d4d8;
-  border-top-color: #18181b;
-  border-radius: 50%;
-  animation: navigation-spin .75s linear infinite;
-}
-.page-arrival main:not([aria-busy="true"]) { animation: page-arrival 140ms ease-out; }
-.navigation-bar-status {
-  position: fixed;
-  top: 0;
+.navigation-bar-status, .navigation-link-hint {
   left: 0;
   right: 0;
   height: 3px;
@@ -63,7 +34,13 @@ html {
   overflow: hidden;
   background: #fef3c7;
   pointer-events: none;
+  opacity: 0;
+  /* Delay only the hint, never navigation or ready content. */
+  animation: navigation-hint-appear 0s 100ms forwards;
 }
+.navigation-bar-status { position: fixed; top: 0; }
+/* Card transforms cannot trap a viewport-fixed indicator: use an underline. */
+.navigation-link-hint { position: absolute; bottom: 0; height: 2px; }
 .navigation-bar-progress {
   display: block;
   height: 100%;
@@ -72,10 +49,9 @@ html {
   animation: navigation-progress 1s ease-in-out infinite;
 }
 @keyframes navigation-progress { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
-@keyframes navigation-spin { to { transform: rotate(360deg); } }
-@keyframes page-arrival { from { opacity: .8; } to { opacity: 1; } }
+@keyframes navigation-hint-appear { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .navigation-spinner, .page-arrival main:not([aria-busy="true"]) { animation: none; }
+  .navigation-bar-status, .navigation-link-hint { animation: none; opacity: 1; }
   .navigation-bar-progress { animation: none; width: 100%; }
 }

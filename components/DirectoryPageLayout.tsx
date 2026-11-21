@@ -6,10 +6,11 @@ import type {DirectoryPageSettings} from "@/lib/directory-page-config";
 import {homepageHref} from "@/lib/homepage-config";
 import {ARTICLE_CARDS_QUERY, type ArticleCardData} from "@/lib/article-card-data";
 import {client} from "@/sanity/lib/client";
+import {ARTICLE_DEPENDENCIES, publicContentOptions} from "@/lib/content-cache";
 
 export default async function DirectoryPageLayout({settings, children, breadcrumb}: {settings: DirectoryPageSettings; children: ReactNode; breadcrumb?: ReactNode}) {
   const needsArticles = settings.sections.some(section => section.kind === "articles" && section.articleIds?.length);
-  const articles = needsArticles ? await client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, {perspective: "published", next: {revalidate: 60}, signal: AbortSignal.timeout(6000)}).catch(() => [] as ArticleCardData[]) : [];
+  const articles = needsArticles ? await client.fetch<ArticleCardData[]>(ARTICLE_CARDS_QUERY, {}, {...publicContentOptions(...ARTICLE_DEPENDENCIES), signal: AbortSignal.timeout(6000)}).catch(() => [] as ArticleCardData[]) : [];
   const byId = new Map(articles.map(article => [article._id, article]));
   return <main className="bg-[#f7f6f2]">{breadcrumb}{settings.sections.map(section => {
     switch (section.kind) {

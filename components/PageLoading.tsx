@@ -2,7 +2,7 @@ import Header from "@/components/Header";
 
 export default function PageLoading({label = "page"}: {label?: string}) {
   return <><Header /><main aria-busy="true" aria-label={`Loading ${label}`} className="mx-auto min-h-screen max-w-7xl px-5 py-8 text-zinc-950 md:px-8">
-    <p role="status" className="mb-6 text-sm font-medium text-zinc-600">Opening {label}…</p>
+    <p role="status" className="sr-only">Loading {label}…</p>
     <div aria-hidden="true" className="animate-pulse motion-reduce:animate-none">
       <div className="h-4 w-40 rounded bg-zinc-200" />
       <div className="mt-7 h-10 w-3/4 max-w-xl rounded bg-zinc-200" />

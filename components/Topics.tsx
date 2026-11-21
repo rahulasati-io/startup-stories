@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {ARTICLE_DEPENDENCIES,publicContentOptions} from "@/lib/content-cache";
 import type { ArticleCardData } from "@/lib/article-card-data";
 import {homepageHref, type HomepageLink} from "@/lib/homepage-config";
 import {defineQuery} from "next-sanity";
@@ -19,7 +20,7 @@ const topics = [
 export default async function Topics({ articles, title = "Topics worth following", eyebrow = "Explore by idea", description, links }: { articles: ArticleCardData[]; title?: string; eyebrow?: string; description?: string; links?: HomepageLink[] }) {
   const choices = links?.map((link) => ({...link, label: link.title})) ?? topics;
   const request=homepageTopicCountQuery(choices.map(topic=>topic.href));
-  const counts=request.query?await client.fetch<Record<string,number>>(defineQuery(request.query),request.params,{perspective:'published',next:{revalidate:60},signal:AbortSignal.timeout(6000)}).catch(()=>({} as Record<string,number>)):{};
+  const counts=request.query?await client.fetch<Record<string,number>>(defineQuery(request.query),request.params,{...publicContentOptions(...ARTICLE_DEPENDENCIES),signal:AbortSignal.timeout(6000)}).catch(()=>({} as Record<string,number>)):{};
   const visibleTopics = choices.flatMap((topic,index) => {
     // Category pages use the same full card collection as their destination.
     // Search pages use the shared server-side filter, including legacy industry.
