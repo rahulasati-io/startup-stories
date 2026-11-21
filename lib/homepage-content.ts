@@ -3,7 +3,6 @@ import type {HomepageSection} from "@/lib/homepage-config";
 
 export type HomepageSettings = {
   featuredArticleId: string | null;
-  secondFeaturedArticleId: string | null;
   supportingFeaturedArticleIds: string[];
   seoTitle?: string;
   seoDescription?: string;
@@ -26,7 +25,6 @@ export const HOMEPAGE_SETTINGS_QUERY = defineQuery(/* groq */ `
       "articleIds": articles[]._ref,
       links[]{_key, title, description, href, action, categorySlug, search}},
     "featuredArticleId": featuredArticle._ref,
-    "secondFeaturedArticleId": secondFeaturedArticle._ref,
     "supportingFeaturedArticleIds": coalesce(supportingFeaturedArticles[]._ref, [])
   }
 `);

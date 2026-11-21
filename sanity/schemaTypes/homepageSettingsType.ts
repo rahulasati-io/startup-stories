@@ -76,8 +76,8 @@ export const homepageSettingsType = defineType({
       type: "reference",
       to: [{ type: "post" }],
       readOnly: true,
-      hidden: ({value})=>value===undefined,
-      deprecated: {reason: "Use Supporting Featured Stories for the four side stories. This saved selection only fills a spare slot."},
+      hidden: true,
+      deprecated: {reason: "Retired. Only Lead Story and Supporting Featured Stories are used. This archived value is not displayed or selected."},
     }),
     defineField({
       name: "supportingFeaturedArticles",

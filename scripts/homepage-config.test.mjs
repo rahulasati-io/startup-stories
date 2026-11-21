@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
+import fs from 'node:fs';
 import {DEFAULT_HOME_SECTIONS, homepageSections, homepageHref, selectHomepageArticles, selectFeaturedHomepageArticles} from '../lib/homepage-config.ts';
 
 test('unset settings preserve the existing eight sections and funding before business models', () => {
@@ -70,9 +71,18 @@ test('one lead and four supporting selections take precedence over the legacy se
   assert.equal(settings.secondFeaturedArticleId,'2');
 });
 
-test('legacy second selection fills only a spare slot; unavailable/duplicate picks do not introduce latest uploads',()=>{
+test('legacy second selection is ignored even with spare slots; configured picks never introduce latest uploads',()=>{
   const items=Array.from({length:8},(_,i)=>({_id:String(i)}));
-  assert.deepEqual(selectFeaturedHomepageArticles(items,{featuredArticleId:'1',secondFeaturedArticleId:'2',supportingFeaturedArticleIds:['3','3','missing']}).map(item=>item._id),['1','3','2']);
+  assert.deepEqual(selectFeaturedHomepageArticles(items,{featuredArticleId:'1',secondFeaturedArticleId:'2',supportingFeaturedArticleIds:['3','3','missing']}).map(item=>item._id),['1','3']);
   assert.deepEqual(selectFeaturedHomepageArticles(items,{featuredArticleId:'missing'}),[]);
   assert.deepEqual(selectFeaturedHomepageArticles(items,null).map(item=>item._id),['0','1','2','3','4']);
+});
+
+test('retired second-highlight control is always hidden and absent from public queries',()=>{
+  const schema=fs.readFileSync(new URL('../sanity/schemaTypes/homepageSettingsType.ts',import.meta.url),'utf8');
+  const field=schema.slice(schema.indexOf('name: "secondFeaturedArticle"'),schema.indexOf('name: "supportingFeaturedArticles"'));
+  assert.match(field,/hidden: true/);
+  assert.match(field,/readOnly: true/);
+  assert.doesNotMatch(field,/hidden: \(/);
+  for(const path of ['../lib/homepage-content.ts','../lib/data-featured-stories.ts']) assert.doesNotMatch(fs.readFileSync(new URL(path,import.meta.url),'utf8'),/secondFeaturedArticle/);
 });

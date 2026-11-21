@@ -26,11 +26,16 @@ const article=id=>({_id:id,_updatedAt:'2026-10-24',title:`Featured ${id}`,slug:i
 test('uses the same five editorial picks, deduplicates and preserves homepage order',async()=>{
   const {api,calls}=loader([{featuredArticleId:'a',supportingFeaturedArticleIds:['b','b','c','d','e'],secondFeaturedArticleId:'f'},['f','e','d','c','b','a'].map(article)]);
   const selected=await api.getDataFeaturedStories();assert.equal(calls.length,2,JSON.stringify(calls));assert.deepEqual(selected.map(a=>a._id),['a','b','c','d','e']);
-  assert.equal(calls.length,2);assert.equal(calls[1][1].ids.length,6);
+  assert.equal(calls.length,2);assert.equal(calls[1][1].ids.length,5);assert.ok(!calls[1][1].ids.includes('f'));
   for(const call of calls){assert.equal(call[2].perspective,'published');assert.equal(call[2].stega,false);assert.equal(call[2].next.revalidate,60);}
 });
 test('no configured picks means no recent-upload fallback and no article read',async()=>{
   const {api,calls}=loader([null]);assert.deepEqual(await api.getDataFeaturedStories(),[]);assert.equal(calls.length,1);
+});
+
+test('retired second-highlight selection alone never triggers a featured-story query',async()=>{
+  const {api,calls}=loader([{secondFeaturedArticleId:'old'}]);
+  assert.deepEqual(await api.getDataFeaturedStories(),[]);assert.equal(calls.length,1);
 });
 test('missing selected articles are omitted and CMS failure is non-fatal',async()=>{
   const {api}=loader([{featuredArticleId:'missing',supportingFeaturedArticleIds:['b']},[article('b')]]);
@@ -67,7 +72,7 @@ test('homepage Data section shows approved datasets by category and links to sta
     '@/lib/data-navigation':{DATA_CATEGORIES,dataCategoryHref}
   }).default;
   const html=renderToStaticMarkup(React.createElement(component));
-  assert.equal((html.match(/<article /g)||[]).length,4);assert.ok(!html.includes('not-approved'));
+  assert.equal((html.match(/<article /g)||[]).length,DATA_CATEGORIES.length);assert.ok(!html.includes('not-approved'));
   for(const name of DATA_CATEGORIES){assert.ok(html.includes(dataCategoryHref(name)));assert.ok(!dataCategoryId(name).includes(' '));}
   const home=fs.readFileSync(new URL('../app/page.tsx',import.meta.url),'utf8');
   assert.ok(home.includes("section.categorySlug==='business-model'"));assert.ok(home.includes('index===dataAfterIndex&&<HomepageDataSection/>'));assert.ok(home.includes('dataAfterIndex<0&&<HomepageDataSection/>'));
