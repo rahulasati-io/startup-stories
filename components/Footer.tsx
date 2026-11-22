@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { defineQuery } from "next-sanity";
 import SiteLogo from "@/components/SiteLogo";
 import { sanityFetch } from "@/sanity/lib/live";
@@ -20,13 +19,9 @@ const FOOTER_CONTENT_QUERY = defineQuery(/* groq */ `{
 
 type FooterCompany = { _id: string; name?: string; slug?: string };
 
-export default function Footer() {
-  // Keep optional CMS navigation from holding up the main route on a cache miss.
-  // The existing live fetch and its publishing invalidation stay unchanged.
-  return <Suspense fallback={<FooterView companies={[]} topicSlugs={[]} />}><FooterContent /></Suspense>;
-}
-
-async function FooterContent() {
+// Resolve navigation on the server so the initial HTML has the complete footer.
+// Keep the existing live fetch and its publishing invalidation unchanged.
+export default async function Footer() {
   let companies: FooterCompany[] = [];
   let topicSlugs: string[] = [];
   try {

@@ -66,7 +66,7 @@ test('direct-reference filters retain matching records and reject unrelated reco
   }
 });
 
-test('company page returns overview and Suspense boundaries while secondary queries remain pending',async()=>{
+test('company page starts cached secondary reads eagerly without public streaming boundaries',async()=>{
   const calls=[];
   const page=load(company,{'@/sanity/lib/client':{client:{fetch:(query,params,opts)=>{
     calls.push({query,params,opts});
@@ -80,7 +80,7 @@ test('company page returns overview and Suspense boundaries while secondary quer
   walk(result);
   assert.ok(text.includes('Test company'));
   assert.ok(text.includes('Company overview'));
-  assert.ok(types.filter(type=>type===React.Suspense).length>=2);
+  assert.equal(types.filter(type=>type===React.Suspense).length,0);
   assert.ok(calls.length>=7,'secondary requests begin eagerly and in parallel');
   assert.ok(calls.every(call=>call.opts.cache==='force-cache' && call.opts.next.revalidate===60));
   const overview=calls.find(call=>call.query===queries(company).companyQuery);
@@ -114,7 +114,9 @@ test('profile cache remains published-only with short fallback and request-level
   assert.match(company,/getCompany = cache\(/);
   assert.match(person,/getPerson = cache\(/);
   assert.match(person,/getPersonArticles = cache\(/);
-  assert.match(person,/<Suspense fallback=\{<ProfileSectionsLoading\/>\}><PeopleRow/);
+  assert.match(person,/<PeopleRow/);
+  assert.doesNotMatch(person,/<Suspense|ProfileSectionsLoading/);
+  assert.doesNotMatch(company,/<Suspense|ProfileSectionsLoading/);
 });
 
 test('only a valid signed webhook expires profile cache and invalidates pages',async()=>{

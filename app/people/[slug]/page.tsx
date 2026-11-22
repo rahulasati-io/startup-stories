@@ -1,5 +1,4 @@
-import { cache, Suspense } from "react";
-import ProfileSectionsLoading from "@/components/ProfileSectionsLoading";
+import { cache } from "react";
 import SidebarArticleLinks, {type SidebarStory} from "@/components/SidebarArticleLinks";
 import {getDataFeaturedStories} from "@/lib/data-featured-stories";
 import {selectSidebarStories} from "@/lib/sidebar-stories";
@@ -213,7 +212,7 @@ export default async function PersonPage({ params }: Props) {
           <nav aria-label={`${person.name} page sections`} className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-5 md:px-8">
             <Link href="#about" prefetch={false} className="shrink-0 border-b-2 border-amber-700 py-3 text-xs font-semibold text-amber-800">Biography</Link>
             {associatedCompanies.length > 0 && <Link href="#associated-companies" prefetch={false} className="shrink-0 border-b-2 border-transparent py-3 text-xs font-semibold text-zinc-600 hover:text-zinc-950">Associated companies</Link>}
-            <Suspense fallback={null}><PersonArticlesNav articles={articles}/></Suspense>
+            <PersonArticlesNav articles={articles}/>
           </nav>
         </div>
 
@@ -251,24 +250,23 @@ export default async function PersonPage({ params }: Props) {
               </div>
             </aside>
           )}
-          <Suspense fallback={null}><PersonSidebarArticles articles={articles}/></Suspense>
+          <PersonSidebarArticles articles={articles}/>
           </div>
         </div>
 
-        <Suspense fallback={<ProfileSectionsLoading/>}><PersonArticles person={person} articles={articles}/></Suspense>
+        <PersonArticles person={person} articles={articles}/>
 
-        <Suspense fallback={<ProfileSectionsLoading/>}><PeopleRow
+        <PeopleRow
           excludeSlug={slug}
           companyIds={associatedCompanies.flatMap((item) => item.company?._id ? [item.company._id] : [])}
           companyNames={associatedCompanies.flatMap((item) => item.company?.name ? [item.company.name] : [])}
         />
-        </Suspense>
-        <Suspense fallback={<ProfileSectionsLoading/>}><div className="border-t border-zinc-200 bg-white">
+        <div className="border-t border-zinc-200 bg-white">
           <CompanyRow title="Explore More Companies" description="Continue exploring company stories, strategies, business models, people and key numbers." />
-        </div></Suspense>
+        </div>
         <Newsletter />
       </main>
-      <Suspense fallback={null}><Footer /></Suspense>
+      <Footer />
     </>
   );
 }

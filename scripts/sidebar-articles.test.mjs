@@ -13,9 +13,9 @@ const require=createRequire(import.meta.url);
 const read=path=>fs.readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 function compile(source,mocks){
   const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
-  const module={exports:{}};
-  new Function('require','module','exports',output)(name=>name==='@/lib/content-cache'?contentCache:mocks[name]??require(name),module,module.exports);
-  return module.exports;
+  const loadedModule={exports:{}};
+  new Function('require','module','exports',output)(name=>name==='@/lib/content-cache'?contentCache:mocks[name]??require(name),loadedModule,loadedModule.exports);
+  return loadedModule.exports;
 }
 const story=id=>({_id:id,title:`Article ${id}`,slug:id,_updatedAt:'2026-10-28',category:'News',categorySlug:'news',socialImageUrl:null,mainImageUrl:`https://example.com/${id}.webp`});
 const shared=compile(read('components/SidebarArticleLinks.tsx'),{
@@ -90,15 +90,16 @@ test('article lists still use ten recent and ten popular items, with image field
   const posts=Array.from({length:12},(_,i)=>({_id:`p${i}`,_type:'post',title:`Post ${i}`,slug:{current:`post-${i}`},category:{_ref:'category'},promotion:'popular',publishedAt:`2026-10-${String(i+1).padStart(2,'0')}`,_updatedAt:'2026-10-28',mainImage:{asset:{_ref:'image'}}}));
   const dataset=[...posts,{_id:'category',_type:'category',title:'News',slug:{current:'news'}},{_id:'image',_type:'sanity.imageAsset',url:'https://example.com/image.webp'}];
   const result=await(await evaluate(parse(query),{dataset,params:{articleId:'current',categoryId:'category',referenceIds:[],companyIds:[],personIds:[],conceptIds:[]}})).get();
-  assert.equal(result.recentArticles.length,10);assert.equal(result.popularArticles.length,10);
+  assert.equal(result.recentArticles.length,12);assert.equal(result.popularArticles.length,10);
   for(const item of [...result.recentArticles,...result.popularArticles]){assert.equal(item.mainImageUrl,'https://example.com/image.webp');assert.equal(item.categorySlug,'news');}
   const sidebar=read('components/ArticleSidebar.tsx');
   assert.match(sidebar,/Recent articles/);assert.match(sidebar,/Popular articles/);assert.match(sidebar,/<SidebarArticleLinks/);
 });
 
-test('people sidebar is inside the biography grid after companies, not awaited by the main profile',()=>{
+test('people sidebar remains inside biography grid without a streaming fallback',()=>{
   const source=read('app/people/[slug]/page.tsx');
-  assert.match(source,/<Suspense fallback=\{null\}><PersonSidebarArticles articles=\{articles\}/);
+  assert.match(source,/<PersonSidebarArticles articles=\{articles\}/);
+  assert.doesNotMatch(source,/<Suspense/);
   assert.ok(source.indexOf('<PersonSidebarArticles')>source.indexOf('id="associated-companies"'));
   assert.match(source,/lg:grid-cols-\[minmax\(0,2.35fr\)_minmax\(280px,.9fr\)\]/);
   assert.match(source,/const relatedArticles=\(await articles\).slice\(0,3\)/);

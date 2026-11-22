@@ -26,13 +26,9 @@ test('header uses pending-aware links for desktop and mobile without interceptin
   assert.doesNotMatch(source,/preventDefault|router\.push|setTimeout/);
 });
 
-test('non-article route fallbacks remain; article HTML has no inherited loading boundary',()=>{
-  for(const dir of ['companies/', 'people/', 'authors/', 'data/', 'topics/', 'search/']){
-    assert.match(read(`app/${dir}loading.tsx`),/PageLoading/);
-  }
-  assert.match(read('app/companies/[slug]/loading.tsx'),/ProfileLoading/);
-  assert.match(read('app/people/[slug]/loading.tsx'),/ProfileLoading/);
-  for(const path of ['app/loading.tsx','app/articles/loading.tsx','app/articles/[slug]/loading.tsx']) {
+test('public route families have no inherited loading shells; navigation feedback remains',()=>{
+  for(const path of ['app/loading.tsx','app/articles/loading.tsx','app/articles/[slug]/loading.tsx',
+    ...['companies','people','authors','data','topics','search','companies/[slug]','people/[slug]'].map(dir=>`app/${dir}/loading.tsx`)]) {
     assert.equal(fs.existsSync(new URL('../'+path,import.meta.url)),false);
   }
   const PageLoading=load('components/PageLoading.tsx',{'@/components/Header':{__esModule:true,default:()=>React.createElement('header',null,'Navigation')}});
@@ -52,31 +48,32 @@ function footerWith(fetch){return load('components/Footer.tsx',{
   '@/lib/data-navigation':{DATA_CATEGORIES:['Economy Data'],dataCategoryHref:()=>'/data#economy-data'},
 });}
 
-test('slow footer CMS fetch does not block main content or static footer links', {timeout:5000},async()=>{
+test('footer navigation is resolved before the initial HTML shell is sent', {timeout:5000},async()=>{
   let release;
   const gate=new Promise(resolve=>{release=resolve;});
+  let entered;
+  const fetching=new Promise(resolve=>{entered=resolve;});
   let calls=0;
-  const Footer=footerWith(()=>{calls++;return gate;});
+  const Footer=footerWith(()=>{calls++;entered();return gate;});
   let html='';
   const out=new PassThrough();
   out.on('data',chunk=>{html+=chunk;});
-  const firstChunk=new Promise(resolve=>out.once('data',resolve));
   const ended=new Promise((resolve,reject)=>{out.on('end',resolve);out.on('error',reject);});
-  let shellReady;
-  const shell=new Promise(resolve=>{shellReady=resolve;});
+  let shellReady=false;
   const stream=renderToPipeableStream(React.createElement('html',null,React.createElement('body',null,
     React.createElement('main',null,'Main page content'),React.createElement(Footer))),{
-    onShellReady(){stream.pipe(out);shellReady();},onError(error){out.destroy(error);},
+    onShellReady(){shellReady=true;stream.pipe(out);},onError(error){out.destroy(error);},
   });
   try{
-    await shell;
-    await firstChunk;
+    await fetching;
+    assert.equal(shellReady,false);
+    assert.equal(html,'');
+    release({data:{companies:[{_id:'example',name:'Example Company',slug:'example'}],topicSlugs:['strategy']}});
+    await ended;
     assert.match(html,/Main page content/);
     assert.match(html,/href="\/data"/);
     assert.match(html,/href="\/privacy"/);
-    assert.doesNotMatch(html,/Example Company/);
-    release({data:{companies:[{_id:'example',name:'Example Company',slug:'example'}],topicSlugs:['strategy']}});
-    await ended;
+    assert.doesNotMatch(html,/<div hidden/);
     assert.match(html,/href="\/companies\/example"/);
     assert.match(html,/href="\/topics\/strategy"/);
     assert.equal(calls,1);

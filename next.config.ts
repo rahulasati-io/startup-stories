@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // All public requests receive SEO metadata in <head>, not deferred in <body>.
+  // This applies equally to browsers and crawlers (no user-agent-only variant).
+  htmlLimitedBots: /.*/,
   async redirects() {
     return [
       {
