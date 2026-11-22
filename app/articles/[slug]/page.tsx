@@ -20,6 +20,7 @@ import { absoluteUrl } from "@/lib/site-url";
 import {ARTICLE_AUTHOR_PROJECTION} from "@/lib/article-author.mjs";
 import { formatIstDateTime } from "@/lib/display-dates.mjs";
 import { articleDates } from "@/lib/article-dates";
+import { selectRecentSidebarArticles } from "@/lib/article-sidebar";
 import { type ArticleCardData, type ArticleLinkData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
 import {
@@ -85,7 +86,7 @@ const ARTICLE_PAGE_SUPPORT_QUERY = defineQuery(/* groq */ `{
     defined(title) &&
     defined(slug.current) &&
     defined(category->slug.current)
-  ] | order(publishedAt desc, _updatedAt desc)[0...10] {
+  ] | order(publishedAt desc, _updatedAt desc)[0...20] {
     _id,
     _updatedAt,
     title,
@@ -513,8 +514,8 @@ export default async function ArticlePage({
         )
       : Promise.resolve([]),
   ]);
-  const recentArticles = support.recentArticles;
   const popularArticles = support.popularArticles;
+  const recentArticles = selectRecentSidebarArticles(support.recentArticles, popularArticles);
   const relatedArticles = support.relatedCandidates
     .flatMap((item, index) => {
       const companyMatches = item.companies.filter((company) => company._id && companyIds.has(company._id)).length;
