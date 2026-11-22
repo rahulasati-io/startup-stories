@@ -72,6 +72,15 @@ function DraftGuardEffects({guard}: {guard: DraftNavigationController}) {
 // These extension points are supplied by the installed Sanity Studio.
 // Keep the history and document-layout integration covered on Sanity upgrades.
 export function GuardedDocumentLayout(props: DocumentLayoutProps) {
+  return <>
+    {props.renderDefault(props)}
+    <GuardDocumentObserver documentId={props.documentId} documentType={props.documentType} />
+  </>;
+}
+
+// Permissions, validation and autosave change while typing/uploading. Observe
+// them without invoking the document layout renderer on every notification.
+function GuardDocumentObserver(props: Pick<DocumentLayoutProps, "documentId" | "documentType">) {
   const guard = useContext(GuardContext);
   const key = useId();
   const id = getPublishedId(props.documentId);
@@ -109,5 +118,5 @@ export function GuardedDocumentLayout(props: DocumentLayoutProps) {
     });
   });
   useLayoutEffect(() => () => guard?.unregister(key), [guard, key]);
-  return props.renderDefault(props);
+  return null;
 }

@@ -2,9 +2,8 @@
 
 import {ExpandIcon} from "@sanity/icons/Expand";
 import {Box, Button, Card, Flex, Stack, Text} from "@sanity/ui";
-import {useCallback, useState} from "react";
+import {Fragment, useCallback, useState} from "react";
 import {
-  PortableTextInput,
   type OnPasteFn,
   type PortableTextInputProps,
   type TypedObject,
@@ -322,13 +321,14 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
         </Flex>
       </Card>
       <Box style={{minHeight: "46vh"}}>
-        <PortableTextInput
-          key={`article-body-${focusSession}`}
-          {...props}
-          initialFullscreen={focusSession > 0}
-          onFullScreenChange={onFullScreenChange}
-          onPaste={onPaste}
-        />
+        <Fragment key={`article-body-${focusSession}`}>
+          {props.renderDefault({
+            ...props,
+            initialFullscreen: focusSession > 0,
+            onFullScreenChange,
+            onPaste,
+          })}
+        </Fragment>
       </Box>
     </Stack>
   );

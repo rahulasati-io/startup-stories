@@ -114,6 +114,7 @@ export type GuardHistory = {
   location: GuardLocation;
   listen: (callback: () => void) => () => void;
   block: (callback: (transition: {location: GuardLocation; retry: () => void}) => void) => () => void;
+  blockDocumentNavigation?: GuardHistory["block"];
 };
 
 // Use Sanity's actual history blocker, including Back/Forward. No global
@@ -123,7 +124,7 @@ export function blockStudioNavigation(history: GuardHistory, guard: DraftNavigat
   let unblock: () => void;
   let stopWaiting: (() => void) | undefined;
   const install = () => {
-    unblock = history.block(transition => {
+    unblock = (history.blockDocumentNavigation || history.block)(transition => {
       const resume = () => {
         unblock();
         // A Back/Forward retry is asynchronous. Re-blocking immediately would

@@ -24,6 +24,7 @@
     "materialize:thumbnails:write": "node --env-file=.env.local scripts/materialize-article-thumbnails.mjs --write"
   },
   "dependencies": {
+    "history": "^5.3.0",
     "@portabletext/react": "^8.0.1",
     "@sanity/client": "^8.2.0",
     "@sanity/icons": "^5.2.1",

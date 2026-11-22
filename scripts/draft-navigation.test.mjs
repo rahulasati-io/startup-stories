@@ -132,16 +132,18 @@ test('rendered guard preserves published content on Discard and exposes only the
         useDocumentOperationEvent:()=>event,useValidationStatus:()=>({isValidating:false,validation:[]}),useDocumentPairPermissions:()=>[{granted:true},false],usePerspective:()=>({}),
       }});
       root=createRoot(document.getElementById('test-root'));
-      let layoutRenders=0;
-      await act(async()=>root.render(React.createElement(React.StrictMode,null,React.createElement(components.StudioDraftGuardLayout,{renderDefault:()=>{layoutRenders++;return React.createElement(components.GuardedDocumentLayout,{documentId:'one',documentType:type,renderDefault:()=>React.createElement('input',{'aria-label':'Alt text',defaultValue:''})});}}))));
+      let layoutRenders=0,documentRenders=0;
+      await act(async()=>root.render(React.createElement(React.StrictMode,null,React.createElement(components.StudioDraftGuardLayout,{renderDefault:()=>{layoutRenders++;return React.createElement(components.GuardedDocumentLayout,{documentId:'one',documentType:type,renderDefault:()=>{documentRenders++;return React.createElement('input',{'aria-label':'Alt text',defaultValue:''});}});}}))));
       const input=document.querySelector('input');
       // React was imported before JSDOM, so its legacy input-event fallback
       // expects these browser shims when the focus-retention test focuses it.
       input.attachEvent=()=>{};input.detachEvent=()=>{};
       input.focus();input.value='A';
       const rendered=layoutRenders;
+      const documentRendered=documentRenders;
       await act(async()=>{state={...state,draft:{...state.draft,title:'Changed title'}};notify();});
       assert.equal(layoutRenders,rendered,'document updates must not re-render the Studio shell');
+      assert.equal(documentRenders,documentRendered,'guard updates must not invoke the document renderer');
       assert.equal(document.activeElement,input);assert.equal(input.value,'A');
       await act(async()=>history.push('/studio/structure/list'));
       assert.ok(document.querySelector('[role="dialog"]'));
