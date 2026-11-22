@@ -11,9 +11,9 @@ const require=createRequire(import.meta.url);
 const read=path=>fs.readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 function load(path,mocks){
   const compiled=ts.transpileModule(read(path),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText;
-  const module={exports:{}};
-  new Function('require','module','exports',compiled)(name=>mocks[name]??require(name),module,module.exports);
-  return module.exports.default;
+  const loadedModule={exports:{}};
+  new Function('require','module','exports',compiled)(name=>mocks[name]??require(name),loadedModule,loadedModule.exports);
+  return loadedModule.exports.default;
 }
 const link={__esModule:true,default:({href,children,...props})=>React.createElement('a',{href,...props},children)};
 
@@ -26,13 +26,15 @@ test('header uses pending-aware links for desktop and mobile without interceptin
   assert.doesNotMatch(source,/preventDefault|router\.push|setTimeout/);
 });
 
-test('all public route families have lightweight fallbacks; detailed profile fallbacks remain',()=>{
-  for(const dir of ['', 'companies/', 'people/', 'articles/', 'authors/', 'data/', 'topics/', 'search/']){
+test('non-article route fallbacks remain; article HTML has no inherited loading boundary',()=>{
+  for(const dir of ['companies/', 'people/', 'authors/', 'data/', 'topics/', 'search/']){
     assert.match(read(`app/${dir}loading.tsx`),/PageLoading/);
   }
   assert.match(read('app/companies/[slug]/loading.tsx'),/ProfileLoading/);
   assert.match(read('app/people/[slug]/loading.tsx'),/ProfileLoading/);
-  assert.match(read('app/articles/[slug]/loading.tsx'),/Loading article/);
+  for(const path of ['app/loading.tsx','app/articles/loading.tsx','app/articles/[slug]/loading.tsx']) {
+    assert.equal(fs.existsSync(new URL('../'+path,import.meta.url)),false);
+  }
   const PageLoading=load('components/PageLoading.tsx',{'@/components/Header':{__esModule:true,default:()=>React.createElement('header',null,'Navigation')}});
   const html=renderToStaticMarkup(React.createElement(PageLoading,{label:'data'}));
   assert.match(html,/aria-busy="true"/);

@@ -20,6 +20,7 @@ import { absoluteUrl } from "@/lib/site-url";
 import {ARTICLE_AUTHOR_PROJECTION} from "@/lib/article-author.mjs";
 import { formatIstDateTime } from "@/lib/display-dates.mjs";
 import { articleDates } from "@/lib/article-dates";
+import { articleDescription } from "@/lib/article-description";
 import { selectRecentSidebarArticles } from "@/lib/article-sidebar";
 import { type ArticleCardData, type ArticleLinkData } from "@/lib/article-card-data";
 import { getGeneratedArticleThumbnailPath } from "@/lib/business-model-thumbnail";
@@ -28,6 +29,18 @@ import {
   MISTERSTORY_ORGANIZATION_ID,
   MISTERSTORY_WEBSITE_ID,
 } from "@/lib/structured-data";
+
+// Generate complete HTML on first request, then serve it through ISR. This
+// waits for the article and metadata rather than streaming a loading shell.
+// New slugs remain available without rebuilding; publish webhooks expire the
+// tagged data and this route, with the existing 60-second refresh as fallback.
+export const dynamic = "force-static";
+export const revalidate = 60;
+export const dynamicParams = true;
+
+export function generateStaticParams() {
+  return [];
+}
 
 const ARTICLE_QUERY = defineQuery(/* groq */ `
   *[
@@ -376,18 +389,19 @@ export async function generateMetadata({
     ?.split(",")
     .map((keyword) => keyword.trim())
     .filter(Boolean);
+  const description = articleDescription(article);
 
   return {
     title: article.seoTitle || article.title,
     authors: article.author?.name ? [{name: article.author.name, ...(article.author.slug ? {url: absoluteUrl(`/authors/${article.author.slug}`)} : {})}] : undefined,
-    description: article.seoDescription || undefined,
+    description,
     keywords: keywords?.length ? keywords : undefined,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
       title: article.seoTitle || article.title,
-      description: article.seoDescription || undefined,
+      description,
       url: canonicalUrl,
       type: "article",
       publishedTime: dates.publishedAt,
@@ -398,7 +412,7 @@ export async function generateMetadata({
     twitter: {
       card: "summary_large_image",
       title: article.seoTitle || article.title,
-      description: article.seoDescription || undefined,
+      description,
       images: socialImage ? [socialImage] : undefined,
     },
   };
