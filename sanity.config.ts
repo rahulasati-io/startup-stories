@@ -13,6 +13,7 @@ import {apiVersion, dataset, projectId} from './sanity/env'
 import {schema} from './sanity/schemaTypes'
 import {structure} from './sanity/structure'
 import {ArticlePublishAction} from './sanity/actions/ArticlePublishAction'
+import {withUpdateLiveLabel} from './sanity/actions/withUpdateLiveLabel'
 import {AuthorUnpublishAction} from './sanity/actions/AuthorUnpublishAction'
 import {GuardedDocumentLayout, StudioDraftGuardLayout} from './sanity/components/DraftNavigationGuard'
 
@@ -51,9 +52,12 @@ export default defineConfig({
   document: {
     components: {unstable_layout: GuardedDocumentLayout},
     actions: (previousActions, context) => {
+      const labelledActions = previousActions.map(action =>
+        action.action === 'publish' ? withUpdateLiveLabel(action) : action,
+      )
       if (context.schemaType === 'author') {
-        const publishAction = previousActions.find((action) => action.action === 'publish')
-        const remainingActions = previousActions.filter(
+        const publishAction = labelledActions.find((action) => action.action === 'publish')
+        const remainingActions = labelledActions.filter(
           (action) => action.action !== 'publish' && action.action !== 'unpublish',
         )
 
@@ -62,9 +66,9 @@ export default defineConfig({
         )
       }
 
-      if (context.schemaType !== 'post') return previousActions
+      if (context.schemaType !== 'post') return labelledActions
 
-      return previousActions.map((action) =>
+      return labelledActions.map((action) =>
         action.action === 'publish' ? ArticlePublishAction : action,
       )
     },

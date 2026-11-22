@@ -65,7 +65,7 @@ export const ArticlePublishAction: DocumentActionComponent = (props) => {
   return {
     disabled: isPublishing || blocked || Boolean(publish.disabled),
     title: !validSlug ? ARTICLE_SLUG_ERROR : blocked ? "Resolve validation errors before publishing." : undefined,
-    label: isPublishing ? "Publishing…" : "Publish",
+    label: isPublishing ? (props.published ? "Updating…" : "Publishing…") : (props.published ? "Update live" : "Publish"),
     onHandle: () => {
       if (blocked || isPublishing || publish.disabled) return;
       const now = new Date().toISOString();
