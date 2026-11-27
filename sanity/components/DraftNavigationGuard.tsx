@@ -15,7 +15,7 @@ export function DraftGuardDialog({guard}: {guard: DraftNavigationController}) {
   const waiting = !entry?.ready || entry.syncing;
   const article = entry?.type === "post";
   return <Dialog id="draft-navigation-guard" header="Resolve unpublished changes" width={1} onClose={busy ? undefined : () => guard.cancel()}>
-    <Box padding={4}><Stack space={4}>
+    <Box padding={4}><Stack gap={4}>
       <Text weight="semibold">{entry?.title || "Document"}</Text>
       <Text size={1}>{article ? "Keep this article as a draft, or discard its unpublished changes before leaving." : "Publish this document, or discard its unpublished changes before leaving. It will not be published automatically."}</Text>
       <Text muted size={1}>Discard removes the draft, not the published version. For a new, never-published document, it removes the new draft.</Text>

@@ -2,6 +2,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Use Node.js **22.20.0 or newer within Node 22**. The tested version is pinned in
+`.nvmrc` (22.23.5), and `package.json` declares the supported range for local and
+deployment builds. With a Node version manager, select this version before
+running `npm ci`. Existing terminals may need reopening after updating Node.
+
+For the isolated Windows runtime used for local verification on this machine,
+select it in the current PowerShell session only:
+
+```powershell
+$env:Path = "$env:LOCALAPPDATA\Programs\MisterStoryNode\node-v22.23.5-win-x64;$env:Path"
+node --version
+npm ci
+```
+
+This does not replace the system-wide Node installation or modify persistent
+PATH settings. On another machine, install/select the version from `.nvmrc`
+using the official Node.js distribution or your existing version manager.
+
 First, run the development server:
 
 ```bash
@@ -15,6 +33,17 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Targeted dependency maintenance
+
+Next.js and `eslint-config-next` are pinned together. Sanity and Vision are also
+pinned together to preserve the verified Studio image-editor integration.
+The `smol-toml`-only override replaces an old TOML parser bundled by Sanity's CLI
+tooling. Its other consumer already uses 1.9.1; no other package is overridden.
+It does not change website content or dataset parsing. Keep the lockfile and run
+the dependency-security regression test when updating these dependencies.
+Do not use `npm audit fix --force` as a substitute
+for testing a targeted upgrade.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

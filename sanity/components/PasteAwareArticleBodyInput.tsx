@@ -300,7 +300,7 @@ export default function PasteAwareArticleBodyInput(props: PortableTextInputProps
   }, [notifyFullscreen]);
 
   return (
-    <Stack space={3}>
+    <Stack gap={3}>
       <Card border padding={3} radius={2} tone="transparent">
         <Flex align="center" gap={3} justify="space-between" wrap="wrap">
           <Box flex={1} style={{minWidth: 240}}>

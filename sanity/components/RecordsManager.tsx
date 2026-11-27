@@ -64,7 +64,7 @@ export function RecordsManager({type}: {type: ManagerType}) {
   const pages = Math.max(1, Math.ceil(total / MANAGER_PAGE_SIZE));
 
   return <Card height="fill" overflow="auto" padding={4} tone="transparent">
-    <Stack space={4}>
+    <Stack gap={4}>
       <Flex align="center" gap={3} justify="space-between" wrap="wrap">
         <Box><Text size={2} weight="semibold">{title}</Text><Box marginTop={2}><Text muted size={1}>Search all {title.toLowerCase()}. Live + changes means newer edits are waiting to be published.</Text></Box></Box>
         <Flex gap={2} wrap="wrap">
@@ -76,7 +76,7 @@ export function RecordsManager({type}: {type: ManagerType}) {
         {filters.map((filter) => <Button key={filter.value} mode={status === filter.value ? "default" : "ghost"} tone={status === filter.value ? "primary" : "default"} onClick={() => {setStatus(filter.value); setPage(1);}} text={`${filter.label} (${result.counts[filter.value]})`} />)}
       </Flex>
       <TextInput aria-label={`Search ${title.toLowerCase()}`} icon={SearchIcon} onChange={(event) => {setSearch(event.currentTarget.value); setPage(1);}} placeholder={type === "post" ? "Search all articles by title, slug, company or category" : "Search all companies by name, slug, industry or SEO text"} value={search} />
-      {error && <Card border padding={4} radius={2} tone="critical"><Stack space={3}><Text size={1}>The list could not be refreshed: {error}</Text><Box><Button onClick={() => setRefresh((value) => value + 1)} text="Try again" /></Box></Stack></Card>}
+      {error && <Card border padding={4} radius={2} tone="critical"><Stack gap={3}><Text size={1}>The list could not be refreshed: {error}</Text><Box><Button onClick={() => setRefresh((value) => value + 1)} text="Try again" /></Box></Stack></Card>}
       {loading ? <Flex align="center" gap={3} justify="center" padding={6}><Spinner muted /><Text muted>Loading {title.toLowerCase()}…</Text></Flex> : <Card border radius={2} overflow="auto">
         <table style={{borderCollapse: "collapse", minWidth: type === "post" ? 980 : 1130, width: "100%"}}>
           <thead><tr>{[title, ...columns.map((column) => column.label), "Status", "Updated", "Actions"].map((label) => <th key={label} style={{...cellStyle, textAlign: "left"}}><Text muted size={1} weight="semibold">{label}</Text></th>)}</tr></thead>

@@ -21,7 +21,7 @@ export function SubIndustryInput(props: StringInputProps) {
   }, [client, id]);
   const category = findIndustry(slug);
   const invalid = props.value && !category?.subIndustries.includes(props.value);
-  return <Stack space={3}>
+  return <Stack gap={3}>
     <Select {...props.elementProps} value={props.value || ""} disabled={props.readOnly || loading || !category} onChange={event => props.onChange(event.currentTarget.value ? set(event.currentTarget.value) : unset())}>
       <option value="">{loading ? "Loading sub-industries…" : "Select sub-industry"}</option>
       {invalid && <option value={props.value}>{props.value} (choose a matching option)</option>}

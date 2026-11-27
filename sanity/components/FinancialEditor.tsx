@@ -115,12 +115,12 @@ export function FinancialEditor() {
   }
 
   const options = companies.some(item => item._id === companyId) || !snapshot ? companies : [{_id: snapshot.company._id, name: snapshot.company.name, slug: snapshot.company.slug}, ...companies];
-  return <Card height="fill" overflow="auto" padding={4} tone="transparent"><Stack space={4}>
-    <Stack space={3}><Text size={3} weight="semibold">Financial Editor</Text><Text muted size={1}>Choose a company and financial year. Save revenue, EBITDA and profit/loss together. Saving protects the whole year and reporting basis from Excel imports.</Text></Stack>
-    <Card border radius={2} padding={4}><Stack space={4}>
+  return <Card height="fill" overflow="auto" padding={4} tone="transparent"><Stack gap={4}>
+    <Stack gap={3}><Text size={3} weight="semibold">Financial Editor</Text><Text muted size={1}>Choose a company and financial year. Save revenue, EBITDA and profit/loss together. Saving protects the whole year and reporting basis from Excel imports.</Text></Stack>
+    <Card border radius={2} padding={4}><Stack gap={4}>
       <Box><label htmlFor="finance-company-search" style={label}>Find company {searching ? "(searching…)" : ""}</label><TextInput id="finance-company-search" placeholder="Search any published company by name or slug" value={search} onChange={event => setSearch(event.currentTarget.value)} /></Box>
       {searchError && <Text size={1}>{searchError}</Text>}
-      <Grid columns={[1, 1, 3]} gap={3}>
+      <Grid gridTemplateColumns={[1, 1, 3]} gap={3}>
         <Box><label htmlFor="finance-company" style={label}>Company</label><Select id="finance-company" value={companyId} disabled={saving} onChange={event => {if (discard()) {setCompanyId(event.currentTarget.value); setMessage(""); setDirty(false);}}}><option value="">Select company</option>{options.map(item => <option key={item._id} value={item._id}>{item.name} ({item.slug})</option>)}</Select></Box>
         <Box><label htmlFor="finance-year" style={label}>Financial year ending</label><Select id="finance-year" value={year} disabled={saving} onChange={event => {if (discard()) {setYear(event.currentTarget.value); setMessage(""); setDirty(false);}}}>{Array.from({length:100}, (_, index) => 2099 - index).map(value => <option key={value} value={value}>FY{value}</option>)}</Select></Box>
         <Box><label htmlFor="finance-basis" style={label}>Reporting basis</label><Select id="finance-basis" value={basis} disabled={saving} onChange={event => {if (discard()) {setBasis(event.currentTarget.value); setMessage(""); setDirty(false);}}}><option value="consolidated">Consolidated</option><option value="standalone">Standalone</option></Select></Box>
@@ -129,13 +129,13 @@ export function FinancialEditor() {
     {error && <Card border padding={3} tone="critical"><Text size={1}>{error}</Text></Card>}
     {message && <Card border padding={3} tone="positive"><Text size={1}>{message}</Text></Card>}
     {loading && <Flex align="center" gap={3}><Spinner /><Text>Loading saved figures…</Text></Flex>}
-    {companyId && <Card border radius={2} padding={4}><Stack space={4}>
+    {companyId && <Card border radius={2} padding={4}><Stack gap={4}>
       <Flex align="center" gap={3} wrap="wrap"><Badge tone={locked ? "positive" : "caution"}>{locked ? "Protected from Excel" : "Excel updates allowed"}</Badge><Text size={1}>FY{year} · {basis}</Text></Flex>
-      <Grid columns={[1, 2]} gap={3}>
+      <Grid gridTemplateColumns={[1, 2]} gap={3}>
         <Box><label htmlFor="finance-currency" style={label}>Currency</label><Select id="finance-currency" value={currency} disabled={!ready} onChange={event => {setCurrency(event.currentTarget.value); setDirty(true);}}>{FINANCIAL_CURRENCIES.map(value => <option key={value} value={value}>{value}</option>)}</Select></Box>
         <Box><label htmlFor="finance-unit" style={label}>Unit</label><Select id="finance-unit" value={unit} disabled={!ready} onChange={event => {setUnit(event.currentTarget.value); setDirty(true);}}>{FINANCIAL_UNITS.map(value => <option key={value} value={value.toLowerCase()}>{value}</option>)}</Select></Box>
       </Grid>
-      <Grid columns={[1, 1, 3]} gap={3}>{(Object.keys(EMPTY) as (keyof Amounts)[]).map(code => <Box key={code}>
+      <Grid gridTemplateColumns={[1, 1, 3]} gap={3}>{(Object.keys(EMPTY) as (keyof Amounts)[]).map(code => <Box key={code}>
         <label htmlFor={`finance-${code}`} style={label}>{FINANCIAL_METRICS[code]}</label>
         <TextInput id={`finance-${code}`} inputMode="decimal" value={amounts[code]} disabled={!ready} placeholder="Blank = preserve saved value" onChange={event => {setAmounts(value => ({...value, [code]: event.currentTarget.value})); setDirty(true);}} />
         <Box marginTop={2}><Text muted size={1}>Saved: {saved[code]?.value || "Not entered"}</Text></Box>

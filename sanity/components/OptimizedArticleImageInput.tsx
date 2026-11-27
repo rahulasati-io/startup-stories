@@ -120,9 +120,9 @@ export default function OptimizedArticleImageInput(props: ObjectInputProps) {
   }
 
   return (
-    <Stack space={3}>
+    <Stack gap={3}>
       <Card border radius={2} padding={3} tone="primary">
-        <Stack space={3}>
+        <Stack gap={3}>
           <Box>
             <Text size={1} weight="semibold">Crop and compress for MisterStory</Text>
             <Box marginTop={2}>
